@@ -1,0 +1,39 @@
+╔════════════════════════════════════════════════════════════╗
+║                                                            ║
+║              ✅ ADMIN USER CREATED!                        ║
+║                                                            ║
+╚════════════════════════════════════════════════════════════╝
+
+🔑 LOGIN NOW:
+
+URL: http://localhost:8081/login.html
+
+Phone:    +8801700000000
+Password: admin123
+
+---
+
+✅ WHAT'S RUNNING:
+
+Backend API:     http://localhost:3000
+Admin Dashboard: http://localhost:8081
+
+---
+
+📋 AFTER LOGIN:
+
+You'll have access to:
+• Real-time dashboard
+• User management
+• Transaction approval
+• KYC verification
+• Exchange rate control
+• Notifications
+• Analytics
+• Activity logs
+
+---
+
+🚀 OPEN NOW:
+
+http://localhost:8081/login.html

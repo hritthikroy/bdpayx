@@ -136,13 +136,29 @@ async function loadDashboard() {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
         
-        if (!response.ok) {
-            console.error('Dashboard API error:', response.status, response.statusText);
+        const data = await response.json();
+        console.log('Dashboard data received:', data);
+        
+        // Check for API error response
+        if (data.error) {
+            console.error('Dashboard API error:', data.error);
+            if (data.error === 'Invalid token' || data.error === 'Unauthorized') {
+                showNotification('Session expired. Please login again.', 'error');
+                setTimeout(() => {
+                    localStorage.removeItem('admin_token');
+                    window.location.href = 'login.html';
+                }, 2000);
+            } else {
+                showNotification('Failed to load dashboard: ' + data.error, 'error');
+            }
             return;
         }
         
-        const data = await response.json();
-        console.log('Dashboard data received:', data);
+        if (!response.ok) {
+            console.error('Dashboard API error:', response.status, response.statusText);
+            showNotification('Failed to load dashboard', 'error');
+            return;
+        }
 
         // Check if data has the expected structure
         if (!data || !data.overview) {
@@ -209,13 +225,19 @@ async function loadUsers() {
             { headers: { 'Authorization': `Bearer ${authToken}` } }
         );
         
+        const data = await response.json();
+        console.log('Users data received:', data);
+        
+        // Check for error response
+        if (data.error) {
+            console.error('Users API error:', data.error);
+            return;
+        }
+        
         if (!response.ok) {
             console.error('Users API error:', response.status, response.statusText);
             return;
         }
-        
-        const data = await response.json();
-        console.log('Users data received:', data);
 
         const tbody = document.querySelector('#users-table tbody');
         tbody.innerHTML = '';
@@ -267,13 +289,19 @@ async function loadTransactions() {
             { headers: { 'Authorization': `Bearer ${authToken}` } }
         );
         
+        const data = await response.json();
+        console.log('Transactions data received:', data);
+        
+        // Check for error response
+        if (data.error) {
+            console.error('Transactions API error:', data.error);
+            return;
+        }
+        
         if (!response.ok) {
             console.error('Transactions API error:', response.status, response.statusText);
             return;
         }
-        
-        const data = await response.json();
-        console.log('Transactions data received:', data);
 
         const tbody = document.querySelector('#transactions-table tbody');
         tbody.innerHTML = '';
@@ -346,13 +374,19 @@ async function loadKYCRequests() {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
         
+        const data = await response.json();
+        console.log('KYC data received:', data);
+        
+        // Check for error response
+        if (data.error) {
+            console.error('KYC API error:', data.error);
+            return;
+        }
+        
         if (!response.ok) {
             console.error('KYC API error:', response.status, response.statusText);
             return;
         }
-        
-        const data = await response.json();
-        console.log('KYC data received:', data);
 
         const container = document.getElementById('kyc-list');
         container.innerHTML = '';
@@ -506,12 +540,24 @@ async function loadLogs() {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
         const data = await response.json();
+        console.log('Logs data received:', data);
+        
+        // Check for error response
+        if (data.error) {
+            console.error('Logs API error:', data.error);
+            return;
+        }
 
         const tbody = document.querySelector('#logs-table tbody');
         tbody.innerHTML = '';
 
         if (!data.logs || !Array.isArray(data.logs)) {
             console.error('Invalid logs data:', data);
+            tbody.innerHTML = '<tr><td colspan="5">No logs found</td></tr>';
+            return;
+        }
+
+        if (data.logs.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5">No logs found</td></tr>';
             return;
         }

@@ -3,6 +3,8 @@ const API_BASE = 'http://localhost:3000/api';
 let socket;
 let authToken = localStorage.getItem('admin_token');
 let currentTransactionId = null;
+let isLoadingDashboard = false;
+let dashboardLoadTimeout = null;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -38,7 +40,9 @@ function initializeSocket() {
     socket.on('transaction_event', (data) => {
         console.log('Transaction event:', data);
         showNotification(`New ${data.type} transaction`, 'info');
-        loadDashboard();
+        // Debounce dashboard reload
+        clearTimeout(dashboardLoadTimeout);
+        dashboardLoadTimeout = setTimeout(() => loadDashboard(), 1000);
     });
 
     socket.on('user_event', (data) => {
@@ -46,7 +50,9 @@ function initializeSocket() {
         if (data.type === 'INSERT') {
             showNotification('New user registered', 'success');
         }
-        loadDashboard();
+        // Debounce dashboard reload
+        clearTimeout(dashboardLoadTimeout);
+        dashboardLoadTimeout = setTimeout(() => loadDashboard(), 1000);
     });
 
     socket.on('user_online', (data) => {
@@ -131,6 +137,14 @@ function navigateToPage(page) {
 
 // Dashboard
 async function loadDashboard() {
+    // Prevent double loading
+    if (isLoadingDashboard) {
+        console.log('Dashboard already loading, skipping...');
+        return;
+    }
+    
+    isLoadingDashboard = true;
+    
     try {
         const response = await fetch(`${API_BASE}/admin/v2/dashboard`, {
             headers: { 'Authorization': `Bearer ${authToken}` }
@@ -182,6 +196,11 @@ async function loadDashboard() {
     } catch (error) {
         console.error('Load dashboard error:', error);
         showNotification('Error loading dashboard', 'error');
+    } finally {
+        // Reset loading flag after a short delay
+        setTimeout(() => {
+            isLoadingDashboard = false;
+        }, 500);
     }
 }
 

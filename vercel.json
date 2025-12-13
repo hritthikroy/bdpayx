@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "backend/src/index.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "backend/src/index.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/flutter_app/build/web/$1"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
+}

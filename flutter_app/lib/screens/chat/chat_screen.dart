@@ -77,7 +77,7 @@ class _ChatScreenState extends State<ChatScreen> {
     SupabaseConfig.client
         .from('chat_messages')
         .stream(primaryKey: ['id'])
-        .eq('user_id', authProvider.user!['id'])
+        .eq('user_id', authProvider.user!.id)
         .listen((List<Map<String, dynamic>> data) {
           if (data.isNotEmpty && mounted) {
             final latestMsg = data.last;

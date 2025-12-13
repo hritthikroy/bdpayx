@@ -9,9 +9,11 @@ const authRoutes = require('./routes/auth');
 const exchangeRoutes = require('./routes/exchange');
 const transactionRoutes = require('./routes/transactions');
 const adminRoutes = require('./routes/admin');
+const adminEnhancedRoutes = require('./routes/admin-enhanced');
 const chatRoutes = require('./routes/chat');
 const walletRoutes = require('./routes/wallet');
 const googleAuthRoutes = require('./routes/google-auth');
+const RealtimeMonitor = require('./services/realtime-monitor');
 
 const app = express();
 const server = http.createServer(app);
@@ -34,11 +36,16 @@ app.use('/api/auth', googleAuthRoutes);
 app.use('/api/exchange', exchangeRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin/v2', adminEnhancedRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/wallet', walletRoutes);
 
 // Start dynamic rate fluctuation
 rateService.startRateFluctuation();
+
+// Initialize real-time monitoring
+const realtimeMonitor = new RealtimeMonitor(io);
+realtimeMonitor.initialize();
 
 // Socket.io for live chat and rate updates
 io.on('connection', (socket) => {
@@ -50,6 +57,8 @@ io.on('connection', (socket) => {
 
   socket.on('send_message', (data) => {
     io.to(`support_${data.userId}`).emit('receive_message', data);
+    // Notify admins of new message
+    io.to('admin_room').emit('new_support_message', data);
   });
 
   socket.on('disconnect', () => {
@@ -57,8 +66,9 @@ io.on('connection', (socket) => {
   });
 });
 
-// Make io accessible to routes
+// Make io and monitor accessible to routes
 app.set('io', io);
+app.set('monitor', realtimeMonitor);
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {

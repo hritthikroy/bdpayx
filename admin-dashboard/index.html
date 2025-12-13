@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BDPayX Admin Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <h2>🔐 BDPayX Admin</h2>
+        </div>
+        <nav class="nav-menu">
+            <a href="#" class="nav-item active" data-page="dashboard">
+                <span class="icon">📊</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item" data-page="users">
+                <span class="icon">👥</span>
+                <span>Users</span>
+            </a>
+            <a href="#" class="nav-item" data-page="transactions">
+                <span class="icon">💸</span>
+                <span>Transactions</span>
+            </a>
+            <a href="#" class="nav-item" data-page="kyc">
+                <span class="icon">✅</span>
+                <span>KYC Requests</span>
+                <span class="badge" id="kyc-badge">0</span>
+            </a>
+            <a href="#" class="nav-item" data-page="exchange">
+                <span class="icon">💱</span>
+                <span>Exchange Rate</span>
+            </a>
+            <a href="#" class="nav-item" data-page="notifications">
+                <span class="icon">🔔</span>
+                <span>Notifications</span>
+            </a>
+            <a href="#" class="nav-item" data-page="analytics">
+                <span class="icon">📈</span>
+                <span>Analytics</span>
+            </a>
+            <a href="#" class="nav-item" data-page="settings">
+                <span class="icon">⚙️</span>
+                <span>Settings</span>
+            </a>
+            <a href="#" class="nav-item" data-page="logs">
+                <span class="icon">📝</span>
+                <span>Activity Logs</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <h1 id="page-title">Dashboard</h1>
+            </div>
+            <div class="header-right">
+                <div class="realtime-indicator">
+                    <span class="pulse"></span>
+                    <span>Live</span>
+                </div>
+                <div class="admin-profile">
+                    <span id="admin-name">Admin</span>
+                    <div class="avatar">A</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Page -->
+        <div id="dashboard-page" class="page active">
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-info">
+                        <h3 id="total-users">0</h3>
+                        <p>Total Users</p>
+                    </div>
+                    <div class="stat-change positive">+12%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🟢</div>
+                    <div class="stat-info">
+                        <h3 id="active-users">0</h3>
+                        <p>Active Now</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⏳</div>
+                    <div class="stat-info">
+                        <h3 id="pending-transactions">0</h3>
+                        <p>Pending Transactions</p>
+                    </div>
+                    <div class="stat-badge">Action Required</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-info">
+                        <h3 id="today-volume">0</h3>
+                        <p>Today's Volume (BDT)</p>
+                    </div>
+                    <div class="stat-change positive">+8%</div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>Transaction Trends</h3>
+                    <canvas id="transactionChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>User Growth</h3>
+                    <canvas id="userChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="activity-section">
+                <h3>Recent Transactions</h3>
+                <div class="table-container">
+                    <table id="recent-transactions">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>User</th>
+                                <th>Amount (BDT)</th>
+                                <th>Amount (INR)</th>
+                                <th>Status</th>
+                                <th>Time</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Page -->
+        <div id="users-page" class="page">
+            <div class="page-header">
+                <div class="search-bar">
+                    <input type="text" id="user-search" placeholder="Search users...">
+                </div>
+                <div class="filters">
+                    <select id="user-status-filter">
+                        <option value="all">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="blocked">Blocked</option>
+                    </select>
+                    <select id="kyc-status-filter">
+                        <option value="all">All KYC</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+            </div>
+            <div class="table-container">
+                <table id="users-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                            <th>KYC Status</th>
+                            <th>Balance</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Transactions Page -->
+        <div id="transactions-page" class="page">
+            <div class="page-header">
+                <div class="filters">
+                    <select id="transaction-status-filter">
+                        <option value="all">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="processing">Processing</option>
+                        <option value="completed">Completed</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                    <input type="date" id="from-date">
+                    <input type="date" id="to-date">
+                    <button onclick="filterTransactions()">Filter</button>
+                </div>
+            </div>
+            <div class="table-container">
+                <table id="transactions-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>BDT Amount</th>
+                            <th>INR Amount</th>
+                            <th>Rate</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- KYC Page -->
+        <div id="kyc-page" class="page">
+            <h2>Pending KYC Requests</h2>
+            <div id="kyc-list" class="kyc-grid"></div>
+        </div>
+
+        <!-- Exchange Rate Page -->
+        <div id="exchange-page" class="page">
+            <div class="rate-section">
+                <div class="current-rate-card">
+                    <h3>Current Exchange Rate</h3>
+                    <div class="rate-display">
+                        <span class="rate-value" id="current-rate-display">0.0000</span>
+                        <span class="rate-label">INR per BDT</span>
+                    </div>
+                    <p class="rate-update">Last updated: <span id="rate-last-update">--</span></p>
+                </div>
+                <div class="update-rate-card">
+                    <h3>Update Rate</h3>
+                    <form onsubmit="updateRate(event)">
+                        <input type="number" step="0.0001" id="new-rate" placeholder="0.0000" required>
+                        <button type="submit">Update Rate</button>
+                    </form>
+                </div>
+            </div>
+            <div class="rate-history">
+                <h3>Rate History</h3>
+                <canvas id="rateHistoryChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Notifications Page -->
+        <div id="notifications-page" class="page">
+            <div class="notification-form">
+                <h3>Send Notification</h3>
+                <form onsubmit="sendNotification(event)">
+                    <input type="text" id="notif-user-id" placeholder="User ID (leave empty for broadcast)">
+                    <input type="text" id="notif-title" placeholder="Title" required>
+                    <textarea id="notif-message" placeholder="Message" required></textarea>
+                    <select id="notif-type">
+                        <option value="info">Info</option>
+                        <option value="success">Success</option>
+                        <option value="warning">Warning</option>
+                        <option value="error">Error</option>
+                    </select>
+                    <button type="submit">Send</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Analytics Page -->
+        <div id="analytics-page" class="page">
+            <div class="analytics-controls">
+                <select id="analytics-period">
+                    <option value="7d">Last 7 Days</option>
+                    <option value="30d">Last 30 Days</option>
+                    <option value="90d">Last 90 Days</option>
+                </select>
+                <button onclick="loadAnalytics()">Refresh</button>
+            </div>
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>Revenue Trends</h3>
+                    <canvas id="revenueChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Transaction Volume</h3>
+                    <canvas id="volumeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div id="settings-page" class="page">
+            <h2>System Settings</h2>
+            <div class="settings-grid" id="settings-list"></div>
+        </div>
+
+        <!-- Logs Page -->
+        <div id="logs-page" class="page">
+            <h2>Admin Activity Logs</h2>
+            <div class="table-container">
+                <table id="logs-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Admin</th>
+                            <th>Action</th>
+                            <th>Target</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="user-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('user-modal')">&times;</span>
+            <h2>User Details</h2>
+            <div id="user-details"></div>
+        </div>
+    </div>
+
+    <div id="transaction-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('transaction-modal')">&times;</span>
+            <h2>Transaction Details</h2>
+            <div id="transaction-details"></div>
+            <div class="modal-actions">
+                <button class="btn-approve" onclick="approveTransaction()">Approve</button>
+                <button class="btn-reject" onclick="rejectTransaction()">Reject</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

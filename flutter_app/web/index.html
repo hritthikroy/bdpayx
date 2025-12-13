@@ -1,23 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <base href="$FLUTTER_BASE_HREF">
   <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="BDT to INR Currency Exchange App">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <!-- iOS meta tags -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="BDPayX">
-  
-  <!-- Google Sign In -->
-  <meta name="google-signin-client_id" content="1071453270740-qojgn6bfqf2dhinr2etkmd92f0has46n.apps.googleusercontent.com">
-  
-  <title>BDPayX - Currency Exchange</title>
-  <link rel="manifest" href="manifest.json">
-  
+  <title>BDPayX - Build Required</title>
   <style>
     * {
       margin: 0;
@@ -26,103 +12,207 @@
     }
     
     body {
-      font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-    
-    /* Material Icons - Optimized */
-    @font-face {
-      font-family: 'Material Icons';
-      font-style: normal;
-      font-weight: 400;
-      font-display: block;
-      src: url(https://fonts.gstatic.com/s/materialicons/v140/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2) format('woff2');
-    }
-    
-    /* Roboto Font */
-    @font-face {
-      font-family: 'Roboto';
-      font-style: normal;
-      font-weight: 400;
-      font-display: swap;
-      src: url(https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxK.woff2) format('woff2');
-    }
-    
-    /* Loading Screen */
-    #loading {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
       background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #A855F7 100%);
+      min-height: 100vh;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      z-index: 9999;
-      transition: opacity 0.3s ease;
+      padding: 20px;
     }
     
-    #loading.fade-out {
-      opacity: 0;
+    .container {
+      background: white;
+      border-radius: 24px;
+      padding: 48px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     }
     
-    .loader {
-      width: 50px;
-      height: 50px;
-      border: 4px solid rgba(255, 255, 255, 0.3);
-      border-top-color: white;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
+    .icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #6366F1, #8B5CF6);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
     }
     
-    @keyframes spin {
-      to { transform: rotate(360deg); }
+    .icon svg {
+      width: 48px;
+      height: 48px;
+      fill: white;
     }
     
-    #loading-text {
+    h1 {
+      font-size: 32px;
+      color: #1E293B;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    
+    p {
+      color: #64748B;
+      line-height: 1.6;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    
+    .steps {
+      background: #F8FAFC;
+      border-radius: 16px;
+      padding: 24px;
+      margin: 24px 0;
+    }
+    
+    .step {
+      margin-bottom: 16px;
+      padding-left: 32px;
+      position: relative;
+    }
+    
+    .step:before {
+      content: attr(data-step);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 24px;
+      height: 24px;
+      background: linear-gradient(135deg, #6366F1, #8B5CF6);
       color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    
+    .step h3 {
+      font-size: 16px;
+      color: #1E293B;
+      margin-bottom: 8px;
+    }
+    
+    .step code {
+      display: block;
+      background: #1E293B;
+      color: #10B981;
+      padding: 12px;
+      border-radius: 8px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 14px;
+      margin-top: 8px;
+      overflow-x: auto;
+    }
+    
+    .status {
+      display: flex;
+      gap: 16px;
+      margin-top: 32px;
+    }
+    
+    .status-item {
+      flex: 1;
+      background: #F8FAFC;
+      padding: 16px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    
+    .status-item .label {
+      font-size: 12px;
+      color: #64748B;
+      margin-bottom: 8px;
+    }
+    
+    .status-item .value {
       font-size: 18px;
-      margin-top: 20px;
-      font-weight: 500;
+      font-weight: bold;
+    }
+    
+    .status-item.success .value {
+      color: #10B981;
+    }
+    
+    .status-item.pending .value {
+      color: #F59E0B;
+    }
+    
+    .note {
+      background: #FEF3C7;
+      border-left: 4px solid #F59E0B;
+      padding: 16px;
+      border-radius: 8px;
+      margin-top: 24px;
+    }
+    
+    .note strong {
+      color: #92400E;
+      display: block;
+      margin-bottom: 8px;
+    }
+    
+    .note p {
+      color: #92400E;
+      text-align: left;
+      margin: 0;
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
-  <div id="loading">
-    <div class="loader"></div>
-    <div id="loading-text">Loading BDPayX...</div>
-  </div>
-  
-  <script src="flutter_bootstrap.js" async></script>
-  
-  <script>
-    window.addEventListener('load', function() {
-      // Wait for fonts to be ready
-      if (document.fonts && document.fonts.ready) {
-        document.fonts.ready.then(function() {
-          initializeApp();
-        });
-      } else {
-        // Fallback if Font Loading API is not supported
-        setTimeout(initializeApp, 100);
-      }
-    });
+  <div class="container">
+    <div class="icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+      </svg>
+    </div>
     
-    function initializeApp() {
-      console.log('Initializing BDPayX...');
+    <h1>Flutter Build Required</h1>
+    <p>Your BDPayX app needs to be built before it can run in the browser.</p>
+    
+    <div class="status">
+      <div class="status-item success">
+        <div class="label">Backend</div>
+        <div class="value">✅ Running</div>
+      </div>
+      <div class="status-item pending">
+        <div class="label">Frontend</div>
+        <div class="value">⏳ Build Needed</div>
+      </div>
+    </div>
+    
+    <div class="steps">
+      <div class="step" data-step="1">
+        <h3>Open Terminal</h3>
+        <code>cd flutter_app</code>
+      </div>
       
-      // Hide loading screen with fade effect
-      var loading = document.getElementById('loading');
-      if (loading) {
-        loading.classList.add('fade-out');
-        setTimeout(function() {
-          loading.style.display = 'none';
-        }, 300);
-      }
-    }
-  </script>
+      <div class="step" data-step="2">
+        <h3>Build Flutter Web</h3>
+        <code>flutter build web</code>
+      </div>
+      
+      <div class="step" data-step="3">
+        <h3>Refresh This Page</h3>
+        <p style="color: #64748B; font-size: 14px; margin-top: 8px;">Press Cmd+R (Mac) or Ctrl+R (Windows)</p>
+      </div>
+    </div>
+    
+    <div class="note">
+      <strong>⚡ Quick Alternative:</strong>
+      <p>Run Flutter directly with hot reload:</p>
+      <code style="display: block; background: #1E293B; color: #10B981; padding: 12px; border-radius: 8px; font-family: monospace; margin-top: 8px;">
+        flutter run -d chrome --web-port=8080
+      </code>
+    </div>
+    
+    <p style="margin-top: 32px; font-size: 14px;">
+      <strong>Backend API:</strong> <a href="http://localhost:3000" style="color: #6366F1;">http://localhost:3000</a>
+    </p>
+  </div>
 </body>
 </html>

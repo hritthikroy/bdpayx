@@ -39,240 +39,358 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final user = Provider.of<AuthProvider>(context).user;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        backgroundColor: const Color(0xFF3B82F6),
-        foregroundColor: Colors.white,
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Modern Header with Gradient
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFA855F7)],
+                  ),
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(32),
+                    bottomRight: Radius.circular(32),
+                  ),
                 ),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.white,
-                        width: 4,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
-                          blurRadius: 20,
-                          offset: const Offset(0, 8),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.arrow_back, color: Colors.white),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.settings_outlined,
+                            color: Colors.white,
+                          ),
                         ),
                       ],
                     ),
-                    child: user?.photoUrl != null
-                        ? CircleAvatar(
-                            radius: 50,
-                            backgroundColor: Colors.white,
-                            backgroundImage: NetworkImage(user!.photoUrl!),
-                          )
-                        : Container(
-                            width: 100,
-                            height: 100,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  Color(0xFF6366F1),
-                                  Color(0xFF8B5CF6),
-                                  Color(0xFFA855F7),
-                                ],
-                              ),
-                            ),
-                            child: Center(
-                              child: Text(
-                                user?.fullName?.substring(0, 1).toUpperCase() ?? 'U',
-                                style: const TextStyle(
-                                  fontSize: 48,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  shadows: [
-                                    Shadow(
-                                      color: Colors.black26,
-                                      offset: Offset(0, 2),
-                                      blurRadius: 4,
-                                    ),
+                    const SizedBox(height: 24),
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white,
+                          width: 4,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: user?.photoUrl != null
+                          ? CircleAvatar(
+                              radius: 50,
+                              backgroundColor: Colors.white,
+                              backgroundImage: NetworkImage(user!.photoUrl!),
+                            )
+                          : Container(
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Color(0xFFFBBF24),
+                                    Color(0xFFF59E0B),
+                                    Color(0xFFEF4444),
                                   ],
                                 ),
                               ),
+                              child: Center(
+                                child: Text(
+                                  user?.fullName?.substring(0, 1).toUpperCase() ?? 'U',
+                                  style: const TextStyle(
+                                    fontSize: 48,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    shadows: [
+                                      Shadow(
+                                        color: Colors.black26,
+                                        offset: Offset(0, 2),
+                                        blurRadius: 4,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      user?.fullName ?? 'User',
+                      style: const TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.phone, color: Colors.white70, size: 16),
+                        const SizedBox(width: 6),
+                        Text(
+                          user?.phone ?? '',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _getKycIcon(user?.kycStatus ?? 'pending'),
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'KYC: ${user?.kycStatus.toUpperCase() ?? 'PENDING'}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
                             ),
                           ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    user?.fullName ?? 'User',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    user?.phone ?? '',
-                    style: const TextStyle(color: Colors.white70),
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  ],
+                ),
+              ),
+              
+              // Stats Cards (Overlapping)
+              Transform.translate(
+                offset: const Offset(0, -30),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: _getKycColor(user?.kycStatus ?? 'pending'),
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 20,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                    child: Text(
-                      'KYC: ${user?.kycStatus.toUpperCase() ?? 'PENDING'}',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _buildStatCard(
+                            '৳${user?.balance.toStringAsFixed(2) ?? '0.00'}',
+                            'Total Balance',
+                            Icons.account_balance_wallet,
+                            const Color(0xFF10B981),
+                          ),
+                        ),
+                        Container(
+                          width: 1,
+                          height: 50,
+                          color: const Color(0xFFE2E8F0),
+                        ),
+                        Expanded(
+                          child: _buildStatCard(
+                            '৳0.00',
+                            'Available',
+                            Icons.check_circle,
+                            const Color(0xFF6366F1),
+                          ),
+                        ),
+                        Container(
+                          width: 1,
+                          height: 50,
+                          color: const Color(0xFFE2E8F0),
+                        ),
+                        Expanded(
+                          child: _buildStatCard(
+                            '৳0.00',
+                            'Pending',
+                            Icons.pending,
+                            const Color(0xFFF59E0B),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            
-            // Stats Row
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildStatCard('৳${user?.balance.toStringAsFixed(2) ?? '0.00'}', 'Total Amount'),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildStatCard('৳0.00', 'Available'),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildStatCard('৳0.00', 'Progressing'),
-                  ),
-                ],
+              
+              const SizedBox(height: 10),
+              
+              // Menu Items
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.people,
+                      title: 'Referrals',
+                      subtitle: 'Invite friends and earn',
+                      color: const Color(0xFFEC4899),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const ReferralScreen()),
+                        );
+                      },
+                    ),
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.history,
+                      title: 'Exchange History',
+                      subtitle: 'View all your exchanges',
+                      color: const Color(0xFF6366F1),
+                      onTap: () {
+                        Navigator.pushNamed(context, '/transactions');
+                      },
+                    ),
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.receipt_long,
+                      title: 'Statement',
+                      subtitle: 'Download transaction reports',
+                      color: const Color(0xFF8B5CF6),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const StatementScreen()),
+                        );
+                      },
+                    ),
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.credit_card,
+                      title: 'Bank Account',
+                      subtitle: 'Manage your bank accounts',
+                      color: const Color(0xFF10B981),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const BankCardsScreen()),
+                        );
+                      },
+                    ),
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.card_giftcard,
+                      title: 'Invite Friends',
+                      subtitle: 'Share and earn rewards',
+                      color: const Color(0xFFF59E0B),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const ReferralScreen()),
+                        );
+                      },
+                    ),
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.verified_user,
+                      title: 'KYC Verification',
+                      subtitle: 'Complete your verification',
+                      color: const Color(0xFF3B82F6),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const KycScreen()),
+                        );
+                      },
+                    ),
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.notifications,
+                      title: 'Notifications',
+                      subtitle: 'View all notifications',
+                      color: const Color(0xFFA855F7),
+                      onTap: () {},
+                    ),
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.settings,
+                      title: 'Settings',
+                      subtitle: 'App preferences',
+                      color: const Color(0xFF64748B),
+                      onTap: () {},
+                    ),
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.headset_mic,
+                      title: '24/7 Support',
+                      subtitle: 'Get help anytime',
+                      color: const Color(0xFF10B981),
+                      onTap: () {
+                        Navigator.pushNamed(context, '/chat');
+                      },
+                    ),
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.logout,
+                      title: 'Logout',
+                      subtitle: 'Sign out of your account',
+                      color: const Color(0xFFEF4444),
+                      onTap: () async {
+                        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                        await authProvider.logout();
+                        if (context.mounted) {
+                          Navigator.pushReplacementNamed(context, '/login');
+                        }
+                      },
+                      isDestructive: true,
+                    ),
+                  ],
+                ),
               ),
-            ),
-            
-            const SizedBox(height: 20),
-            
-            _buildMenuItem(
-              context,
-              icon: Icons.people,
-              title: 'Referrals',
-              subtitle: 'Invite friends and earn',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ReferralScreen()),
-                );
-              },
-            ),
-            _buildMenuItem(
-              context,
-              icon: Icons.history,
-              title: 'Exchange History',
-              subtitle: 'View all your exchanges',
-              onTap: () {
-                Navigator.pushNamed(context, '/transactions');
-              },
-            ),
-            _buildMenuItem(
-              context,
-              icon: Icons.receipt_long,
-              title: 'Statement',
-              subtitle: 'Download transaction reports',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const StatementScreen()),
-                );
-              },
-            ),
-            _buildMenuItem(
-              context,
-              icon: Icons.credit_card,
-              title: 'Bank Account',
-              subtitle: 'Manage your bank accounts',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const BankCardsScreen()),
-                );
-              },
-            ),
-            _buildMenuItem(
-              context,
-              icon: Icons.card_giftcard,
-              title: 'Invite Friends',
-              subtitle: 'Share and earn rewards',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ReferralScreen()),
-                );
-              },
-            ),
-            _buildMenuItem(
-              context,
-              icon: Icons.verified_user,
-              title: 'KYC Verification',
-              subtitle: 'Complete your verification',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const KycScreen()),
-                );
-              },
-            ),
-            _buildMenuItem(
-              context,
-              icon: Icons.notifications,
-              title: 'Notifications',
-              subtitle: 'View all notifications',
-              onTap: () {},
-            ),
-            _buildMenuItem(
-              context,
-              icon: Icons.settings,
-              title: 'Settings',
-              subtitle: 'App preferences',
-              onTap: () {},
-            ),
-            _buildMenuItem(
-              context,
-              icon: Icons.headset_mic,
-              title: '24/7 Support',
-              subtitle: 'Get help anytime',
-              onTap: () {
-                Navigator.pushNamed(context, '/chat');
-              },
-            ),
-            _buildMenuItem(
-              context,
-              icon: Icons.logout,
-              title: 'Logout',
-              subtitle: 'Sign out of your account',
-              onTap: () async {
-                final authProvider = Provider.of<AuthProvider>(context, listen: false);
-                await authProvider.logout();
-                if (context.mounted) {
-                  Navigator.pushReplacementNamed(context, '/login');
-                }
-              },
-              isDestructive: true,
-            ),
-            const SizedBox(height: 20),
-          ],
+              const SizedBox(height: 30),
+            ],
+          ),
         ),
       ),
     );
@@ -283,65 +401,89 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required IconData icon,
     required String title,
     required String subtitle,
+    required Color color,
     required VoidCallback onTap,
     bool isDestructive = false,
   }) {
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: isDestructive
-            ? Colors.red.shade50
-            : const Color(0xFF3B82F6).withOpacity(0.1),
-        child: Icon(
-          icon,
-          color: isDestructive ? Colors.red : const Color(0xFF3B82F6),
-        ),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          color: isDestructive ? Colors.red : Colors.black,
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                color.withOpacity(0.2),
+                color.withOpacity(0.1),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            icon,
+            color: color,
+            size: 22,
+          ),
         ),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 15,
+            color: isDestructive ? color : const Color(0xFF1E293B),
+          ),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: const TextStyle(
+            fontSize: 13,
+            color: Color(0xFF64748B),
+          ),
+        ),
+        trailing: Icon(
+          Icons.chevron_right,
+          color: const Color(0xFF94A3B8),
+        ),
+        onTap: onTap,
       ),
-      subtitle: Text(subtitle),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: onTap,
     );
   }
 
-  Widget _buildStatCard(String value, String label) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 5,
+  Widget _buildStatCard(String value, String label, IconData icon, Color color) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 24),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1E293B),
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 11,
+            color: Color(0xFF64748B),
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              color: Colors.grey[600],
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 
@@ -353,6 +495,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return Colors.red;
       default:
         return Colors.orange;
+    }
+  }
+  
+  IconData _getKycIcon(String status) {
+    switch (status) {
+      case 'approved':
+        return Icons.verified;
+      case 'rejected':
+        return Icons.cancel;
+      default:
+        return Icons.pending;
     }
   }
 }

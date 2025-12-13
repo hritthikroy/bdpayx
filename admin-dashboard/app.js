@@ -140,7 +140,7 @@ async function loadDashboard() {
         console.log('Dashboard data received:', data);
         
         // Check for API error response
-        if (data.error) {
+        if (data && data.error) {
             console.error('Dashboard API error:', data.error);
             if (data.error === 'Invalid token' || data.error === 'Unauthorized') {
                 showNotification('Session expired. Please login again.', 'error');
@@ -160,19 +160,20 @@ async function loadDashboard() {
             return;
         }
 
-        // Check if data has the expected structure
-        if (!data || !data.overview) {
+        // Check if data has the expected structure - DEFENSIVE CHECK
+        if (!data || typeof data !== 'object' || !data.overview || typeof data.overview !== 'object') {
             console.error('Invalid dashboard data structure:', data);
             showNotification('Failed to load dashboard data', 'error');
             return;
         }
 
-        // Update stats
-        document.getElementById('total-users').textContent = data.overview.totalUsers || 0;
-        document.getElementById('active-users').textContent = data.overview.activeUsers || 0;
-        document.getElementById('pending-transactions').textContent = data.overview.pendingTransactions || 0;
-        document.getElementById('today-volume').textContent = parseFloat(data.overview.totalVolume || 0).toLocaleString();
-        document.getElementById('kyc-badge').textContent = data.overview.pendingKYC || 0;
+        // Update stats - with safe access
+        const overview = data.overview || {};
+        document.getElementById('total-users').textContent = overview.totalUsers || 0;
+        document.getElementById('active-users').textContent = overview.activeUsers || 0;
+        document.getElementById('pending-transactions').textContent = overview.pendingTransactions || 0;
+        document.getElementById('today-volume').textContent = parseFloat(overview.totalVolume || 0).toLocaleString();
+        document.getElementById('kyc-badge').textContent = overview.pendingKYC || 0;
 
         // Load recent transactions
         if (data.recentTransactions && Array.isArray(data.recentTransactions)) {

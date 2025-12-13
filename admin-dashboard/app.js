@@ -135,19 +135,36 @@ async function loadDashboard() {
         const response = await fetch(`${API_BASE}/admin/v2/dashboard`, {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
+        
+        if (!response.ok) {
+            console.error('Dashboard API error:', response.status, response.statusText);
+            return;
+        }
+        
         const data = await response.json();
+        console.log('Dashboard data received:', data);
+
+        // Check if data has the expected structure
+        if (!data || !data.overview) {
+            console.error('Invalid dashboard data structure:', data);
+            showNotification('Failed to load dashboard data', 'error');
+            return;
+        }
 
         // Update stats
-        document.getElementById('total-users').textContent = data.overview.totalUsers;
-        document.getElementById('active-users').textContent = data.overview.activeUsers;
-        document.getElementById('pending-transactions').textContent = data.overview.pendingTransactions;
-        document.getElementById('today-volume').textContent = parseFloat(data.overview.todayVolume).toLocaleString();
-        document.getElementById('kyc-badge').textContent = data.overview.pendingKYC;
+        document.getElementById('total-users').textContent = data.overview.totalUsers || 0;
+        document.getElementById('active-users').textContent = data.overview.activeUsers || 0;
+        document.getElementById('pending-transactions').textContent = data.overview.pendingTransactions || 0;
+        document.getElementById('today-volume').textContent = parseFloat(data.overview.totalVolume || 0).toLocaleString();
+        document.getElementById('kyc-badge').textContent = data.overview.pendingKYC || 0;
 
         // Load recent transactions
-        loadRecentTransactions(data.recentTransactions);
+        if (data.recentTransactions && Array.isArray(data.recentTransactions)) {
+            loadRecentTransactions(data.recentTransactions);
+        }
     } catch (error) {
         console.error('Load dashboard error:', error);
+        showNotification('Error loading dashboard', 'error');
     }
 }
 
@@ -191,10 +208,28 @@ async function loadUsers() {
             `${API_BASE}/admin/v2/users?search=${search}&status=${status}&kyc_status=${kyc}`,
             { headers: { 'Authorization': `Bearer ${authToken}` } }
         );
+        
+        if (!response.ok) {
+            console.error('Users API error:', response.status, response.statusText);
+            return;
+        }
+        
         const data = await response.json();
+        console.log('Users data received:', data);
 
         const tbody = document.querySelector('#users-table tbody');
         tbody.innerHTML = '';
+
+        if (!data.users || !Array.isArray(data.users)) {
+            console.error('Invalid users data:', data);
+            tbody.innerHTML = '<tr><td colspan="8">No users found</td></tr>';
+            return;
+        }
+
+        if (data.users.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8">No users found</td></tr>';
+            return;
+        }
 
         data.users.forEach(u => {
             const row = `
@@ -231,10 +266,28 @@ async function loadTransactions() {
             `${API_BASE}/admin/v2/transactions?status=${status}`,
             { headers: { 'Authorization': `Bearer ${authToken}` } }
         );
+        
+        if (!response.ok) {
+            console.error('Transactions API error:', response.status, response.statusText);
+            return;
+        }
+        
         const data = await response.json();
+        console.log('Transactions data received:', data);
 
         const tbody = document.querySelector('#transactions-table tbody');
         tbody.innerHTML = '';
+
+        if (!data.transactions || !Array.isArray(data.transactions)) {
+            console.error('Invalid transactions data:', data);
+            tbody.innerHTML = '<tr><td colspan="8">No transactions found</td></tr>';
+            return;
+        }
+
+        if (data.transactions.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8">No transactions found</td></tr>';
+            return;
+        }
 
         data.transactions.forEach(t => {
             const row = `
@@ -292,10 +345,28 @@ async function loadKYCRequests() {
         const response = await fetch(`${API_BASE}/admin/v2/kyc/pending`, {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
+        
+        if (!response.ok) {
+            console.error('KYC API error:', response.status, response.statusText);
+            return;
+        }
+        
         const data = await response.json();
+        console.log('KYC data received:', data);
 
         const container = document.getElementById('kyc-list');
         container.innerHTML = '';
+
+        if (!data.users || !Array.isArray(data.users)) {
+            console.error('Invalid KYC data:', data);
+            container.innerHTML = '<p>No pending KYC requests</p>';
+            return;
+        }
+
+        if (data.users.length === 0) {
+            container.innerHTML = '<p>No pending KYC requests</p>';
+            return;
+        }
 
         data.users.forEach(u => {
             const card = `
@@ -439,6 +510,12 @@ async function loadLogs() {
         const tbody = document.querySelector('#logs-table tbody');
         tbody.innerHTML = '';
 
+        if (!data.logs || !Array.isArray(data.logs)) {
+            console.error('Invalid logs data:', data);
+            tbody.innerHTML = '<tr><td colspan="5">No logs found</td></tr>';
+            return;
+        }
+
         data.logs.forEach(log => {
             const row = `
                 <tr>
@@ -467,8 +544,26 @@ function getUserIdFromToken() {
 }
 
 function showNotification(message, type = 'info') {
-    // Simple notification (you can enhance this)
-    alert(message);
+    // Create a simple toast notification
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        background: ${type === 'error' ? '#f44336' : type === 'success' ? '#4caf50' : '#2196f3'};
+        color: white;
+        border-radius: 4px;
+        z-index: 10000;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
 }
 
 function logout() {

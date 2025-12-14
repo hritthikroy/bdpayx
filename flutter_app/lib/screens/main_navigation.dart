@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
-import 'dart:math' as math;
 import 'home/home_screen.dart';
 import 'transactions/transactions_screen.dart';
 import 'chat/support_screen.dart';
@@ -13,13 +11,8 @@ class MainNavigation extends StatefulWidget {
   State<MainNavigation> createState() => _MainNavigationState();
 }
 
-class _MainNavigationState extends State<MainNavigation> with TickerProviderStateMixin {
+class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
-  late AnimationController _bubbleController;
-  late AnimationController _floatingController;
-  late Animation<double> _floatingAnimation;
-  final ScrollController _scrollController = ScrollController();
-  double _scrollOffset = 0.0;
 
   final List<Widget> _screens = [
     const HomeScreen(),
@@ -29,43 +22,11 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
   ];
 
   final List<NavItem> _navItems = [
-    NavItem(icon: Icons.home_rounded, label: 'Home', color: Color(0xFF6366F1)),
-    NavItem(icon: Icons.receipt_long_rounded, label: 'History', color: Color(0xFF8B5CF6)),
-    NavItem(icon: Icons.chat_bubble_rounded, label: 'Support', color: Color(0xFFA855F7)),
-    NavItem(icon: Icons.person_rounded, label: 'Profile', color: Color(0xFFEC4899)),
+    NavItem(icon: Icons.home_rounded, label: 'Home', color: const Color(0xFF6366F1)),
+    NavItem(icon: Icons.receipt_long_rounded, label: 'History', color: const Color(0xFF8B5CF6)),
+    NavItem(icon: Icons.chat_bubble_rounded, label: 'Support', color: const Color(0xFFA855F7)),
+    NavItem(icon: Icons.person_rounded, label: 'Profile', color: const Color(0xFFEC4899)),
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    _bubbleController = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
-    
-    _floatingController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
-      vsync: this,
-    )..repeat(reverse: true);
-    
-    _floatingAnimation = Tween<double>(begin: -3, end: 3).animate(
-      CurvedAnimation(parent: _floatingController, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _bubbleController.dispose();
-    _floatingController.dispose();
-    _scrollController.dispose();
-    super.dispose();
-  }
-  
-  void _onScroll(double offset) {
-    setState(() {
-      _scrollOffset = offset.clamp(0.0, 100.0);
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -107,10 +68,7 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
     
     return Expanded(
       child: GestureDetector(
-        onTap: () {
-          setState(() => _currentIndex = index);
-          _bubbleController.forward(from: 0);
-        },
+        onTap: () => setState(() => _currentIndex = index),
         behavior: HitTestBehavior.opaque,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),

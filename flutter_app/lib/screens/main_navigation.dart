@@ -66,15 +66,6 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
       _scrollOffset = offset.clamp(0.0, 100.0);
     });
   }
-}
-
-class NavItem {
-  final IconData icon;
-  final String label;
-  final Color color;
-  
-  NavItem({required this.icon, required this.label, required this.color});
-}
 
   @override
   Widget build(BuildContext context) {
@@ -302,4 +293,12 @@ class NavItem {
       ),
     );
   }
+}
+
+class NavItem {
+  final IconData icon;
+  final String label;
+  final Color color;
+  
+  NavItem({required this.icon, required this.label, required this.color});
 }

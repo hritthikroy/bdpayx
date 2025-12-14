@@ -205,7 +205,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             Expanded(
                               child: Row(
                                 children: [
-                                  // User Avatar
+                                  // User Avatar - 3D Style
                                   Container(
                                     width: 54,
                                     height: 54,
@@ -222,45 +222,77 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                           offset: const Offset(0, 4),
                                         ),
                                       ],
-                                      gradient: user?.photoUrl == null ? const LinearGradient(
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                        colors: [
-                                          Color(0xFF6366F1),
-                                          Color(0xFF8B5CF6),
-                                          Color(0xFFA855F7),
-                                        ],
-                                      ) : null,
                                     ),
-                                    child: user?.photoUrl != null
-                                        ? ClipOval(
-                                            child: Image.network(
+                                    child: ClipOval(
+                                      child: user?.photoUrl != null
+                                          ? Image.network(
                                               user!.photoUrl!,
                                               fit: BoxFit.cover,
                                               errorBuilder: (context, error, stackTrace) {
-                                                return Center(
-                                                  child: Text(
-                                                    (user.fullName ?? 'U')[0].toUpperCase(),
-                                                    style: const TextStyle(
-                                                      fontSize: 22,
-                                                      fontWeight: FontWeight.bold,
-                                                      color: Colors.white,
+                                                // Fallback to 3D avatar
+                                                return Image.network(
+                                                  'https://api.dicebear.com/7.x/avataaars/png?seed=${user.phone ?? user.id}&backgroundColor=6366f1,8b5cf6,a855f7&radius=50',
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (context, error, stackTrace) {
+                                                    // Final fallback to gradient
+                                                    return Container(
+                                                      decoration: const BoxDecoration(
+                                                        gradient: LinearGradient(
+                                                          begin: Alignment.topLeft,
+                                                          end: Alignment.bottomRight,
+                                                          colors: [
+                                                            Color(0xFF6366F1),
+                                                            Color(0xFF8B5CF6),
+                                                            Color(0xFFA855F7),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      child: Center(
+                                                        child: Text(
+                                                          (user.fullName ?? 'U')[0].toUpperCase(),
+                                                          style: const TextStyle(
+                                                            fontSize: 22,
+                                                            fontWeight: FontWeight.bold,
+                                                            color: Colors.white,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
+                                                );
+                                              },
+                                            )
+                                          : Image.network(
+                                              'https://api.dicebear.com/7.x/avataaars/png?seed=${user?.phone ?? user?.id ?? 'default'}&backgroundColor=6366f1,8b5cf6,a855f7&radius=50',
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (context, error, stackTrace) {
+                                                // Fallback to gradient
+                                                return Container(
+                                                  decoration: const BoxDecoration(
+                                                    gradient: LinearGradient(
+                                                      begin: Alignment.topLeft,
+                                                      end: Alignment.bottomRight,
+                                                      colors: [
+                                                        Color(0xFF6366F1),
+                                                        Color(0xFF8B5CF6),
+                                                        Color(0xFFA855F7),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  child: Center(
+                                                    child: Text(
+                                                      (user?.fullName ?? 'U')[0].toUpperCase(),
+                                                      style: const TextStyle(
+                                                        fontSize: 22,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: Colors.white,
+                                                      ),
                                                     ),
                                                   ),
                                                 );
                                               },
                                             ),
-                                          )
-                                        : Center(
-                                            child: Text(
-                                              (user?.fullName ?? 'U')[0].toUpperCase(),
-                                              style: const TextStyle(
-                                                fontSize: 22,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                          ),
+                                    ),
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(

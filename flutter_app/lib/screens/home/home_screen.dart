@@ -26,6 +26,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late Animation<double> _cardAnimation;
   late AnimationController _avatarPulseController;
   late Animation<double> _avatarPulseAnimation;
+  late AnimationController _avatarTiltController;
+  late Animation<double> _avatarTiltAnimation;
   int _currentUpdateIndex = 0;
   
   // Dynamic updates list
@@ -96,20 +98,37 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         curve: Curves.easeInOut,
       ),
     );
-    _startAvatarPulse();
+    
+    // Avatar tilt animation - simulates head movement
+    _avatarTiltController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    );
+    _avatarTiltAnimation = Tween<double>(begin: -0.05, end: 0.05).animate(
+      CurvedAnimation(
+        parent: _avatarTiltController,
+        curve: Curves.easeInOut,
+      ),
+    );
+    
+    _startAvatarAnimations();
     _startUpdateRotation();
   }
   
-  void _startAvatarPulse() {
-    Future.delayed(const Duration(seconds: 3), () {
+  void _startAvatarAnimations() {
+    // Start pulse animation
+    Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
         _avatarPulseController.forward().then((_) {
           _avatarPulseController.reverse().then((_) {
-            _startAvatarPulse();
+            _startAvatarAnimations();
           });
         });
       }
     });
+    
+    // Start tilt animation (head movement)
+    _avatarTiltController.repeat(reverse: true);
   }
   
   void _startUpdateRotation() {
@@ -127,6 +146,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void dispose() {
     _cardAnimationController.dispose();
     _avatarPulseController.dispose();
+    _avatarTiltController.dispose();
     _amountController.dispose();
     super.dispose();
   }
@@ -233,10 +253,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             Expanded(
                               child: Row(
                                 children: [
-                                  // User Avatar - Fun & Catchy with Pulse Animation
+                                  // User Avatar - Animated Robot Head (Like Kiro)
                                   ScaleTransition(
                                     scale: _avatarPulseAnimation,
-                                    child: Container(
+                                    child: RotationTransition(
+                                      turns: _avatarTiltAnimation,
+                                      child: Container(
                                       width: 54,
                                       height: 54,
                                       decoration: BoxDecoration(
@@ -254,14 +276,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         ],
                                       ),
                                       child: ClipOval(
-                                        child: user?.photoUrl != null
-                                            ? Image.network(
-                                                user!.photoUrl!,
-                                                fit: BoxFit.cover,
-                                                errorBuilder: (context, error, stackTrace) {
-                                                  // Fallback to fun emoji avatar
-                                                  return Image.network(
-                                                    'https://api.dicebear.com/7.x/big-smile/png?seed=${user.phone ?? user.id}&backgroundColor=6366f1,8b5cf6,a855f7',
+                                          child: user?.photoUrl != null
+                                              ? Image.network(
+                                                  user!.photoUrl!,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (context, error, stackTrace) {
+                                                    // Fallback to robot avatar (like Kiro)
+                                                    return Image.network(
+                                                      'https://api.dicebear.com/7.x/bottts/png?seed=${user.phone ?? user.id}&backgroundColor=6366f1,8b5cf6,a855f7',
                                                     fit: BoxFit.cover,
                                                     errorBuilder: (context, err, stack) {
                                                       // Final fallback to gradient
@@ -293,8 +315,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                                   );
                                                 },
                                               )
-                                            : Image.network(
-                                                'https://api.dicebear.com/7.x/big-smile/png?seed=${user?.phone ?? user?.id ?? 'default'}&backgroundColor=6366f1,8b5cf6,a855f7',
+                                              : Image.network(
+                                                  'https://api.dicebear.com/7.x/bottts/png?seed=${user?.phone ?? user?.id ?? 'default'}&backgroundColor=6366f1,8b5cf6,a855f7',
                                                 fit: BoxFit.cover,
                                                 errorBuilder: (context, error, stackTrace) {
                                                   // Fallback to gradient
@@ -324,6 +346,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                                   );
                                                 },
                                               ),
+                                        ),
                                       ),
                                     ),
                                   ),

@@ -113,9 +113,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 height: 100,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
-                                  // Fallback to cartoon avatar
+                                  // Fallback to fun emoji avatar
                                   return Image.network(
-                                    'https://api.dicebear.com/7.x/notionists/png?seed=${user.phone ?? user.id}&backgroundColor=6366f1,8b5cf6,a855f7&size=100',
+                                    'https://api.dicebear.com/7.x/big-smile/png?seed=${user.phone ?? user.id}&backgroundColor=6366f1,8b5cf6,a855f7&size=100',
                                     width: 100,
                                     height: 100,
                                     fit: BoxFit.cover,
@@ -150,7 +150,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 },
                               )
                             : Image.network(
-                                'https://api.dicebear.com/7.x/notionists/png?seed=${user?.phone ?? user?.id ?? 'default'}&backgroundColor=6366f1,8b5cf6,a855f7&size=100',
+                                'https://api.dicebear.com/7.x/big-smile/png?seed=${user?.phone ?? user?.id ?? 'default'}&backgroundColor=6366f1,8b5cf6,a855f7&size=100',
                                 width: 100,
                                 height: 100,
                                 fit: BoxFit.cover,

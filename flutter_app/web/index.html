@@ -20,19 +20,23 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&family=Noto+Color+Emoji&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   
   <style>
-    /* Load Material Icons from local assets */
+    /* Load Material Icons from local assets with Google Fonts fallback */
     @font-face {
       font-family: 'MaterialIcons';
       font-style: normal;
       font-weight: 400;
-      src: url('assets/fonts/MaterialIcons-Regular.otf') format('opentype');
+      src: local('Material Icons'),
+           local('MaterialIcons-Regular'),
+           url('assets/fonts/MaterialIcons-Regular.otf') format('opentype'),
+           url('https://fonts.gstatic.com/s/materialicons/v140/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2') format('woff2');
     }
     
     /* Ensure icons use the correct font */
     .material-icons {
-      font-family: 'MaterialIcons' !important;
+      font-family: 'Material Icons', 'MaterialIcons' !important;
       font-weight: normal;
       font-style: normal;
       font-size: 24px;
@@ -50,8 +54,10 @@
     }
   </style>
   <script>
+    // Completely disable service worker and clear any existing ones
     var serviceWorkerVersion = null;
     var scriptLoaded = false;
+    
     function loadMainDartJs() {
       if (scriptLoaded) {
         return;
@@ -63,11 +69,24 @@
       document.body.append(scriptTag);
     }
 
+    // Clear all service workers on load
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function () {
-        var serviceWorkerUrl = 'flutter_service_worker.js?v=' + serviceWorkerVersion;
-        navigator.serviceWorker.register(serviceWorkerUrl);
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for(let registration of registrations) {
+          registration.unregister();
+          console.log('Service worker unregistered');
+        }
       });
+      
+      // Clear all caches
+      if ('caches' in window) {
+        caches.keys().then(function(cacheNames) {
+          cacheNames.forEach(function(cacheName) {
+            caches.delete(cacheName);
+            console.log('Cache deleted:', cacheName);
+          });
+        });
+      }
     }
   </script>
   <style>

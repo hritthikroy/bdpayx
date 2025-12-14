@@ -8,6 +8,15 @@ const PORT = 8080;
 // Enable CORS
 app.use(cors());
 
+// Disable caching to ensure fresh content (especially for fonts and icons)
+app.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
+  next();
+});
+
 // Serve static files from Flutter web directory
 const webPath = path.join(__dirname, 'flutter_app', 'build', 'web');
 app.use(express.static(webPath));

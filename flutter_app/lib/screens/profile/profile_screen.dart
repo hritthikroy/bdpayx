@@ -104,17 +104,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ],
                       ),
                       child: user?.photoUrl != null
-                          ? CircleAvatar(
-                              radius: 50,
-                              backgroundColor: Colors.white,
-                              backgroundImage: NetworkImage(user!.photoUrl!),
+                          ? ClipOval(
+                              child: Image.network(
+                                user!.photoUrl!,
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    width: 100,
+                                    height: 100,
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          Color(0xFF6366F1),
+                                          Color(0xFF8B5CF6),
+                                          Color(0xFFA855F7),
+                                        ],
+                                      ),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        user.fullName?.substring(0, 1).toUpperCase() ?? 'U',
+                                        style: const TextStyle(
+                                          fontSize: 42,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
                             )
-                          : CircleAvatar(
-                              radius: 50,
-                              backgroundColor: Colors.white,
-                              backgroundImage: NetworkImage(
-                                // DiceBear Avatars - 3D cartoon style
-                                'https://api.dicebear.com/7.x/avataaars/svg?seed=${Uri.encodeComponent(user?.fullName ?? 'User')}&backgroundColor=b6e3f4,c0aede,d1d4f9',
+                          : Container(
+                              width: 100,
+                              height: 100,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Color(0xFF6366F1),
+                                    Color(0xFF8B5CF6),
+                                    Color(0xFFA855F7),
+                                  ],
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  user?.fullName?.substring(0, 1).toUpperCase() ?? 'U',
+                                  style: const TextStyle(
+                                    fontSize: 42,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
                               ),
                             ),
                     ),

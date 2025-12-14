@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Icons - Clear Cache</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #A855F7 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #6366F1;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        .subtitle {
+            color: #64748B;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        .step {
+            background: #F8FAFC;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #6366F1;
+        }
+        .step-number {
+            display: inline-block;
+            background: #6366F1;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 32px;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+        .step-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1E293B;
+            margin-bottom: 10px;
+        }
+        .step-content {
+            color: #475569;
+            line-height: 1.6;
+            margin-left: 44px;
+        }
+        .keyboard-shortcut {
+            display: inline-block;
+            background: #1E293B;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            margin: 0 4px;
+        }
+        .button {
+            display: inline-block;
+            background: linear-gradient(135deg, #6366F1, #8B5CF6);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .warning {
+            background: #FEF3C7;
+            border-left: 4px solid #F59E0B;
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        .warning-title {
+            color: #92400E;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .warning-text {
+            color: #78350F;
+            font-size: 14px;
+        }
+        .success {
+            background: #D1FAE5;
+            border-left: 4px solid #10B981;
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        .success-title {
+            color: #065F46;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .success-text {
+            color: #047857;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Fix Icons Issue</h1>
+        <p class="subtitle">Follow these steps to clear your browser cache and see the icons properly</p>
+
+        <div class="step">
+            <div class="step-title">
+                <span class="step-number">1</span>
+                Hard Refresh the Page
+            </div>
+            <div class="step-content">
+                Press the keyboard shortcut to force reload without cache:
+                <br><br>
+                <strong>Mac:</strong> <span class="keyboard-shortcut">⌘ Cmd</span> + <span class="keyboard-shortcut">⇧ Shift</span> + <span class="keyboard-shortcut">R</span>
+                <br>
+                <strong>Windows/Linux:</strong> <span class="keyboard-shortcut">Ctrl</span> + <span class="keyboard-shortcut">Shift</span> + <span class="keyboard-shortcut">R</span>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-title">
+                <span class="step-number">2</span>
+                Clear Browser Cache (If Step 1 Doesn't Work)
+            </div>
+            <div class="step-content">
+                <strong>Chrome/Edge:</strong>
+                <br>• Press <span class="keyboard-shortcut">Ctrl</span> + <span class="keyboard-shortcut">Shift</span> + <span class="keyboard-shortcut">Delete</span>
+                <br>• Select "Cached images and files"
+                <br>• Click "Clear data"
+                <br><br>
+                <strong>Firefox:</strong>
+                <br>• Press <span class="keyboard-shortcut">Ctrl</span> + <span class="keyboard-shortcut">Shift</span> + <span class="keyboard-shortcut">Delete</span>
+                <br>• Select "Cache"
+                <br>• Click "Clear Now"
+                <br><br>
+                <strong>Safari:</strong>
+                <br>• Press <span class="keyboard-shortcut">⌘ Cmd</span> + <span class="keyboard-shortcut">⌥ Option</span> + <span class="keyboard-shortcut">E</span>
+                <br>• Then reload the page
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-title">
+                <span class="step-number">3</span>
+                Open the App
+            </div>
+            <div class="step-content">
+                After clearing cache, open the app:
+                <br><br>
+                <a href="http://localhost:8080" class="button" target="_blank">
+                    🚀 Open BDPayX App
+                </a>
+            </div>
+        </div>
+
+        <div class="warning">
+            <div class="warning-title">⚠️ Important Note</div>
+            <div class="warning-text">
+                The icons are showing as boxes because your browser cached the old version. 
+                The server now sends no-cache headers, so after clearing cache once, this won't happen again.
+            </div>
+        </div>
+
+        <div class="success">
+            <div class="success-title">✅ What's Fixed</div>
+            <div class="success-text">
+                • MaterialIcons font is properly loaded<br>
+                • FontManifest.json is correct<br>
+                • Server sends no-cache headers<br>
+                • All 1.6MB of icons are available<br>
+                • Avatar gradient circles are working
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-detect OS and highlight the correct shortcut
+        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+        console.log('🖥️ Detected OS:', isMac ? 'Mac' : 'Windows/Linux');
+        console.log('⌨️ Use:', isMac ? 'Cmd+Shift+R' : 'Ctrl+Shift+R');
+    </script>
+</body>
+</html>

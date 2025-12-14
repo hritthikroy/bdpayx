@@ -60,7 +60,10 @@ class _AppInitializerState extends State<AppInitializer> {
   @override
   void initState() {
     super.initState();
-    _initializeApp();
+    // Initialize after first frame to avoid flickering
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeApp();
+    });
   }
 
   Future<void> _initializeApp() async {
@@ -71,10 +74,10 @@ class _AppInitializerState extends State<AppInitializer> {
     // Initialize exchange provider immediately (no delay)
     exchangeProvider.initialize();
     
-    // Load token
-    await authProvider.loadToken();
+    // Load token in parallel
+    authProvider.loadToken();
     
-    // Navigate to main directly (skip splash on reload)
+    // Navigate immediately without waiting
     if (mounted) {
       Navigator.pushReplacementNamed(context, '/main');
     }

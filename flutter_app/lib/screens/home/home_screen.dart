@@ -205,8 +205,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             Expanded(
                               child: Row(
                                 children: [
-                                  // User Avatar - 3D Cartoon Style
+                                  // User Avatar
                                   Container(
+                                    width: 54,
+                                    height: 54,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       border: Border.all(
@@ -220,19 +222,43 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                           offset: const Offset(0, 4),
                                         ),
                                       ],
+                                      gradient: user?.photoUrl == null ? const LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          Color(0xFF6366F1),
+                                          Color(0xFF8B5CF6),
+                                          Color(0xFFA855F7),
+                                        ],
+                                      ) : null,
                                     ),
                                     child: user?.photoUrl != null
-                                        ? CircleAvatar(
-                                            radius: 24,
-                                            backgroundColor: Colors.white,
-                                            backgroundImage: NetworkImage(user!.photoUrl!),
+                                        ? ClipOval(
+                                            child: Image.network(
+                                              user!.photoUrl!,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (context, error, stackTrace) {
+                                                return Center(
+                                                  child: Text(
+                                                    (user.fullName ?? 'U')[0].toUpperCase(),
+                                                    style: const TextStyle(
+                                                      fontSize: 22,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                            ),
                                           )
-                                        : CircleAvatar(
-                                            radius: 24,
-                                            backgroundColor: Colors.white,
-                                            backgroundImage: NetworkImage(
-                                              // DiceBear Avatars - 3D cartoon style
-                                              'https://api.dicebear.com/7.x/avataaars/svg?seed=${Uri.encodeComponent(user?.fullName ?? 'User')}&backgroundColor=b6e3f4,c0aede,d1d4f9',
+                                        : Center(
+                                            child: Text(
+                                              (user?.fullName ?? 'U')[0].toUpperCase(),
+                                              style: const TextStyle(
+                                                fontSize: 22,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                              ),
                                             ),
                                           ),
                                   ),

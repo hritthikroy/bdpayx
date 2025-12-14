@@ -287,83 +287,41 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 Expanded(
                                   child: Row(
                                     children: [
-                                      // User Avatar - Animated
+                                      // User Avatar - Modern Profile Picture
                                       ScaleTransition(
                                         scale: _avatarPulseAnimation,
-                                        child: RotationTransition(
-                                          turns: _avatarTiltAnimation,
-                                          child: Container(
-                                            width: 50,
-                                            height: 50,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              border: Border.all(
-                                                color: Colors.white,
-                                                width: 2.5,
+                                        child: Container(
+                                          width: 52,
+                                          height: 52,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            gradient: const LinearGradient(
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                              colors: [Color(0xFFFFFFFF), Color(0xFFF0F0F0)],
+                                            ),
+                                            border: Border.all(
+                                              color: Colors.white,
+                                              width: 3,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(0.2),
+                                                blurRadius: 15,
+                                                offset: const Offset(0, 5),
                                               ),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.black.withOpacity(0.3),
-                                                  blurRadius: 12,
-                                                  offset: const Offset(0, 4),
-                                                ),
-                                              ],
-                                            ),
-                                            child: ClipOval(
-                                              child: user?.photoUrl != null
-                                                  ? Image.network(
-                                                      user!.photoUrl!,
-                                                      fit: BoxFit.cover,
-                                                      errorBuilder: (context, error, stackTrace) {
-                                                        return Image.network(
-                                                          'https://api.dicebear.com/7.x/bottts/png?seed=${user.phone ?? user.id}&backgroundColor=6366f1,8b5cf6,a855f7',
-                                                          fit: BoxFit.cover,
-                                                          errorBuilder: (context, err, stack) {
-                                                            return Container(
-                                                              decoration: const BoxDecoration(
-                                                                gradient: LinearGradient(
-                                                                  colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                                                                ),
-                                                              ),
-                                                              child: Center(
-                                                                child: Text(
-                                                                  (user.fullName ?? 'U')[0].toUpperCase(),
-                                                                  style: const TextStyle(
-                                                                    fontSize: 20,
-                                                                    fontWeight: FontWeight.bold,
-                                                                    color: Colors.white,
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                            );
-                                                          },
-                                                        );
-                                                      },
-                                                    )
-                                                  : Image.network(
-                                                      'https://api.dicebear.com/7.x/bottts/png?seed=${user?.phone ?? user?.id ?? 'default'}&backgroundColor=6366f1,8b5cf6,a855f7',
-                                                      fit: BoxFit.cover,
-                                                      errorBuilder: (context, error, stackTrace) {
-                                                        return Container(
-                                                          decoration: const BoxDecoration(
-                                                            gradient: LinearGradient(
-                                                              colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                                                            ),
-                                                          ),
-                                                          child: Center(
-                                                            child: Text(
-                                                              (user?.fullName ?? 'U')[0].toUpperCase(),
-                                                              style: const TextStyle(
-                                                                fontSize: 20,
-                                                                fontWeight: FontWeight.bold,
-                                                                color: Colors.white,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        );
-                                                      },
-                                                    ),
-                                            ),
+                                            ],
+                                          ),
+                                          child: ClipOval(
+                                            child: user?.photoUrl != null && user!.photoUrl!.isNotEmpty
+                                                ? Image.network(
+                                                    user.photoUrl!,
+                                                    fit: BoxFit.cover,
+                                                    errorBuilder: (context, error, stackTrace) {
+                                                      return _buildDefaultAvatar(user);
+                                                    },
+                                                  )
+                                                : _buildDefaultAvatar(user),
                                           ),
                                         ),
                                       ),
@@ -1091,6 +1049,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDefaultAvatar(user) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFA855F7)],
+        ),
+      ),
+      child: Center(
+        child: Text(
+          (user?.fullName ?? 'U')[0].toUpperCase(),
+          style: const TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            letterSpacing: 0.5,
+          ),
         ),
       ),
     );

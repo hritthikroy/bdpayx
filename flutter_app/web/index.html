@@ -13,26 +13,32 @@
   <title>BDPayX - Currency Exchange</title>
   <link rel="manifest" href="manifest.json">
   
-  <!-- Material Icons -->
-  <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Icons+Outlined" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Icons+Round" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Icons+Sharp" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Icons+Two+Tone" rel="stylesheet">
+  <!-- Load fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&family=Noto+Color+Emoji&display=swap" rel="stylesheet">
   
   <style>
-    /* Ensure Material Icons load properly */
+    /* Load Material Icons from local assets */
+    @font-face {
+      font-family: 'MaterialIcons';
+      font-style: normal;
+      font-weight: 400;
+      src: url('assets/fonts/MaterialIcons-Regular.otf') format('opentype');
+    }
+    
+    /* Ensure icons use the correct font */
     .material-icons {
-      font-family: 'Material Icons' !important;
+      font-family: 'MaterialIcons' !important;
       font-weight: normal;
       font-style: normal;
       font-size: 24px;
-      line-height: 1;
-      letter-spacing: normal;
-      text-transform: none;
       display: inline-block;
-      white-space: nowrap;
+      line-height: 1;
+      text-transform: none;
+      letter-spacing: normal;
       word-wrap: normal;
+      white-space: nowrap;
       direction: ltr;
       -webkit-font-smoothing: antialiased;
       text-rendering: optimizeLegibility;

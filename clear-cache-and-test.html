@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Clear Cache & Test Icons</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 40px;
+            background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #A855F7 100%);
+            color: white;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            color: #1E293B;
+        }
+        button {
+            background: #6366F1;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px;
+            font-weight: 600;
+        }
+        button:hover {
+            background: #4F46E5;
+        }
+        .status {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        .success { background: #D1FAE5; color: #065F46; }
+        .error { background: #FEE2E2; color: #991B1B; }
+        .info { background: #DBEAFE; color: #1E40AF; }
+        h1 { color: #6366F1; }
+        .step {
+            text-align: left;
+            padding: 15px;
+            background: #F8FAFC;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #6366F1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 Clear Cache & Fix Icons</h1>
+        <p>This will clear all cached data and service workers for the Flutter app.</p>
+        
+        <div id="status" class="status info">
+            Ready to clear cache
+        </div>
+
+        <div class="step">
+            <strong>Step 1:</strong> Click the button below to unregister service workers
+        </div>
+        
+        <button onclick="clearEverything()">🗑️ Clear All Cache & Service Workers</button>
+        
+        <div class="step">
+            <strong>Step 2:</strong> After clearing, click to open the app
+        </div>
+        
+        <button onclick="openApp()">🚀 Open Flutter App</button>
+
+        <div class="step">
+            <strong>Step 3:</strong> In the app, press <code>Cmd+Shift+R</code> (Mac) or <code>Ctrl+Shift+R</code> (Windows) to hard refresh
+        </div>
+
+        <div id="details" style="margin-top: 20px; text-align: left; font-size: 14px; color: #64748B;"></div>
+    </div>
+
+    <script>
+        const status = document.getElementById('status');
+        const details = document.getElementById('details');
+
+        async function clearEverything() {
+            status.className = 'status info';
+            status.textContent = 'Clearing...';
+            details.innerHTML = '';
+            
+            let log = [];
+
+            try {
+                // 1. Unregister all service workers
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (let registration of registrations) {
+                        await registration.unregister();
+                        log.push(`✅ Unregistered service worker: ${registration.scope}`);
+                    }
+                    if (registrations.length === 0) {
+                        log.push('ℹ️ No service workers found');
+                    }
+                }
+
+                // 2. Clear all caches
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    for (let cacheName of cacheNames) {
+                        await caches.delete(cacheName);
+                        log.push(`✅ Deleted cache: ${cacheName}`);
+                    }
+                    if (cacheNames.length === 0) {
+                        log.push('ℹ️ No caches found');
+                    }
+                }
+
+                // 3. Clear localStorage
+                localStorage.clear();
+                log.push('✅ Cleared localStorage');
+
+                // 4. Clear sessionStorage
+                sessionStorage.clear();
+                log.push('✅ Cleared sessionStorage');
+
+                status.className = 'status success';
+                status.textContent = '✅ All cache cleared successfully!';
+                details.innerHTML = log.join('<br>');
+
+            } catch (error) {
+                status.className = 'status error';
+                status.textContent = '❌ Error: ' + error.message;
+                details.innerHTML = log.join('<br>') + '<br>❌ ' + error.message;
+            }
+        }
+
+        function openApp() {
+            window.open('http://localhost:8080', '_blank');
+        }
+
+        // Check current status
+        window.addEventListener('load', async () => {
+            let info = [];
+            
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                info.push(`Service Workers: ${registrations.length}`);
+            }
+            
+            if ('caches' in window) {
+                const cacheNames = await caches.keys();
+                info.push(`Caches: ${cacheNames.length}`);
+            }
+            
+            details.innerHTML = '<strong>Current Status:</strong><br>' + info.join('<br>');
+        });
+    </script>
+</body>
+</html>

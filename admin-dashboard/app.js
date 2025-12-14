@@ -1,5 +1,5 @@
 // Admin Dashboard JavaScript
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = 'http://localhost:8081/api';
 let socket;
 let authToken = localStorage.getItem('admin_token');
 let currentTransactionId = null;
@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Socket.IO Connection
 function initializeSocket() {
-    socket = io('http://localhost:3000');
+    socket = io('http://localhost:8081');
     
     socket.on('connect', () => {
         console.log('Connected to server');

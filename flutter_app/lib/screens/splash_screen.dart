@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/exchange_provider.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -13,16 +14,24 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _checkAuth();
+    _initialize();
   }
 
-  Future<void> _checkAuth() async {
+  Future<void> _initialize() async {
+    // Get providers
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    await authProvider.loadToken();
+    final exchangeProvider = Provider.of<ExchangeProvider>(context, listen: false);
     
-    await Future.delayed(const Duration(seconds: 2));
+    // Initialize exchange provider first (this starts the timers)
+    exchangeProvider.initialize();
     
-    // Always go to main screen - let users browse without login
+    // Load auth token and wait minimum 3 seconds for smooth transition
+    await Future.wait([
+      authProvider.loadToken(),
+      Future.delayed(const Duration(seconds: 3)),
+    ]);
+    
+    // Navigate only once after everything is ready
     if (mounted) {
       Navigator.pushReplacementNamed(context, '/main');
     }

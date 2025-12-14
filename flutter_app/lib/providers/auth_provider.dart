@@ -106,9 +106,12 @@ class AuthProvider with ChangeNotifier {
       }
     }
     
+    // Fetch fresh profile data in background without notifying
     if (_token != null) {
-      await fetchProfile();
+      fetchProfile(); // Don't await - let it run in background
     }
+    
+    // Only notify once after initial load
     notifyListeners();
   }
 
@@ -122,8 +125,19 @@ class AuthProvider with ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
-        _user = User.fromJson(json.decode(response.body));
-        notifyListeners();
+        final newUser = User.fromJson(json.decode(response.body));
+        // Only notify if user data actually changed
+        if (_user == null || _user!.id != newUser.id || _user!.balance != newUser.balance) {
+          _user = newUser;
+          
+          // Save updated user data
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('user_data', json.encode(newUser.toJson()));
+          
+          notifyListeners();
+        } else {
+          _user = newUser;
+        }
       }
     } catch (e) {
       print('Fetch profile error: $e');

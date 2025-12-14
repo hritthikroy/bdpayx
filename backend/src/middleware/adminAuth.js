@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { supabase } = require('../config/supabase');
+const pool = require('../config/database');
 
 // Admin authentication middleware
 const adminAuth = async (req, res, next) => {
@@ -13,15 +13,16 @@ const adminAuth = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // Get user from database
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', decoded.userId)
-      .single();
+    const result = await pool.query(
+      'SELECT * FROM users WHERE id = $1',
+      [decoded.userId]
+    );
 
-    if (error || !user) {
+    if (result.rows.length === 0) {
       return res.status(401).json({ error: 'Invalid token' });
     }
+
+    const user = result.rows[0];
 
     // Check if user is admin
     if (user.role !== 'admin' && user.role !== 'super_admin') {

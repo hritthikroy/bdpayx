@@ -13,6 +13,7 @@ class ExchangeProvider with ChangeNotifier {
   int _countdown = 60;
   bool _isLoading = false;
   String? _error;
+  bool _isInitialized = false;
 
   double get baseRate => _baseRate;
   double get currentRate => _currentRate;
@@ -22,6 +23,17 @@ class ExchangeProvider with ChangeNotifier {
   int get countdown => _countdown;
 
   ExchangeProvider() {
+    // Initialize with default rate immediately
+    _baseRate = 0.70;
+    _currentRate = 0.70;
+    // Don't auto-initialize - wait for explicit call from splash screen
+  }
+  
+  // Explicit initialization method called from splash screen
+  void initialize() {
+    if (_isInitialized) return; // Prevent double initialization
+    
+    _isInitialized = true;
     fetchExchangeRate();
     fetchPricingTiers();
     startAutoRefresh();
@@ -30,11 +42,12 @@ class ExchangeProvider with ChangeNotifier {
   void startAutoRefresh() {
     _countdown = 60;
     
-    // Countdown timer (updates every second)
+    // Countdown timer (updates every second) - NO NOTIFICATIONS
+    // This prevents unnecessary rebuilds
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (_countdown > 0) {
         _countdown--;
-        notifyListeners();
+        // Don't notify listeners - countdown is just internal state
       } else {
         _countdown = 60;
       }
@@ -49,27 +62,35 @@ class ExchangeProvider with ChangeNotifier {
 
   Future<void> fetchExchangeRate() async {
     try {
-      _isLoading = true;
-      _error = null;
-      notifyListeners();
-      
       final response = await http.get(Uri.parse(ApiConfig.exchangeRate)).timeout(
         const Duration(seconds: 5),
       );
       
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        _baseRate = double.parse(data['base_rate'].toString());
-        _error = null;
+        final newRate = double.parse(data['base_rate'].toString());
+        
+        // Only notify if rate actually changed and initialized
+        if (newRate != _baseRate && _isInitialized) {
+          _baseRate = newRate;
+          _error = null;
+          notifyListeners();
+        } else {
+          _baseRate = newRate;
+          _error = null;
+        }
       } else {
-        _error = 'Failed to fetch rate';
+        if (_error == null && _isInitialized) {
+          _error = 'Failed to fetch rate';
+          notifyListeners();
+        }
       }
     } catch (e) {
-      _error = 'Network error: ${e.toString()}';
-      print('Fetch rate error: $e');
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (_error == null && _isInitialized) {
+        _error = 'Network error';
+        print('Fetch rate error: $e');
+        notifyListeners();
+      }
     }
   }
 
@@ -78,7 +99,10 @@ class ExchangeProvider with ChangeNotifier {
       final response = await http.get(Uri.parse(ApiConfig.pricingTiers));
       if (response.statusCode == 200) {
         _pricingTiers = List<Map<String, dynamic>>.from(json.decode(response.body));
-        notifyListeners();
+        // Only notify if initialized
+        if (_isInitialized) {
+          notifyListeners();
+        }
       }
     } catch (e) {
       print('Fetch tiers error: $e');

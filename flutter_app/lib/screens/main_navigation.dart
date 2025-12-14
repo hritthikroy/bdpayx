@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'home/home_screen.dart';
 import 'transactions/transactions_screen.dart';
-import 'chat/chat_screen.dart';
+import 'chat/support_screen.dart';
 import 'profile/profile_screen.dart';
 
 class MainNavigation extends StatefulWidget {
@@ -17,7 +17,7 @@ class _MainNavigationState extends State<MainNavigation> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const TransactionsScreen(),
-    const ChatScreen(),
+    const SupportScreen(),
     const ProfileScreen(),
   ];
 

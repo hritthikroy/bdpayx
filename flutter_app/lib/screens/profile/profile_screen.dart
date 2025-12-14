@@ -109,37 +109,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               backgroundColor: Colors.white,
                               backgroundImage: NetworkImage(user!.photoUrl!),
                             )
-                          : Container(
-                              width: 100,
-                              height: 100,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    Color(0xFFFBBF24),
-                                    Color(0xFFF59E0B),
-                                    Color(0xFFEF4444),
-                                  ],
-                                ),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  user?.fullName?.substring(0, 1).toUpperCase() ?? 'U',
-                                  style: const TextStyle(
-                                    fontSize: 48,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    shadows: [
-                                      Shadow(
-                                        color: Colors.black26,
-                                        offset: Offset(0, 2),
-                                        blurRadius: 4,
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                          : CircleAvatar(
+                              radius: 50,
+                              backgroundColor: Colors.white,
+                              backgroundImage: NetworkImage(
+                                // DiceBear Avatars - 3D cartoon style
+                                'https://api.dicebear.com/7.x/avataaars/svg?seed=${Uri.encodeComponent(user?.fullName ?? 'User')}&backgroundColor=b6e3f4,c0aede,d1d4f9',
                               ),
                             ),
                     ),

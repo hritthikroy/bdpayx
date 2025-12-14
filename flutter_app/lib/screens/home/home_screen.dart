@@ -170,8 +170,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final user = Provider.of<AuthProvider>(context).user;
-    final exchangeProvider = Provider.of<ExchangeProvider>(context);
+    // Use listen: false to prevent unnecessary rebuilds
+    final user = Provider.of<AuthProvider>(context, listen: false).user;
+    final exchangeProvider = Provider.of<ExchangeProvider>(context, listen: false);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -204,7 +205,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             Expanded(
                               child: Row(
                                 children: [
-                                  // User Avatar
+                                  // User Avatar - 3D Cartoon Style
                                   Container(
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
@@ -226,37 +227,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                             backgroundColor: Colors.white,
                                             backgroundImage: NetworkImage(user!.photoUrl!),
                                           )
-                                        : Container(
-                                            width: 48,
-                                            height: 48,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              gradient: LinearGradient(
-                                                begin: Alignment.topLeft,
-                                                end: Alignment.bottomRight,
-                                                colors: [
-                                                  Color(0xFFFBBF24),
-                                                  Color(0xFFF59E0B),
-                                                  Color(0xFFEF4444),
-                                                ],
-                                              ),
-                                            ),
-                                            child: Center(
-                                              child: Text(
-                                                (user?.fullName ?? 'U')[0].toUpperCase(),
-                                                style: const TextStyle(
-                                                  fontSize: 22,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.white,
-                                                  shadows: [
-                                                    Shadow(
-                                                      color: Colors.black26,
-                                                      offset: Offset(0, 1),
-                                                      blurRadius: 2,
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
+                                        : CircleAvatar(
+                                            radius: 24,
+                                            backgroundColor: Colors.white,
+                                            backgroundImage: NetworkImage(
+                                              // DiceBear Avatars - 3D cartoon style
+                                              'https://api.dicebear.com/7.x/avataaars/svg?seed=${Uri.encodeComponent(user?.fullName ?? 'User')}&backgroundColor=b6e3f4,c0aede,d1d4f9',
                                             ),
                                           ),
                                   ),

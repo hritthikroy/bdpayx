@@ -31,4 +31,17 @@ class User {
       loginMethod: json['login_method'],
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'phone': phone,
+      'email': email,
+      'full_name': fullName,
+      'kyc_status': kycStatus,
+      'balance': balance,
+      'photo_url': photoUrl,
+      'login_method': loginMethod,
+    };
+  }
 }

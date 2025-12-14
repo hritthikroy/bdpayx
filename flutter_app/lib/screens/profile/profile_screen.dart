@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/login_popup.dart';
+import '../../widgets/animated_avatar.dart';
 import 'kyc_screen.dart';
 import 'bank_cards_screen.dart';
 import '../referral/referral_screen.dart';
@@ -89,99 +90,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 24),
                     Container(
-                      width: 100,
-                      height: 100,
+                      width: 110,
+                      height: 110,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white,
-                          width: 4,
-                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
+                            color: Colors.black.withOpacity(0.3),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
                           ),
                         ],
                       ),
-                      child: ClipOval(
-                        child: user?.photoUrl != null
-                            ? Image.network(
-                                user!.photoUrl!,
-                                width: 100,
-                                height: 100,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  // Fallback to robot avatar (like Kiro)
-                                  return Image.network(
-                                    'https://api.dicebear.com/7.x/bottts/png?seed=${user.phone ?? user.id}&backgroundColor=6366f1,8b5cf6,a855f7&size=100',
-                                    width: 100,
-                                    height: 100,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, err, stack) {
-                                      // Final fallback to gradient
-                                      return Container(
-                                        decoration: const BoxDecoration(
-                                          gradient: LinearGradient(
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                            colors: [
-                                              Color(0xFF6366F1),
-                                              Color(0xFF8B5CF6),
-                                              Color(0xFFA855F7),
-                                            ],
-                                          ),
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            user.fullName?.substring(0, 1).toUpperCase() ?? 'U',
-                                            style: const TextStyle(
-                                              fontSize: 42,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white,
-                                              letterSpacing: 2,
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  );
-                                },
-                              )
-                            : Image.network(
-                                'https://api.dicebear.com/7.x/bottts/png?seed=${user?.phone ?? user?.id ?? 'default'}&backgroundColor=6366f1,8b5cf6,a855f7&size=100',
-                                width: 100,
-                                height: 100,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  // Fallback to gradient
-                                  return Container(
-                                    decoration: const BoxDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                        colors: [
-                                          Color(0xFF6366F1),
-                                          Color(0xFF8B5CF6),
-                                          Color(0xFFA855F7),
-                                        ],
-                                      ),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        user?.fullName?.substring(0, 1).toUpperCase() ?? 'U',
-                                        style: const TextStyle(
-                                          fontSize: 42,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                          letterSpacing: 2,
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
+                      child: AnimatedAvatar(
+                        size: 110,
+                        userName: user?.fullName,
                       ),
                     ),
                     const SizedBox(height: 16),

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup Support System - BDPayX</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        .content {
+            padding: 40px;
+        }
+        .step {
+            margin-bottom: 40px;
+            padding: 24px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+        .step h2 {
+            color: #1e293b;
+            margin-bottom: 16px;
+            font-size: 20px;
+        }
+        .step p {
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+        .sql-box {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            position: relative;
+            margin: 16px 0;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .copy-btn:hover {
+            background: #5568d3;
+        }
+        .copy-btn.copied {
+            background: #10b981;
+        }
+        .btn {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .btn-success {
+            background: #10b981;
+        }
+        .btn-success:hover {
+            background: #059669;
+        }
+        .alert {
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border-left: 4px solid #3b82f6;
+        }
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border-left: 4px solid #10b981;
+        }
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        .checklist li {
+            padding: 12px;
+            margin: 8px 0;
+            background: white;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+        }
+        .checklist li:before {
+            content: "✓";
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background: #10b981;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            margin-right: 12px;
+            font-weight: bold;
+        }
+        .link-box {
+            background: #f1f5f9;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+        .link-box a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            word-break: break-all;
+        }
+        .link-box a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎫 Setup Support Ticket System</h1>
+            <p>Follow these simple steps to enable support management in your admin dashboard</p>
+        </div>
+        
+        <div class="content">
+            <div class="alert alert-info">
+                <strong>📋 What you're setting up:</strong> A complete support ticket system where users can create tickets and admins can reply and manage them.
+            </div>
+
+            <div class="step">
+                <h2>Step 1: Open Supabase SQL Editor</h2>
+                <p>Click the button below to open your Supabase SQL Editor:</p>
+                <div class="link-box">
+                    <a href="https://supabase.com/dashboard/project/cvsdypdlpngytpshivgw/sql/new" target="_blank">
+                        🔗 Open Supabase SQL Editor
+                    </a>
+                </div>
+                <a href="https://supabase.com/dashboard/project/cvsdypdlpngytpshivgw/sql/new" target="_blank" class="btn">
+                    Open SQL Editor →
+                </a>
+            </div>
+
+            <div class="step">
+                <h2>Step 2: Copy the SQL Schema</h2>
+                <p>Click the "Copy SQL" button below to copy the database schema:</p>
+                <div class="sql-box" id="sqlBox">
+                    <button class="copy-btn" onclick="copySql()">Copy SQL</button>
+<pre>-- Support Tickets Schema
+CREATE TABLE IF NOT EXISTS support_tickets (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    subject VARCHAR(255) NOT NULL,
+    category VARCHAR(50) DEFAULT 'general',
+    status VARCHAR(20) DEFAULT 'open',
+    priority VARCHAR(20) DEFAULT 'normal',
+    assigned_to INTEGER REFERENCES admin_users(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    closed_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS support_messages (
+    id SERIAL PRIMARY KEY,
+    ticket_id INTEGER REFERENCES support_tickets(id) ON DELETE CASCADE,
+    sender_id INTEGER NOT NULL,
+    sender_type VARCHAR(20) NOT NULL,
+    message TEXT NOT NULL,
+    attachment_url TEXT,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_support_tickets_user_id ON support_tickets(user_id);
+CREATE INDEX IF NOT EXISTS idx_support_tickets_status ON support_tickets(status);
+CREATE INDEX IF NOT EXISTS idx_support_tickets_assigned_to ON support_tickets(assigned_to);
+CREATE INDEX IF NOT EXISTS idx_support_messages_ticket_id ON support_messages(ticket_id);
+
+CREATE OR REPLACE FUNCTION update_support_ticket_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER support_ticket_update_timestamp
+    BEFORE UPDATE ON support_tickets
+    FOR EACH ROW
+    EXECUTE FUNCTION update_support_ticket_timestamp();</pre>
+                </div>
+            </div>
+
+            <div class="step">
+                <h2>Step 3: Run the SQL</h2>
+                <p>In the Supabase SQL Editor:</p>
+                <ol style="margin-left: 20px; color: #64748b; line-height: 2;">
+                    <li>Paste the copied SQL</li>
+                    <li>Click the "Run" button (or press Ctrl+Enter)</li>
+                    <li>Wait for "Success" message</li>
+                </ol>
+            </div>
+
+            <div class="step">
+                <h2>Step 4: Access Admin Dashboard</h2>
+                <p>Open your admin dashboard and check the support section:</p>
+                <div class="link-box">
+                    <a href="http://localhost:3000" target="_blank">
+                        🔗 http://localhost:3000
+                    </a>
+                </div>
+                <a href="http://localhost:3000" target="_blank" class="btn btn-success">
+                    Open Admin Dashboard →
+                </a>
+            </div>
+
+            <div class="alert alert-success">
+                <strong>✅ What's Already Done:</strong>
+                <ul class="checklist">
+                    <li>Backend API routes created</li>
+                    <li>Admin dashboard UI added</li>
+                    <li>Real-time notifications enabled</li>
+                    <li>Backend server running on port 8081</li>
+                </ul>
+            </div>
+
+            <div class="step">
+                <h2>🎉 You're All Set!</h2>
+                <p>After running the SQL, you'll be able to:</p>
+                <ul style="margin-left: 20px; color: #64748b; line-height: 2;">
+                    <li>✓ View all support tickets in admin dashboard</li>
+                    <li>✓ Reply to user questions</li>
+                    <li>✓ Set ticket priorities (low, normal, high)</li>
+                    <li>✓ Filter tickets by status and category</li>
+                    <li>✓ Get real-time notifications for new tickets</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copySql() {
+            const sqlText = document.querySelector('#sqlBox pre').textContent;
+            navigator.clipboard.writeText(sqlText).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = '✓ Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = 'Copy SQL';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

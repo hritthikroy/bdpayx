@@ -13,6 +13,8 @@ const adminEnhancedRoutes = require('./routes/admin-enhanced');
 const chatRoutes = require('./routes/chat');
 const walletRoutes = require('./routes/wallet');
 const googleAuthRoutes = require('./routes/google-auth');
+const supportRoutes = require('./routes/support');
+const smsWebhookRoutes = require('./routes/smsWebhook');
 const RealtimeMonitor = require('./services/realtime-monitor');
 
 const app = express();
@@ -39,6 +41,11 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/admin/v2', adminEnhancedRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/wallet', walletRoutes);
+app.use('/api/support', supportRoutes);
+app.use('/api/sms-webhook', smsWebhookRoutes);
+
+// Make io available to routes
+app.set('io', io);
 
 // Start dynamic rate fluctuation
 rateService.startRateFluctuation();

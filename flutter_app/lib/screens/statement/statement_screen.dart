@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/transaction_provider.dart';
 import '../../models/transaction_model.dart';
+import '../../widgets/transaction_analytics.dart';
 
 class StatementScreen extends StatefulWidget {
   const StatementScreen({super.key});
@@ -17,18 +18,23 @@ class _StatementScreenState extends State<StatementScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Scaffold(
+      backgroundColor: colorScheme.background,
       appBar: AppBar(
         title: const Text('Statement'),
-        backgroundColor: const Color(0xFF1E3A8A),
+        backgroundColor: colorScheme.primary,
         foregroundColor: Colors.white,
+        elevation: 0,
       ),
       body: Column(
         children: [
           // Date Range Selector
           Container(
             padding: const EdgeInsets.all(20),
-            color: Colors.grey[100],
+            color: isDark ? colorScheme.surface : Colors.grey[100],
             child: Column(
               children: [
                 Row(
@@ -82,9 +88,21 @@ class _StatementScreenState extends State<StatementScreen> {
             ),
           ),
 
+          // Analytics Chart
+          Consumer<TransactionProvider>(
+            builder: (context, provider, _) {
+              return Padding(
+                padding: const EdgeInsets.all(20),
+                child: TransactionAnalytics(
+                  transactions: provider.transactions,
+                ),
+              );
+            },
+          ),
+
           // Summary Cards
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               children: [
                 Expanded(
@@ -107,6 +125,8 @@ class _StatementScreenState extends State<StatementScreen> {
               ],
             ),
           ),
+          
+          const SizedBox(height: 20),
 
           // Transactions List
           Expanded(
@@ -166,31 +186,39 @@ class _StatementScreenState extends State<StatementScreen> {
   }
 
   Widget _buildDateButton(String label, DateTime date, VoidCallback onTap) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return InkWell(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? colorScheme.surface : Colors.white,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey[300]!),
+          border: Border.all(
+            color: isDark 
+                ? colorScheme.primary.withOpacity(0.3) 
+                : Colors.grey[300]!,
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey,
+                color: colorScheme.onSurface.withOpacity(0.6),
               ),
             ),
             const SizedBox(height: 4),
             Text(
               DateFormat('dd MMM yyyy').format(date),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
               ),
             ),
           ],
@@ -233,6 +261,8 @@ class _StatementScreenState extends State<StatementScreen> {
   }
 
   Widget _buildTransactionItem(Transaction transaction) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isDeposit = transaction.fromCurrency == 'BDT';
     final color = isDeposit ? Colors.green : Colors.red;
     final icon = isDeposit ? Icons.add : Icons.remove;
@@ -241,11 +271,11 @@ class _StatementScreenState extends State<StatementScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? colorScheme.surface : Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
             blurRadius: 5,
           ),
         ],
@@ -267,15 +297,16 @@ class _StatementScreenState extends State<StatementScreen> {
               children: [
                 Text(
                   '${transaction.fromCurrency} → ${transaction.toCurrency}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 Text(
                   transaction.status,
                   style: TextStyle(
-                    color: Colors.grey[600],
+                    color: colorScheme.onSurface.withOpacity(0.6),
                     fontSize: 12,
                   ),
                 ),

@@ -31,18 +31,65 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Currency Exchange',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-          scaffoldBackgroundColor: const Color(0xFFF5F5F5),
-          fontFamily: 'Inter',
-          useMaterial3: true,
-        ),
+        theme: _buildLightTheme(),
+        darkTheme: _buildDarkTheme(),
+        themeMode: ThemeMode.system,
         home: const AppInitializer(),
         routes: {
           '/login': (context) => const LoginScreen(),
           '/main': (context) => const MainNavigation(),
           '/splash': (context) => const SplashScreen(),
         },
+      ),
+    );
+  }
+
+  ThemeData _buildLightTheme() {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      primarySwatch: Colors.blue,
+      scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+      fontFamily: 'Inter',
+      colorScheme: const ColorScheme.light(
+        primary: Color(0xFF6366F1),
+        secondary: Color(0xFF8B5CF6),
+        tertiary: Color(0xFFA855F7),
+        surface: Colors.white,
+        error: Color(0xFFEF4444),
+        onPrimary: Colors.white,
+        onSecondary: Colors.white,
+        onSurface: Color(0xFF1E293B),
+      ),
+      cardTheme: const CardThemeData(
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
+        color: Colors.white,
+      ),
+    );
+  }
+
+  ThemeData _buildDarkTheme() {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      primarySwatch: Colors.blue,
+      scaffoldBackgroundColor: const Color(0xFF0F172A),
+      fontFamily: 'Inter',
+      colorScheme: const ColorScheme.dark(
+        primary: Color(0xFF818CF8),
+        secondary: Color(0xFFA78BFA),
+        tertiary: Color(0xFFC084FC),
+        surface: Color(0xFF1E293B),
+        error: Color(0xFFF87171),
+        onPrimary: Colors.white,
+        onSecondary: Colors.white,
+        onSurface: Color(0xFFF1F5F9),
+      ),
+      cardTheme: const CardThemeData(
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
+        color: Color(0xFF1E293B),
       ),
     );
   }

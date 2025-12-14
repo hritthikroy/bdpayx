@@ -6,7 +6,6 @@ import 'dart:convert';
 import '../../providers/auth_provider.dart';
 import '../../config/api_config.dart';
 import '../../config/google_config.dart';
-import '../../config/google_config.dart';
 
 class GoogleLoginScreen extends StatefulWidget {
   const GoogleLoginScreen({super.key});

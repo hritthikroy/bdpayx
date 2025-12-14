@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/exchange_provider.dart';
 import '../../widgets/login_popup.dart';
 import '../../widgets/amount_chip.dart';
+import '../../widgets/rate_chart.dart';
 import '../exchange/payment_screen.dart';
 import '../wallet/deposit_screen.dart';
 import '../wallet/withdraw_screen.dart';
-import '../transactions/transactions_screen.dart';
 import '../referral/referral_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -752,6 +751,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
               ),
             ),
+
+            // Rate Chart Section
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: RateChart(currentRate: exchangeProvider.baseRate),
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
 
             // Updates/Announcements Section (Dynamic)
             SliverToBoxAdapter(

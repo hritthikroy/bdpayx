@@ -1,21 +1,19 @@
-// Admin Dashboard JavaScript
+// Modern Mobile-First Admin Dashboard
 const API_BASE = 'http://localhost:8081/api';
-let socket;
 let authToken = localStorage.getItem('admin_token');
+let socket;
+let currentPage = 'dashboard';
 let currentTransactionId = null;
-let isLoadingDashboard = false;
-let dashboardLoadTimeout = null;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     if (!authToken) {
-        window.location.href = 'login.html';
+        window.location.href = 'login-modern.html';
         return;
     }
 
     initializeSocket();
     loadDashboard();
-    setupNavigation();
     setupEventListeners();
 });
 
@@ -25,92 +23,59 @@ function initializeSocket() {
     
     socket.on('connect', () => {
         console.log('Connected to server');
-        // Authenticate as admin
         socket.emit('authenticate', {
             userId: getUserIdFromToken(),
             role: 'admin'
         });
     });
 
-    // Real-time events
     socket.on('admin_stats', (data) => {
         updateDashboardStats(data);
     });
 
     socket.on('transaction_event', (data) => {
-        console.log('Transaction event:', data);
-        showNotification(`New ${data.type} transaction`, 'info');
-        // Debounce dashboard reload
-        clearTimeout(dashboardLoadTimeout);
-        dashboardLoadTimeout = setTimeout(() => loadDashboard(), 1000);
-    });
-
-    socket.on('user_event', (data) => {
-        console.log('User event:', data);
-        if (data.type === 'INSERT') {
-            showNotification('New user registered', 'success');
+        showToast('New transaction received', 'info');
+        if (currentPage === 'dashboard' || currentPage === 'transactions') {
+            loadCurrentPage();
         }
-        // Debounce dashboard reload
-        clearTimeout(dashboardLoadTimeout);
-        dashboardLoadTimeout = setTimeout(() => loadDashboard(), 1000);
     });
 
-    socket.on('user_online', (data) => {
-        console.log('User online:', data.userId);
+    socket.on('new_support_ticket', (data) => {
+        showToast('New support ticket', 'info');
+        if (currentPage === 'support') {
+            loadSupport();
+        }
     });
-
-    socket.on('user_offline', (data) => {
-        console.log('User offline:', data.userId);
-    });
-
-    socket.on('new_support_message', (data) => {
-        showNotification('New support message', 'info');
-    });
-
-    // Request initial stats
-    socket.emit('admin_request_stats');
 }
 
 // Navigation
-function setupNavigation() {
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            const page = item.dataset.page;
-            navigateToPage(page);
-        });
+function navigateTo(page) {
+    event?.preventDefault();
+    currentPage = page;
+    
+    // Hide all pages
+    document.querySelectorAll('.page').forEach(p => {
+        p.style.display = 'none';
     });
-}
-
-function navigateToPage(page) {
-    // Update active nav item
-    document.querySelectorAll('.nav-item').forEach(item => {
+    
+    // Show selected page
+    document.getElementById(`${page}-page`).style.display = 'block';
+    
+    // Update bottom nav
+    document.querySelectorAll('.nav-item-mobile').forEach(item => {
         item.classList.remove('active');
     });
-    document.querySelector(`[data-page="${page}"]`).classList.add('active');
-
-    // Show page
-    document.querySelectorAll('.page').forEach(p => {
-        p.classList.remove('active');
-    });
-    document.getElementById(`${page}-page`).classList.add('active');
-
-    // Update title
-    const titles = {
-        dashboard: 'Dashboard',
-        users: 'User Management',
-        transactions: 'Transactions',
-        kyc: 'KYC Requests',
-        exchange: 'Exchange Rate',
-        notifications: 'Notifications',
-        analytics: 'Analytics',
-        settings: 'Settings',
-        logs: 'Activity Logs'
-    };
-    document.getElementById('page-title').textContent = titles[page];
-
+    document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
+    
     // Load page data
-    switch(page) {
+    loadCurrentPage();
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function loadCurrentPage() {
+    switch(currentPage) {
         case 'dashboard':
             loadDashboard();
             break;
@@ -120,116 +85,74 @@ function navigateToPage(page) {
         case 'transactions':
             loadTransactions();
             break;
-        case 'kyc':
-            loadKYCRequests();
-            break;
-        case 'exchange':
-            loadExchangeRate();
-            break;
-        case 'analytics':
-            loadAnalytics();
-            break;
-        case 'logs':
-            loadLogs();
+        case 'support':
+            loadSupport();
             break;
     }
 }
 
 // Dashboard
 async function loadDashboard() {
-    // Prevent double loading
-    if (isLoadingDashboard) {
-        console.log('Dashboard already loading, skipping...');
-        return;
-    }
-    
-    isLoadingDashboard = true;
-    
     try {
         const response = await fetch(`${API_BASE}/admin/v2/dashboard`, {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
         
+        if (!response.ok) throw new Error('Failed to load dashboard');
+        
         const data = await response.json();
-        console.log('Dashboard data received:', data);
+        updateDashboardStats(data);
         
-        // Check for API error response
-        if (data && data.error) {
-            console.error('Dashboard API error:', data.error);
-            if (data.error === 'Invalid token' || data.error === 'Unauthorized') {
-                showNotification('Session expired. Please login again.', 'error');
-                setTimeout(() => {
-                    localStorage.removeItem('admin_token');
-                    window.location.href = 'login.html';
-                }, 2000);
-            } else {
-                showNotification('Failed to load dashboard: ' + data.error, 'error');
-            }
-            return;
+        // Initialize charts with data
+        if (typeof initializeCharts === 'function') {
+            initializeCharts(data);
         }
         
-        if (!response.ok) {
-            console.error('Dashboard API error:', response.status, response.statusText);
-            showNotification('Failed to load dashboard', 'error');
+        const data = await response.json();
+        
+        if (data.error) {
+            showToast(data.error, 'error');
             return;
         }
 
-        // Check if data has the expected structure - DEFENSIVE CHECK
-        if (!data || typeof data !== 'object' || !data.overview || typeof data.overview !== 'object') {
-            console.error('Invalid dashboard data structure:', data);
-            showNotification('Failed to load dashboard data', 'error');
-            return;
-        }
-
-        // Update stats - with safe access
+        // Update stats
         const overview = data.overview || {};
         document.getElementById('total-users').textContent = overview.totalUsers || 0;
         document.getElementById('active-users').textContent = overview.activeUsers || 0;
-        document.getElementById('pending-transactions').textContent = overview.pendingTransactions || 0;
-        document.getElementById('today-volume').textContent = parseFloat(overview.totalVolume || 0).toLocaleString();
-        document.getElementById('kyc-badge').textContent = overview.pendingKYC || 0;
+        document.getElementById('pending-tx').textContent = overview.pendingTransactions || 0;
+        document.getElementById('today-volume').textContent = formatNumber(overview.totalVolume || 0);
 
         // Load recent transactions
-        if (data.recentTransactions && Array.isArray(data.recentTransactions)) {
+        if (data.recentTransactions) {
             loadRecentTransactions(data.recentTransactions);
         }
     } catch (error) {
         console.error('Load dashboard error:', error);
-        showNotification('Error loading dashboard', 'error');
-    } finally {
-        // Reset loading flag after a short delay
-        setTimeout(() => {
-            isLoadingDashboard = false;
-        }, 500);
+        showToast('Failed to load dashboard', 'error');
     }
 }
 
-function updateDashboardStats(stats) {
-    document.getElementById('total-users').textContent = stats.totalUsers;
-    document.getElementById('active-users').textContent = stats.activeUsers;
-    document.getElementById('pending-transactions').textContent = stats.pendingTransactions;
-    document.getElementById('today-volume').textContent = parseFloat(stats.todayVolume).toLocaleString();
-}
-
 function loadRecentTransactions(transactions) {
-    const tbody = document.querySelector('#recent-transactions tbody');
-    tbody.innerHTML = '';
+    const container = document.getElementById('recent-transactions-list');
+    container.innerHTML = '';
 
-    transactions.forEach(t => {
-        const row = `
-            <tr>
-                <td>#${t.id}</td>
-                <td>${t.users?.full_name || 'N/A'}</td>
-                <td>${parseFloat(t.bdt_amount).toLocaleString()} BDT</td>
-                <td>${parseFloat(t.inr_amount).toLocaleString()} INR</td>
-                <td><span class="status-badge status-${t.status}">${t.status}</span></td>
-                <td>${new Date(t.created_at).toLocaleString()}</td>
-                <td>
-                    <button class="btn btn-primary" onclick="viewTransaction(${t.id})">View</button>
-                </td>
-            </tr>
+    transactions.slice(0, 5).forEach(tx => {
+        const statusClass = tx.status === 'completed' ? 'success' : 
+                          tx.status === 'pending' ? 'warning' : 'danger';
+        
+        const item = `
+            <a href="#" class="list-item-modern" onclick="viewTransaction(${tx.id})">
+                <div class="list-item-icon">
+                    <i class="fas fa-exchange-alt"></i>
+                </div>
+                <div class="list-item-content">
+                    <div class="list-item-title">${tx.users?.full_name || 'User'}</div>
+                    <div class="list-item-subtitle">${formatNumber(tx.bdt_amount)} BDT → ${formatNumber(tx.inr_amount)} INR</div>
+                </div>
+                <div class="list-item-badge ${statusClass}">${tx.status}</div>
+            </a>
         `;
-        tbody.innerHTML += row;
+        container.innerHTML += item;
     });
 }
 
@@ -237,369 +160,289 @@ function loadRecentTransactions(transactions) {
 async function loadUsers() {
     try {
         const search = document.getElementById('user-search')?.value || '';
-        const status = document.getElementById('user-status-filter')?.value || 'all';
-        const kyc = document.getElementById('kyc-status-filter')?.value || 'all';
-
         const response = await fetch(
-            `${API_BASE}/admin/v2/users?search=${search}&status=${status}&kyc_status=${kyc}`,
+            `${API_BASE}/admin/v2/users?search=${search}`,
             { headers: { 'Authorization': `Bearer ${authToken}` } }
         );
         
         const data = await response.json();
-        console.log('Users data received:', data);
         
-        // Check for error response
         if (data.error) {
-            console.error('Users API error:', data.error);
-            return;
-        }
-        
-        if (!response.ok) {
-            console.error('Users API error:', response.status, response.statusText);
+            showToast(data.error, 'error');
             return;
         }
 
-        const tbody = document.querySelector('#users-table tbody');
-        tbody.innerHTML = '';
+        const container = document.getElementById('users-list');
+        container.innerHTML = '';
 
-        if (!data.users || !Array.isArray(data.users)) {
-            console.error('Invalid users data:', data);
-            tbody.innerHTML = '<tr><td colspan="8">No users found</td></tr>';
+        if (!data.users || data.users.length === 0) {
+            container.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-secondary);">No users found</div>';
             return;
         }
 
-        if (data.users.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8">No users found</td></tr>';
-            return;
-        }
-
-        data.users.forEach(u => {
-            const row = `
-                <tr>
-                    <td>#${u.id}</td>
-                    <td>${u.full_name || 'N/A'}</td>
-                    <td>${u.phone}</td>
-                    <td>${u.email || 'N/A'}</td>
-                    <td><span class="status-badge status-${u.kyc_status}">${u.kyc_status}</span></td>
-                    <td>${parseFloat(u.balance || 0).toFixed(2)} INR</td>
-                    <td><span class="status-badge status-${u.status}">${u.status}</span></td>
-                    <td>
-                        <button class="btn btn-primary" onclick="viewUser(${u.id})">View</button>
-                        <button class="btn ${u.status === 'active' ? 'btn-reject' : 'btn-approve'}" 
-                                onclick="toggleUserStatus(${u.id})">
-                            ${u.status === 'active' ? 'Block' : 'Unblock'}
-                        </button>
-                    </td>
-                </tr>
+        data.users.forEach(user => {
+            const statusClass = user.status === 'active' ? 'success' : 'danger';
+            const item = `
+                <div class="list-item-modern">
+                    <div class="list-item-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="list-item-content">
+                        <div class="list-item-title">${user.full_name}</div>
+                        <div class="list-item-subtitle">${user.phone}</div>
+                    </div>
+                    <div class="list-item-badge ${statusClass}">${user.status}</div>
+                </div>
             `;
-            tbody.innerHTML += row;
+            container.innerHTML += item;
         });
     } catch (error) {
         console.error('Load users error:', error);
+        showToast('Failed to load users', 'error');
     }
 }
 
 // Transactions
 async function loadTransactions() {
     try {
-        const status = document.getElementById('transaction-status-filter')?.value || 'all';
-        
+        const status = document.getElementById('tx-filter')?.value || 'all';
         const response = await fetch(
             `${API_BASE}/admin/v2/transactions?status=${status}`,
             { headers: { 'Authorization': `Bearer ${authToken}` } }
         );
         
         const data = await response.json();
-        console.log('Transactions data received:', data);
         
-        // Check for error response
         if (data.error) {
-            console.error('Transactions API error:', data.error);
-            return;
-        }
-        
-        if (!response.ok) {
-            console.error('Transactions API error:', response.status, response.statusText);
+            showToast(data.error, 'error');
             return;
         }
 
-        const tbody = document.querySelector('#transactions-table tbody');
-        tbody.innerHTML = '';
+        const container = document.getElementById('transactions-list');
+        container.innerHTML = '';
 
-        if (!data.transactions || !Array.isArray(data.transactions)) {
-            console.error('Invalid transactions data:', data);
-            tbody.innerHTML = '<tr><td colspan="8">No transactions found</td></tr>';
+        if (!data.transactions || data.transactions.length === 0) {
+            container.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-secondary);">No transactions found</div>';
             return;
         }
 
-        if (data.transactions.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8">No transactions found</td></tr>';
-            return;
-        }
-
-        data.transactions.forEach(t => {
-            const row = `
-                <tr>
-                    <td>#${t.id}</td>
-                    <td>${t.users?.full_name || 'N/A'}</td>
-                    <td>${parseFloat(t.bdt_amount).toLocaleString()} BDT</td>
-                    <td>${parseFloat(t.inr_amount).toLocaleString()} INR</td>
-                    <td>${parseFloat(t.exchange_rate).toFixed(4)}</td>
-                    <td><span class="status-badge status-${t.status}">${t.status}</span></td>
-                    <td>${new Date(t.created_at).toLocaleString()}</td>
-                    <td>
-                        <button class="btn btn-primary" onclick="viewTransaction(${t.id})">View</button>
-                        ${t.status === 'pending' ? `
-                            <button class="btn btn-approve" onclick="updateTransactionStatus(${t.id}, 'completed')">Approve</button>
-                            <button class="btn btn-reject" onclick="updateTransactionStatus(${t.id}, 'rejected')">Reject</button>
-                        ` : ''}
-                    </td>
-                </tr>
+        data.transactions.forEach(tx => {
+            const statusClass = tx.status === 'completed' ? 'success' : 
+                              tx.status === 'pending' ? 'warning' : 'danger';
+            
+            const item = `
+                <a href="#" class="list-item-modern" onclick="viewTransaction(${tx.id})">
+                    <div class="list-item-icon">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <div class="list-item-content">
+                        <div class="list-item-title">${tx.users?.full_name || 'User'}</div>
+                        <div class="list-item-subtitle">${formatNumber(tx.bdt_amount)} BDT → ${formatNumber(tx.inr_amount)} INR</div>
+                    </div>
+                    <div class="list-item-badge ${statusClass}">${tx.status}</div>
+                </a>
             `;
-            tbody.innerHTML += row;
+            container.innerHTML += item;
         });
     } catch (error) {
         console.error('Load transactions error:', error);
+        showToast('Failed to load transactions', 'error');
     }
 }
 
-async function updateTransactionStatus(id, status) {
-    const note = prompt(`Enter admin note for ${status}:`);
-    if (!note) return;
-
+// Support
+async function loadSupport() {
     try {
-        const response = await fetch(`${API_BASE}/admin/v2/transactions/${id}/status`, {
+        const status = document.getElementById('support-filter')?.value || 'all';
+        const response = await fetch(
+            `${API_BASE}/support/tickets?status=${status}`,
+            { headers: { 'Authorization': `Bearer ${authToken}` } }
+        );
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            showToast(data.error, 'error');
+            return;
+        }
+
+        const container = document.getElementById('support-list');
+        container.innerHTML = '';
+
+        if (!data.tickets || data.tickets.length === 0) {
+            container.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-secondary);">No tickets found</div>';
+            return;
+        }
+
+        data.tickets.forEach(ticket => {
+            const statusClass = ticket.status === 'closed' ? 'success' : 
+                              ticket.status === 'replied' ? 'info' : 'warning';
+            const priorityIcon = ticket.priority === 'high' ? '🔴' : 
+                               ticket.priority === 'normal' ? '🟡' : '🟢';
+            
+            const item = `
+                <a href="#" class="list-item-modern" onclick="viewTicket(${ticket.id})">
+                    <div class="list-item-icon">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                    <div class="list-item-content">
+                        <div class="list-item-title">${priorityIcon} ${ticket.subject}</div>
+                        <div class="list-item-subtitle">${ticket.users?.full_name || 'User'}</div>
+                    </div>
+                    <div class="list-item-badge ${statusClass}">${ticket.status}</div>
+                </a>
+            `;
+            container.innerHTML += item;
+        });
+    } catch (error) {
+        console.error('Load support error:', error);
+        showToast('Failed to load support tickets', 'error');
+    }
+}
+
+// View Transaction
+async function viewTransaction(id) {
+    event?.preventDefault();
+    currentTransactionId = id;
+    
+    try {
+        const response = await fetch(`${API_BASE}/admin/v2/transactions/${id}`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            showToast(data.error, 'error');
+            return;
+        }
+
+        const tx = data.transaction;
+        const details = `
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div>
+                    <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">User</div>
+                    <div style="font-size: 16px; font-weight: 600;">${tx.users?.full_name || 'N/A'}</div>
+                </div>
+                <div>
+                    <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">Amount</div>
+                    <div style="font-size: 16px; font-weight: 600;">${formatNumber(tx.bdt_amount)} BDT → ${formatNumber(tx.inr_amount)} INR</div>
+                </div>
+                <div>
+                    <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">Exchange Rate</div>
+                    <div style="font-size: 16px; font-weight: 600;">${tx.exchange_rate}</div>
+                </div>
+                <div>
+                    <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">Status</div>
+                    <div><span class="badge-modern badge-${tx.status === 'completed' ? 'success' : tx.status === 'pending' ? 'warning' : 'danger'}">${tx.status}</span></div>
+                </div>
+                <div>
+                    <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">Date</div>
+                    <div style="font-size: 16px; font-weight: 600;">${new Date(tx.created_at).toLocaleString()}</div>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('transaction-details').innerHTML = details;
+        openModal('transaction-modal');
+    } catch (error) {
+        console.error('View transaction error:', error);
+        showToast('Failed to load transaction', 'error');
+    }
+}
+
+// Approve Transaction
+async function approveTransaction() {
+    if (!currentTransactionId) return;
+    
+    try {
+        const response = await fetch(`${API_BASE}/admin/v2/transactions/${currentTransactionId}/status`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ status, admin_note: note })
+            body: JSON.stringify({ status: 'completed', admin_note: 'Approved via mobile' })
         });
 
         if (response.ok) {
-            showNotification(`Transaction ${status}`, 'success');
-            loadTransactions();
+            showToast('Transaction approved!', 'success');
+            closeModal('transaction-modal');
+            loadCurrentPage();
+        } else {
+            showToast('Failed to approve transaction', 'error');
         }
     } catch (error) {
-        console.error('Update transaction error:', error);
-        showNotification('Failed to update transaction', 'error');
+        console.error('Approve transaction error:', error);
+        showToast('Failed to approve transaction', 'error');
     }
 }
 
-// KYC
-async function loadKYCRequests() {
-    try {
-        const response = await fetch(`${API_BASE}/admin/v2/kyc/pending`, {
-            headers: { 'Authorization': `Bearer ${authToken}` }
-        });
-        
-        const data = await response.json();
-        console.log('KYC data received:', data);
-        
-        // Check for error response
-        if (data.error) {
-            console.error('KYC API error:', data.error);
-            return;
-        }
-        
-        if (!response.ok) {
-            console.error('KYC API error:', response.status, response.statusText);
-            return;
-        }
-
-        const container = document.getElementById('kyc-list');
-        container.innerHTML = '';
-
-        if (!data.users || !Array.isArray(data.users)) {
-            console.error('Invalid KYC data:', data);
-            container.innerHTML = '<p>No pending KYC requests</p>';
-            return;
-        }
-
-        if (data.users.length === 0) {
-            container.innerHTML = '<p>No pending KYC requests</p>';
-            return;
-        }
-
-        data.users.forEach(u => {
-            const card = `
-                <div class="kyc-card">
-                    <h3>${u.full_name}</h3>
-                    <p>Phone: ${u.phone}</p>
-                    <p>Email: ${u.email || 'N/A'}</p>
-                    <div class="kyc-actions">
-                        <button class="btn btn-approve" onclick="reviewKYC(${u.id}, 'approved')">Approve</button>
-                        <button class="btn btn-reject" onclick="reviewKYC(${u.id}, 'rejected')">Reject</button>
-                    </div>
-                </div>
-            `;
-            container.innerHTML += card;
-        });
-    } catch (error) {
-        console.error('Load KYC error:', error);
-    }
-}
-
-async function reviewKYC(userId, status) {
-    let reason = null;
-    if (status === 'rejected') {
-        reason = prompt('Enter rejection reason:');
-        if (!reason) return;
-    }
-
-    try {
-        const response = await fetch(`${API_BASE}/admin/v2/kyc/${userId}/review`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${authToken}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ status, rejection_reason: reason })
-        });
-
-        if (response.ok) {
-            showNotification(`KYC ${status}`, 'success');
-            loadKYCRequests();
-        }
-    } catch (error) {
-        console.error('Review KYC error:', error);
-    }
-}
-
-// Exchange Rate
-async function loadExchangeRate() {
-    try {
-        const response = await fetch(`${API_BASE}/exchange/rate`);
-        const data = await response.json();
-
-        document.getElementById('current-rate-display').textContent = parseFloat(data.base_rate).toFixed(4);
-        document.getElementById('rate-last-update').textContent = new Date(data.updated_at).toLocaleString();
-    } catch (error) {
-        console.error('Load rate error:', error);
-    }
-}
-
-async function updateRate(event) {
-    event.preventDefault();
-    const newRate = document.getElementById('new-rate').value;
-
-    try {
-        const response = await fetch(`${API_BASE}/admin/v2/exchange-rate/update`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${authToken}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ base_rate: newRate })
-        });
-
-        if (response.ok) {
-            showNotification('Rate updated successfully', 'success');
-            loadExchangeRate();
-            document.getElementById('new-rate').value = '';
-        }
-    } catch (error) {
-        console.error('Update rate error:', error);
-        showNotification('Failed to update rate', 'error');
-    }
-}
-
-// Notifications
-async function sendNotification(event) {
-    event.preventDefault();
-    
-    const userId = document.getElementById('notif-user-id').value;
-    const title = document.getElementById('notif-title').value;
-    const message = document.getElementById('notif-message').value;
-    const type = document.getElementById('notif-type').value;
-
-    const endpoint = userId ? '/notifications/send' : '/announcements/broadcast';
-    const body = userId ? { user_id: userId, title, message, type } : { title, message, type };
-
-    try {
-        const response = await fetch(`${API_BASE}/admin/v2${endpoint}`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${authToken}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(body)
-        });
-
-        if (response.ok) {
-            showNotification('Notification sent', 'success');
-            event.target.reset();
-        }
-    } catch (error) {
-        console.error('Send notification error:', error);
-    }
-}
-
-// Analytics
-async function loadAnalytics() {
-    const period = document.getElementById('analytics-period')?.value || '7d';
+// Reject Transaction
+async function rejectTransaction() {
+    if (!currentTransactionId) return;
     
     try {
-        const response = await fetch(`${API_BASE}/admin/v2/analytics?period=${period}`, {
-            headers: { 'Authorization': `Bearer ${authToken}` }
+        const response = await fetch(`${API_BASE}/admin/v2/transactions/${currentTransactionId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: 'rejected', admin_note: 'Rejected via mobile' })
         });
-        const data = await response.json();
 
-        // Render charts with data
-        console.log('Analytics data:', data);
+        if (response.ok) {
+            showToast('Transaction rejected', 'warning');
+            closeModal('transaction-modal');
+            loadCurrentPage();
+        } else {
+            showToast('Failed to reject transaction', 'error');
+        }
     } catch (error) {
-        console.error('Load analytics error:', error);
+        console.error('Reject transaction error:', error);
+        showToast('Failed to reject transaction', 'error');
     }
 }
 
-// Logs
-async function loadLogs() {
-    try {
-        const response = await fetch(`${API_BASE}/admin/v2/logs`, {
-            headers: { 'Authorization': `Bearer ${authToken}` }
-        });
-        const data = await response.json();
-        console.log('Logs data received:', data);
-        
-        // Check for error response
-        if (data.error) {
-            console.error('Logs API error:', data.error);
-            return;
-        }
-
-        const tbody = document.querySelector('#logs-table tbody');
-        tbody.innerHTML = '';
-
-        if (!data.logs || !Array.isArray(data.logs)) {
-            console.error('Invalid logs data:', data);
-            tbody.innerHTML = '<tr><td colspan="5">No logs found</td></tr>';
-            return;
-        }
-
-        if (data.logs.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5">No logs found</td></tr>';
-            return;
-        }
-
-        data.logs.forEach(log => {
-            const row = `
-                <tr>
-                    <td>${new Date(log.created_at).toLocaleString()}</td>
-                    <td>${log.admin?.full_name || 'System'}</td>
-                    <td>${log.action}</td>
-                    <td>${log.target_id || 'N/A'}</td>
-                    <td>${JSON.stringify(log.details || {})}</td>
-                </tr>
-            `;
-            tbody.innerHTML += row;
-        });
-    } catch (error) {
-        console.error('Load logs error:', error);
-    }
+// Modal Functions
+function openModal(modalId) {
+    document.getElementById(modalId).classList.add('active');
+    document.body.style.overflow = 'hidden';
 }
 
-// Utilities
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+// Toast Notifications
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast-modern toast-${type}`;
+    toast.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+        <div style="flex: 1;">${message}</div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Haptic feedback
+    if ('vibrate' in navigator) {
+        navigator.vibrate(50);
+    }
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideDown 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Utility Functions
+function formatNumber(num) {
+    return parseFloat(num || 0).toLocaleString('en-US', { maximumFractionDigits: 2 });
+}
+
 function getUserIdFromToken() {
     try {
         const payload = JSON.parse(atob(authToken.split('.')[1]));
@@ -609,84 +452,125 @@ function getUserIdFromToken() {
     }
 }
 
-function showNotification(message, type = 'info') {
-    // Create a simple toast notification
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.textContent = message;
-    toast.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 15px 20px;
-        background: ${type === 'error' ? '#f44336' : type === 'success' ? '#4caf50' : '#2196f3'};
-        color: white;
-        border-radius: 4px;
-        z-index: 10000;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    `;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.remove();
-    }, 3000);
-}
-
 function logout() {
+    event?.preventDefault();
     localStorage.removeItem('admin_token');
-    window.location.href = 'login.html';
+    window.location.href = 'login-modern.html';
 }
 
+// Event Listeners
 function setupEventListeners() {
     // Search users
     document.getElementById('user-search')?.addEventListener('input', debounce(loadUsers, 500));
     
-    // Filter users
-    document.getElementById('user-status-filter')?.addEventListener('change', loadUsers);
-    document.getElementById('kyc-status-filter')?.addEventListener('change', loadUsers);
-    
-    // Filter transactions
-    document.getElementById('transaction-status-filter')?.addEventListener('change', loadTransactions);
+    // Close modals on backdrop click
+    document.querySelectorAll('.modal-modern').forEach(modal => {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal(modal.id);
+            }
+        });
+    });
 }
 
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
         clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
+        timeout = setTimeout(() => func(...args), wait);
     };
 }
 
-function closeModal(modalId) {
-    document.getElementById(modalId).classList.remove('active');
+function filterTransactions() {
+    loadTransactions();
 }
 
-async function viewUser(userId) {
-    // Implement user details modal
-    console.log('View user:', userId);
+function filterSupport() {
+    loadSupport();
 }
 
-async function viewTransaction(transactionId) {
-    // Implement transaction details modal
-    console.log('View transaction:', transactionId);
+// Placeholder functions
+function toggleMenu() {
+    showToast('Menu feature coming soon!', 'info');
 }
 
-async function toggleUserStatus(userId) {
-    try {
-        const response = await fetch(`${API_BASE}/admin/v2/users/${userId}/toggle-status`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${authToken}` }
-        });
+function showNotifications() {
+    showToast('Notifications feature coming soon!', 'info');
+}
 
-        if (response.ok) {
-            showNotification('User status updated', 'success');
-            loadUsers();
+function showProfile() {
+    event?.preventDefault();
+    showToast('Profile feature coming soon!', 'info');
+}
+
+function showNotificationSettings() {
+    event?.preventDefault();
+    showToast('Notification settings coming soon!', 'info');
+}
+
+function showSecurity() {
+    event?.preventDefault();
+    showToast('Security settings coming soon!', 'info');
+}
+
+function viewTicket(id) {
+    event?.preventDefault();
+    showToast('Ticket details coming soon!', 'info');
+}
+
+// Add slideDown animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideDown {
+        from {
+            transform: translateY(0);
+            opacity: 1;
         }
-    } catch (error) {
-        console.error('Toggle user status error:', error);
+        to {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
+
+
+// Theme Toggle
+function toggleTheme() {
+    const body = document.body;
+    const themeToggle = document.querySelector('.theme-toggle i');
+    
+    body.classList.toggle('dark-theme');
+    
+    // Update icon
+    if (body.classList.contains('dark-theme')) {
+        themeToggle.className = 'fas fa-sun';
+        localStorage.setItem('theme', 'dark');
+    } else {
+        themeToggle.className = 'fas fa-moon';
+        localStorage.setItem('theme', 'light');
+    }
+    
+    // Reinitialize charts with new theme
+    if (typeof handleThemeChange === 'function') {
+        handleThemeChange();
     }
 }
+
+// Load saved theme on page load
+function loadTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    const themeToggle = document.querySelector('.theme-toggle i');
+    
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-theme');
+        if (themeToggle) {
+            themeToggle.className = 'fas fa-sun';
+        }
+    }
+}
+
+// Initialize theme on load
+document.addEventListener('DOMContentLoaded', () => {
+    loadTheme();
+});

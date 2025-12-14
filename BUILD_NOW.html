@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Build Your Android App Now!</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: white;
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: white;
+            text-align: center;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        .option {
+            background: #f9fafb;
+            border: 3px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 20px 0;
+            transition: all 0.3s;
+        }
+        .option:hover {
+            border-color: #10b981;
+            transform: translateY(-2px);
+        }
+        .option.recommended {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        .badge {
+            background: #10b981;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            display: inline-block;
+            margin-left: 10px;
+        }
+        .btn {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            margin: 10px 5px;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background: #667eea;
+        }
+        .btn-secondary:hover {
+            background: #5568d3;
+        }
+        .code {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .steps {
+            margin: 15px 0;
+        }
+        .step {
+            padding: 10px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+        .step:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        .warning {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .success {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>📱 Build Your Android App</h1>
+    <p class="subtitle">Choose the method that works best for you</p>
+
+    <div class="card">
+        <div class="success">
+            <strong>✅ Your Android project is ready!</strong><br>
+            All files are in the <code>android-sms-monitor</code> folder.
+        </div>
+
+        <div class="option recommended">
+            <h2>
+                🎯 Option 1: Android Studio
+                <span class="badge">RECOMMENDED</span>
+            </h2>
+            <p><strong>Best for:</strong> Everyone! Easiest and most reliable method.</p>
+            <p><strong>Time:</strong> 20 minutes (including download)</p>
+            
+            <div class="steps">
+                <div class="step">Download Android Studio from <a href="https://developer.android.com/studio" target="_blank">developer.android.com/studio</a></div>
+                <div class="step">Install and open Android Studio</div>
+                <div class="step">Click "Open" and select <code>android-sms-monitor</code> folder</div>
+                <div class="step">Wait for Gradle sync (2-3 minutes)</div>
+                <div class="step">Go to: <strong>Build > Build Bundle(s) / APK(s) > Build APK(s)</strong></div>
+                <div class="step">Wait for build (2-5 minutes)</div>
+                <div class="step">Click "locate" to find your APK!</div>
+            </div>
+
+            <a href="https://developer.android.com/studio" target="_blank" class="btn">Download Android Studio</a>
+            <a href="EASY_BUILD_GUIDE.md" class="btn btn-secondary">Detailed Guide</a>
+        </div>
+
+        <div class="option">
+            <h2>⚡ Option 2: Command Line</h2>
+            <p><strong>Best for:</strong> Developers who prefer terminal</p>
+            <p><strong>Requirements:</strong> Java JDK + Android SDK</p>
+            
+            <p><strong>Step 1:</strong> Install dependencies</p>
+            <div class="code">brew install openjdk@17</div>
+            
+            <p><strong>Step 2:</strong> Install Android Studio (for SDK)</p>
+            <p>Even for command line, you need Android SDK which comes with Android Studio.</p>
+            
+            <p><strong>Step 3:</strong> Build</p>
+            <div class="code">cd android-sms-monitor<br>./gradlew assembleDebug</div>
+            
+            <p><strong>Or use the automated script:</strong></p>
+            <div class="code">./install-and-build.sh</div>
+        </div>
+
+        <div class="option">
+            <h2>☁️ Option 3: Online Builder</h2>
+            <p><strong>Best for:</strong> Quick build without installing anything</p>
+            <p><strong>Time:</strong> 10-15 minutes</p>
+            
+            <div class="steps">
+                <div class="step">Zip the project: <code>zip -r android-sms-monitor.zip android-sms-monitor/</code></div>
+                <div class="step">Search Google for "online android apk builder"</div>
+                <div class="step">Upload your zip file</div>
+                <div class="step">Wait for build</div>
+                <div class="step">Download the APK</div>
+            </div>
+
+            <div class="warning">
+                <strong>⚠️ Note:</strong> Online builders may have limitations or require signup. Option 1 is more reliable.
+            </div>
+        </div>
+
+        <h2 style="margin-top: 40px;">📲 After Building</h2>
+        
+        <div class="option">
+            <h3>1. Transfer APK to Phone</h3>
+            <p>Via USB, email, cloud storage, or messaging app</p>
+            
+            <h3>2. Install on Phone</h3>
+            <div class="steps">
+                <div class="step">Enable "Install from Unknown Sources" in Settings</div>
+                <div class="step">Open file manager and tap the APK</div>
+                <div class="step">Tap "Install"</div>
+            </div>
+            
+            <h3>3. Configure the App</h3>
+            <p><strong>Server URL:</strong></p>
+            <div class="code">https://yourdomain.com</div>
+            <p><small>Replace with your actual domain</small></p>
+            
+            <p><strong>API Key:</strong></p>
+            <div class="code">eed2e21ff245cda9ceeea36552dac08a0d5e7727058a9da0d29296b1ebb0fd65</div>
+            
+            <h3>4. Grant Permissions</h3>
+            <p>Allow SMS permissions when prompted</p>
+            
+            <h3>5. Test!</h3>
+            <p>Create a deposit and send a test payment (৳10-50)</p>
+        </div>
+
+        <div class="success" style="margin-top: 30px; text-align: center;">
+            <h3>🎊 Ready to Build?</h3>
+            <p>We recommend Option 1 (Android Studio) for the best experience!</p>
+            <a href="https://developer.android.com/studio" target="_blank" class="btn">Download Android Studio</a>
+            <a href="EASY_BUILD_GUIDE.md" class="btn btn-secondary">Read Full Guide</a>
+        </div>
+    </div>
+
+    <div style="text-align: center; color: white; margin-top: 20px;">
+        <p>Need help? Check <strong>EASY_BUILD_GUIDE.md</strong> for detailed instructions</p>
+    </div>
+</body>
+</html>

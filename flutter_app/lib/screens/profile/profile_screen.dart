@@ -93,6 +93,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       height: 100,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF6366F1),
+                            Color(0xFF8B5CF6),
+                            Color(0xFFA855F7),
+                          ],
+                        ),
                         border: Border.all(
                           color: Colors.white,
                           width: 4,
@@ -105,86 +114,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ],
                       ),
-                      child: ClipOval(
-                        child: user?.photoUrl != null
-                            ? Image.network(
+                      child: user?.photoUrl != null
+                          ? ClipOval(
+                              child: Image.network(
                                 user!.photoUrl!,
                                 width: 100,
                                 height: 100,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
-                                  // Fallback to 3D avatar
-                                  return Image.network(
-                                    'https://api.dicebear.com/7.x/avataaars/png?seed=${user.phone ?? user.id}&backgroundColor=6366f1,8b5cf6,a855f7&radius=50&size=100',
-                                    width: 100,
-                                    height: 100,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      // Final fallback to gradient
-                                      return Container(
-                                        width: 100,
-                                        height: 100,
-                                        decoration: const BoxDecoration(
-                                          gradient: LinearGradient(
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                            colors: [
-                                              Color(0xFF6366F1),
-                                              Color(0xFF8B5CF6),
-                                              Color(0xFFA855F7),
-                                            ],
-                                          ),
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            user.fullName?.substring(0, 1).toUpperCase() ?? 'U',
-                                            style: const TextStyle(
-                                              fontSize: 42,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  );
-                                },
-                              )
-                            : Image.network(
-                                'https://api.dicebear.com/7.x/avataaars/png?seed=${user?.phone ?? user?.id ?? 'default'}&backgroundColor=6366f1,8b5cf6,a855f7&radius=50&size=100',
-                                width: 100,
-                                height: 100,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  // Fallback to gradient
-                                  return Container(
-                                    width: 100,
-                                    height: 100,
-                                    decoration: const BoxDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                        colors: [
-                                          Color(0xFF6366F1),
-                                          Color(0xFF8B5CF6),
-                                          Color(0xFFA855F7),
-                                        ],
-                                      ),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        user?.fullName?.substring(0, 1).toUpperCase() ?? 'U',
-                                        style: const TextStyle(
-                                          fontSize: 42,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
+                                  return Center(
+                                    child: Text(
+                                      user.fullName?.substring(0, 1).toUpperCase() ?? 'U',
+                                      style: const TextStyle(
+                                        fontSize: 42,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                        letterSpacing: 2,
                                       ),
                                     ),
                                   );
                                 },
                               ),
-                      ),
+                            )
+                          : Center(
+                              child: Text(
+                                user?.fullName?.substring(0, 1).toUpperCase() ?? 'U',
+                                style: const TextStyle(
+                                  fontSize: 42,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  letterSpacing: 2,
+                                ),
+                              ),
+                            ),
                     ),
                     const SizedBox(height: 16),
                     Text(

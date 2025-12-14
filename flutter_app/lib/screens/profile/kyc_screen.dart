@@ -14,7 +14,6 @@ class _KycScreenState extends State<KycScreen> {
   final _idNumberController = TextEditingController();
   String? _idFrontPath;
   String? _idBackPath;
-  String? _selfieWithIdPath;
 
   Future<void> _pickImage(String type) async {
     final picker = ImagePicker();
@@ -28,9 +27,6 @@ class _KycScreenState extends State<KycScreen> {
             break;
           case 'back':
             _idBackPath = image.path;
-            break;
-          case 'selfie':
-            _selfieWithIdPath = image.path;
             break;
         }
       });
@@ -115,12 +111,6 @@ class _KycScreenState extends State<KycScreen> {
               _idBackPath,
               () => _pickImage('back'),
             ),
-            const SizedBox(height: 12),
-            _buildUploadButton(
-              'Selfie with ID',
-              _selfieWithIdPath,
-              () => _pickImage('selfie'),
-            ),
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _submitKyc,
@@ -157,8 +147,7 @@ class _KycScreenState extends State<KycScreen> {
         _addressController.text.isEmpty ||
         _idNumberController.text.isEmpty ||
         _idFrontPath == null ||
-        _idBackPath == null ||
-        _selfieWithIdPath == null) {
+        _idBackPath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please complete all fields and upload documents')),
       );

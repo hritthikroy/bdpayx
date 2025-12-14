@@ -292,7 +292,7 @@ class _RateChartState extends State<RateChart> with TickerProviderStateMixin {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Text(
-                                        '₹${widget.currentRate.toStringAsFixed(4)}',
+                                        '₹${(widget.currentRate * 100).toStringAsFixed(2)}',
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontSize: 16,
@@ -307,13 +307,13 @@ class _RateChartState extends State<RateChart> with TickerProviderStateMixin {
                                           ],
                                         ),
                                       ),
-                                      Text(
-                                        '${isPositive ? '+' : ''}${_percentChange.toStringAsFixed(2)}%',
-                                        style: const TextStyle(
+                                      const Text(
+                                        'per 100 BDT',
+                                        style: TextStyle(
                                           color: Colors.white,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w700,
-                                          letterSpacing: 0.5,
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w600,
+                                          letterSpacing: 0.3,
                                         ),
                                       ),
                                     ],
@@ -372,16 +372,16 @@ class _RateChartState extends State<RateChart> with TickerProviderStateMixin {
                               leftTitles: AxisTitles(
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 48,
+                                  reservedSize: 42,
                                   interval: (_maxY - _minY) / 4,
                                   getTitlesWidget: (value, meta) {
                                     return Padding(
-                                      padding: const EdgeInsets.only(right: 8),
+                                      padding: const EdgeInsets.only(right: 6),
                                       child: Text(
-                                        value.toStringAsFixed(4),
-                                        style: TextStyle(
+                                        (value * 100).toStringAsFixed(1),
+                                        style: const TextStyle(
                                           fontSize: 9,
-                                          color: colorScheme.onSurface.withOpacity(0.6),
+                                          color: Color(0xFF64748B),
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
@@ -465,7 +465,7 @@ class _RateChartState extends State<RateChart> with TickerProviderStateMixin {
                                   return touchedBarSpots.map((barSpot) {
                                     final hoursAgo = (23 - barSpot.x).toInt();
                                     return LineTooltipItem(
-                                      '₹${barSpot.y.toStringAsFixed(4)}\n',
+                                      '₹${(barSpot.y * 100).toStringAsFixed(2)}\n',
                                       const TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold,
@@ -473,10 +473,10 @@ class _RateChartState extends State<RateChart> with TickerProviderStateMixin {
                                       ),
                                       children: [
                                         TextSpan(
-                                          text: hoursAgo == 0 ? 'Now' : '${hoursAgo}h ago',
+                                          text: hoursAgo == 0 ? 'Now • per 100 BDT' : '${hoursAgo}h ago • per 100 BDT',
                                           style: TextStyle(
                                             color: Colors.white.withOpacity(0.7),
-                                            fontSize: 11,
+                                            fontSize: 10,
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),

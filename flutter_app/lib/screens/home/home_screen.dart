@@ -24,6 +24,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   double _appliedRate = 0;
   late AnimationController _cardAnimationController;
   late Animation<double> _cardAnimation;
+  late AnimationController _avatarPulseController;
+  late Animation<double> _avatarPulseAnimation;
   int _currentUpdateIndex = 0;
   
   // Dynamic updates list
@@ -82,7 +84,32 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       parent: _cardAnimationController,
       curve: Curves.easeOutBack,
     );
+    
+    // Avatar pulse animation - subtle and professional
+    _avatarPulseController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+    _avatarPulseAnimation = Tween<double>(begin: 1.0, end: 1.08).animate(
+      CurvedAnimation(
+        parent: _avatarPulseController,
+        curve: Curves.easeInOut,
+      ),
+    );
+    _startAvatarPulse();
     _startUpdateRotation();
+  }
+  
+  void _startAvatarPulse() {
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        _avatarPulseController.forward().then((_) {
+          _avatarPulseController.reverse().then((_) {
+            _startAvatarPulse();
+          });
+        });
+      }
+    });
   }
   
   void _startUpdateRotation() {
@@ -99,6 +126,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void dispose() {
     _cardAnimationController.dispose();
+    _avatarPulseController.dispose();
     _amountController.dispose();
     super.dispose();
   }
@@ -205,25 +233,27 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             Expanded(
                               child: Row(
                                 children: [
-                                  // User Avatar - Professional with Cartoon Option
-                                  Container(
-                                    width: 54,
-                                    height: 54,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: Colors.white,
-                                        width: 3,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.3),
-                                          blurRadius: 12,
-                                          offset: const Offset(0, 4),
+                                  // User Avatar - Professional with Subtle Pulse Animation
+                                  ScaleTransition(
+                                    scale: _avatarPulseAnimation,
+                                    child: Container(
+                                      width: 54,
+                                      height: 54,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: Colors.white,
+                                          width: 3,
                                         ),
-                                      ],
-                                    ),
-                                    child: ClipOval(
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.3),
+                                            blurRadius: 12,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      child: ClipOval(
                                       child: user?.photoUrl != null
                                           ? Image.network(
                                               user!.photoUrl!,
@@ -294,6 +324,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                                 );
                                               },
                                             ),
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 12),

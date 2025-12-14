@@ -204,7 +204,7 @@ class _ExchangeScreenState extends State<ExchangeScreen> {
                                 ),
                               ],
                             ),
-                            Text('1 BDT = ₹${exchangeProvider.baseRate.toStringAsFixed(4)}'),
+                            Text('100 BDT = ₹${(exchangeProvider.baseRate * 100).toStringAsFixed(2)}'),
                           ],
                         ),
                       ),

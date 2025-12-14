@@ -439,7 +439,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   const Icon(Icons.trending_up_rounded, color: Colors.white, size: 18),
                                   const SizedBox(width: 8),
                                   Text(
-                                    '1 BDT = ₹${exchangeProvider.baseRate.toStringAsFixed(4)}',
+                                    '100 BDT = ₹${(exchangeProvider.baseRate * 100).toStringAsFixed(2)}',
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 14,
@@ -653,7 +653,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  'Rate updates in ${exchangeProvider.countdown}s • Current: ${exchangeProvider.baseRate.toStringAsFixed(4)}',
+                                  'Rate updates in ${exchangeProvider.countdown}s • 100 BDT = ₹${(exchangeProvider.baseRate * 100).toStringAsFixed(2)}',
                                   style: const TextStyle(fontSize: 11, color: Color(0xFF92400E)),
                                 ),
                               ),

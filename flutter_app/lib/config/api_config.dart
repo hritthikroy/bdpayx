@@ -1,6 +1,6 @@
 class ApiConfig {
-  static const String baseUrl = 'http://localhost:8081/api';
-  static const String socketUrl = 'http://localhost:8081';
+  static const String baseUrl = 'http://localhost:3000/api';
+  static const String socketUrl = 'http://localhost:3000';
   
   // Endpoints
   static const String login = '$baseUrl/auth/login';

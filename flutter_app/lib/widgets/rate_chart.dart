@@ -126,38 +126,32 @@ class _RateChartState extends State<RateChart> with TickerProviderStateMixin {
       animation: Listenable.merge([_animation, _shimmerAnimation, _pulseAnimation]),
       builder: (context, child) {
         return Container(
-          height: 260,
+          height: 280,
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: isDark
-                  ? [
-                      colorScheme.surface,
-                      colorScheme.primary.withOpacity(0.05),
-                      colorScheme.secondary.withOpacity(0.08),
-                    ]
-                  : [
-                      Colors.white,
-                      colorScheme.primary.withOpacity(0.02),
-                      colorScheme.secondary.withOpacity(0.03),
-                    ],
+              colors: [
+                const Color(0xFFF8FAFC),
+                const Color(0xFFF1F5F9),
+                const Color(0xFFE0E7FF),
+              ],
             ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: colorScheme.primary.withOpacity(isDark ? 0.3 : 0.15),
-              width: 1.5,
+              color: const Color(0xFF6366F1).withOpacity(0.2),
+              width: 2,
             ),
             boxShadow: [
               BoxShadow(
-                color: colorScheme.primary.withOpacity(isDark ? 0.2 : 0.1),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
+                color: const Color(0xFF6366F1).withOpacity(0.15),
+                blurRadius: 24,
+                offset: const Offset(0, 10),
               ),
               BoxShadow(
-                color: colorScheme.secondary.withOpacity(isDark ? 0.1 : 0.05),
+                color: const Color(0xFF8B5CF6).withOpacity(0.1),
                 blurRadius: 40,
-                offset: const Offset(0, 16),
+                offset: const Offset(0, 20),
               ),
             ],
           ),
@@ -194,46 +188,49 @@ class _RateChartState extends State<RateChart> with TickerProviderStateMixin {
                                 Row(
                                   children: [
                                     Container(
-                                      padding: const EdgeInsets.all(8),
+                                      padding: const EdgeInsets.all(10),
                                       decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [colorScheme.primary, colorScheme.secondary],
+                                        gradient: const LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
                                         ),
-                                        borderRadius: BorderRadius.circular(10),
+                                        borderRadius: BorderRadius.circular(14),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: colorScheme.primary.withOpacity(0.3),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 2),
+                                            color: const Color(0xFF6366F1).withOpacity(0.4),
+                                            blurRadius: 12,
+                                            offset: const Offset(0, 4),
                                           ),
                                         ],
                                       ),
                                       child: const Icon(
-                                        Icons.show_chart_rounded,
+                                        Icons.auto_graph_rounded,
                                         color: Colors.white,
-                                        size: 18,
+                                        size: 22,
                                       ),
                                     ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
+                                    const SizedBox(width: 14),
+                                    const Expanded(
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             'Exchange Rate',
                                             style: TextStyle(
-                                              fontSize: 17,
+                                              fontSize: 18,
                                               fontWeight: FontWeight.bold,
-                                              color: colorScheme.onSurface,
+                                              color: Color(0xFF1E293B),
                                               letterSpacing: -0.5,
                                             ),
                                           ),
+                                          SizedBox(height: 2),
                                           Text(
                                             'Live 24h Trend',
                                             style: TextStyle(
-                                              fontSize: 11,
-                                              color: colorScheme.onSurface.withOpacity(0.6),
-                                              fontWeight: FontWeight.w500,
+                                              fontSize: 12,
+                                              color: Color(0xFF64748B),
+                                              fontWeight: FontWeight.w600,
                                             ),
                                           ),
                                         ],
@@ -245,13 +242,15 @@ class _RateChartState extends State<RateChart> with TickerProviderStateMixin {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          // Animated badge
+                          // Animated badge - More Eye-Catching
                           ScaleTransition(
                             scale: _pulseAnimation,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
                                   colors: isPositive
                                       ? [const Color(0xFF10B981), const Color(0xFF059669)]
                                       : [const Color(0xFFEF4444), const Color(0xFFDC2626)],
@@ -260,40 +259,61 @@ class _RateChartState extends State<RateChart> with TickerProviderStateMixin {
                                 boxShadow: [
                                   BoxShadow(
                                     color: (isPositive ? const Color(0xFF10B981) : const Color(0xFFEF4444))
-                                        .withOpacity(0.4),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 4),
+                                        .withOpacity(0.5),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                  BoxShadow(
+                                    color: (isPositive ? const Color(0xFF10B981) : const Color(0xFFEF4444))
+                                        .withOpacity(0.3),
+                                    blurRadius: 30,
+                                    offset: const Offset(0, 12),
                                   ),
                                 ],
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(
-                                    isPositive ? Icons.trending_up : Icons.trending_down,
-                                    color: Colors.white,
-                                    size: 16,
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.2),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      isPositive ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
                                   ),
-                                  const SizedBox(width: 6),
+                                  const SizedBox(width: 10),
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Text(
-                                        '${widget.currentRate.toStringAsFixed(4)}',
+                                        '₹${widget.currentRate.toStringAsFixed(4)}',
                                         style: const TextStyle(
                                           color: Colors.white,
-                                          fontSize: 13,
+                                          fontSize: 16,
                                           fontWeight: FontWeight.bold,
-                                          letterSpacing: 0.5,
+                                          letterSpacing: 0.3,
+                                          shadows: [
+                                            Shadow(
+                                              color: Colors.black26,
+                                              blurRadius: 4,
+                                              offset: Offset(0, 2),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                       Text(
                                         '${isPositive ? '+' : ''}${_percentChange.toStringAsFixed(2)}%',
-                                        style: TextStyle(
-                                          color: Colors.white.withOpacity(0.9),
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.w600,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 0.5,
                                         ),
                                       ),
                                     ],
@@ -384,18 +404,18 @@ class _RateChartState extends State<RateChart> with TickerProviderStateMixin {
                                   );
                                 }).toList(),
                                 isCurved: true,
-                                curveSmoothness: 0.4,
+                                curveSmoothness: 0.45,
                                 gradient: LinearGradient(
                                   colors: [
-                                    colorScheme.primary,
-                                    colorScheme.secondary,
-                                    colorScheme.tertiary,
+                                    const Color(0xFF6366F1),
+                                    const Color(0xFF8B5CF6),
+                                    const Color(0xFFA855F7),
                                     isPositive ? const Color(0xFF10B981) : const Color(0xFFEC4899),
                                   ],
                                   begin: Alignment.centerLeft,
                                   end: Alignment.centerRight,
                                 ),
-                                barWidth: 3.5,
+                                barWidth: 4,
                                 isStrokeCapRound: true,
                                 dotData: FlDotData(
                                   show: true,
@@ -421,17 +441,17 @@ class _RateChartState extends State<RateChart> with TickerProviderStateMixin {
                                     begin: Alignment.topCenter,
                                     end: Alignment.bottomCenter,
                                     colors: [
-                                      colorScheme.primary.withOpacity(0.25 * _animation.value),
-                                      colorScheme.secondary.withOpacity(0.15 * _animation.value),
-                                      colorScheme.tertiary.withOpacity(0.08 * _animation.value),
-                                      colorScheme.tertiary.withOpacity(0.0),
+                                      const Color(0xFF6366F1).withOpacity(0.35 * _animation.value),
+                                      const Color(0xFF8B5CF6).withOpacity(0.25 * _animation.value),
+                                      const Color(0xFFA855F7).withOpacity(0.15 * _animation.value),
+                                      const Color(0xFFA855F7).withOpacity(0.0),
                                     ],
                                   ),
                                 ),
-                                shadow: Shadow(
-                                  color: colorScheme.primary.withOpacity(0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
+                                shadow: const Shadow(
+                                  color: Color(0xFF6366F1),
+                                  blurRadius: 12,
+                                  offset: Offset(0, 6),
                                 ),
                               ),
                             ],

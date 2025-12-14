@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/exchange_provider.dart';
-import '../../widgets/login_popup.dart';
-import '../../widgets/amount_chip.dart';
-import '../../widgets/rate_chart.dart';
 import '../exchange/payment_screen.dart';
 import '../wallet/deposit_screen.dart';
-import '../wallet/withdraw_screen.dart';
-import '../referral/referral_screen.dart';
+import '../transactions/transactions_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,135 +14,22 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   final _amountController = TextEditingController();
   double _convertedAmount = 0;
   double _appliedRate = 0;
-  late AnimationController _cardAnimationController;
-  late Animation<double> _cardAnimation;
-  late AnimationController _avatarPulseController;
-  late Animation<double> _avatarPulseAnimation;
-  late AnimationController _avatarTiltController;
-  late Animation<double> _avatarTiltAnimation;
-  int _currentUpdateIndex = 0;
-  
-  // Dynamic updates list
-  final List<Map<String, dynamic>> _updates = [
-    {
-      'text': 'User exchanged ৳10,000 to ₹6,997 • Fast & Secure',
-      'icon': Icons.check_circle,
-      'color': Color(0xFF10B981),
-    },
-    {
-      'text': 'New user from Dhaka joined • Welcome bonus active!',
-      'icon': Icons.celebration,
-      'color': Color(0xFFF59E0B),
-    },
-    {
-      'text': '₹50,000 exchanged today • Join the community!',
-      'icon': Icons.trending_up,
-      'color': Color(0xFF6366F1),
-    },
-    {
-      'text': 'Instant withdrawal processed • 2 mins ago',
-      'icon': Icons.flash_on,
-      'color': Color(0xFFEF4444),
-    },
-    {
-      'text': 'Exchange rate improved • Best rates guaranteed!',
-      'icon': Icons.star,
-      'color': Color(0xFFFBBF24),
-    },
-    {
-      'text': 'User from Chittagong exchanged ৳25,000 successfully',
-      'icon': Icons.verified,
-      'color': Color(0xFF10B981),
-    },
-    {
-      'text': '100+ transactions completed today • Trusted platform',
-      'icon': Icons.security,
-      'color': Color(0xFF8B5CF6),
-    },
-    {
-      'text': 'Referral bonus paid ৳500 • Invite friends now!',
-      'icon': Icons.card_giftcard,
-      'color': Color(0xFFEC4899),
-    },
-  ];
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _amountController.addListener(_calculateExchange);
-    _cardAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
-    _cardAnimation = CurvedAnimation(
-      parent: _cardAnimationController,
-      curve: Curves.easeOutBack,
-    );
-    
-    // Avatar pulse animation - subtle and professional
-    _avatarPulseController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    );
-    _avatarPulseAnimation = Tween<double>(begin: 1.0, end: 1.08).animate(
-      CurvedAnimation(
-        parent: _avatarPulseController,
-        curve: Curves.easeInOut,
-      ),
-    );
-    
-    // Avatar tilt animation - simulates head movement
-    _avatarTiltController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
-      vsync: this,
-    );
-    _avatarTiltAnimation = Tween<double>(begin: -0.05, end: 0.05).animate(
-      CurvedAnimation(
-        parent: _avatarTiltController,
-        curve: Curves.easeInOut,
-      ),
-    );
-    
-    _startAvatarAnimations();
-    _startUpdateRotation();
-  }
-  
-  void _startAvatarAnimations() {
-    // Start pulse animation
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        _avatarPulseController.forward().then((_) {
-          _avatarPulseController.reverse().then((_) {
-            _startAvatarAnimations();
-          });
-        });
-      }
-    });
-    
-    // Start tilt animation (head movement)
-    _avatarTiltController.repeat(reverse: true);
-  }
-  
-  void _startUpdateRotation() {
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
-        setState(() {
-          _currentUpdateIndex = (_currentUpdateIndex + 1) % _updates.length;
-        });
-        _startUpdateRotation();
-      }
-    });
   }
 
   @override
   void dispose() {
-    _cardAnimationController.dispose();
-    _avatarPulseController.dispose();
-    _avatarTiltController.dispose();
+    _tabController.dispose();
     _amountController.dispose();
     super.dispose();
   }
@@ -157,7 +41,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         _convertedAmount = 0;
         _appliedRate = 0;
       });
-      _cardAnimationController.reverse();
       return;
     }
 
@@ -168,8 +51,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       _appliedRate = exchangeProvider.baseRate;
     });
     
-    _cardAnimationController.forward();
-    
     final result = await exchangeProvider.calculateExchange(amount);
     if (result != null && mounted) {
       setState(() {
@@ -179,293 +60,130 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
-  Future<void> _proceedToPayment() async {
+  void _proceedToPayment() {
     final amount = double.tryParse(_amountController.text);
     if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Please enter a valid amount'),
+        const SnackBar(
+          content: Text('Please enter a valid amount'),
           backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
       return;
     }
 
-    // Check if user is logged in
-    final isLoggedIn = await LoginPopup.show(
+    Navigator.push(
       context,
-      message: 'Login to exchange BDT to INR',
-    );
-    
-    if (!isLoggedIn) return;
-
-    if (mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => PaymentScreen(
-            fromAmount: amount,
-            toAmount: _convertedAmount,
-            exchangeRate: _appliedRate,
-          ),
+      MaterialPageRoute(
+        builder: (_) => PaymentScreen(
+          fromAmount: amount,
+          toAmount: _convertedAmount,
+          exchangeRate: _appliedRate,
         ),
-      );
-    }
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Use listen: false to prevent unnecessary rebuilds
-    final user = Provider.of<AuthProvider>(context, listen: false).user;
-    final exchangeProvider = Provider.of<ExchangeProvider>(context, listen: false);
+    final user = Provider.of<AuthProvider>(context).user;
+    final exchangeProvider = Provider.of<ExchangeProvider>(context);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
-            // App Bar - More Compact and Gorgeous
+            // App Bar
             SliverAppBar(
-              expandedHeight: 180,
+              expandedHeight: 200,
               floating: false,
               pinned: true,
               backgroundColor: const Color(0xFF6366F1),
               flexibleSpace: FlexibleSpaceBar(
                 background: Container(
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFA855F7)],
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF6366F1).withOpacity(0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
                   ),
-                  child: Stack(
-                    children: [
-                      // Decorative circles
-                      Positioned(
-                        top: -50,
-                        right: -50,
-                        child: Container(
-                          width: 200,
-                          height: 200,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white.withOpacity(0.05),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: -30,
-                        left: -30,
-                        child: Container(
-                          width: 150,
-                          height: 150,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white.withOpacity(0.03),
-                          ),
-                        ),
-                      ),
-                      // Content
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 50, 20, 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Expanded(
-                                  child: Row(
-                                    children: [
-                                      // User Avatar - Modern Profile Picture
-                                      ScaleTransition(
-                                        scale: _avatarPulseAnimation,
-                                        child: Container(
-                                          width: 52,
-                                          height: 52,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            gradient: const LinearGradient(
-                                              begin: Alignment.topLeft,
-                                              end: Alignment.bottomRight,
-                                              colors: [Color(0xFFFFFFFF), Color(0xFFF0F0F0)],
-                                            ),
-                                            border: Border.all(
-                                              color: Colors.white,
-                                              width: 3,
-                                            ),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black.withOpacity(0.2),
-                                                blurRadius: 15,
-                                                offset: const Offset(0, 5),
-                                              ),
-                                            ],
-                                          ),
-                                          child: ClipOval(
-                                            child: user?.photoUrl != null && user!.photoUrl!.isNotEmpty
-                                                ? Image.network(
-                                                    user.photoUrl!,
-                                                    fit: BoxFit.cover,
-                                                    errorBuilder: (context, error, stackTrace) {
-                                                      return _buildDefaultAvatar(user);
-                                                    },
-                                                  )
-                                                : _buildDefaultAvatar(user),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'Hello, ${user?.fullName?.split(' ').first ?? 'User'}',
-                                              style: const TextStyle(
-                                                color: Colors.white70,
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            const SizedBox(height: 2),
-                                            const Text(
-                                              'BDPayX Exchange',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                                letterSpacing: -0.5,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
+                                Text(
+                                  'Hello, ${user?.fullName ?? 'User'}',
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 14,
                                   ),
                                 ),
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.15),
-                                    borderRadius: BorderRadius.circular(14),
-                                    border: Border.all(
-                                      color: Colors.white.withOpacity(0.2),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: const Icon(
-                                    Icons.notifications_rounded,
+                                const SizedBox(height: 4),
+                                const Text(
+                                  'BDPayX Exchange',
+                                  style: TextStyle(
                                     color: Colors.white,
-                                    size: 22,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ],
                             ),
-                            const Spacer(),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.2),
-                                  width: 1,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.trending_up_rounded, color: Colors.white, size: 18),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '100 BDT = ₹${(exchangeProvider.baseRate * 100).toStringAsFixed(2)}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: 0.3,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF10B981),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: const Text(
-                                      'LIVE',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        SizedBox(
-                                          width: 12,
-                                          height: 12,
-                                          child: CircularProgressIndicator(
-                                            value: exchangeProvider.countdown / 60,
-                                            strokeWidth: 2,
-                                            backgroundColor: Colors.white.withOpacity(0.3),
-                                            valueColor: AlwaysStoppedAnimation<Color>(
-                                              exchangeProvider.countdown > 10
-                                                  ? Colors.white
-                                                  : const Color(0xFFEF4444),
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          '${exchangeProvider.countdown}s',
-                                          style: TextStyle(
-                                            color: exchangeProvider.countdown > 10
-                                                ? Colors.white
-                                                : const Color(0xFFFFCDD2),
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
+                              child: const Icon(
+                                Icons.notifications_outlined,
+                                color: Colors.white,
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
+                        const Spacer(),
+                        Row(
+                          children: [
+                            const Icon(Icons.trending_up, color: Colors.white70, size: 16),
+                            const SizedBox(width: 4),
+                            Text(
+                              '1 BDT = ₹${exchangeProvider.baseRate.toStringAsFixed(4)}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.green,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Text(
+                                'LIVE',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -499,7 +217,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
             ),
 
-            // Quick Actions (Deposit, Withdraw, Invite)
+            // Quick Actions
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -508,59 +226,27 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     Expanded(
                       child: _buildQuickAction(
                         'Deposit',
-                        Icons.add_card,
-                        const Color(0xFF10B981),
-                        () async {
-                          final isLoggedIn = await LoginPopup.show(
-                            context,
-                            message: 'Login to deposit BDT',
-                          );
-                          if (isLoggedIn && mounted) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const DepositScreen()),
-                            );
-                          }
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildQuickAction(
-                        'Withdraw',
-                        Icons.account_balance,
+                        Icons.add_circle_outline,
                         const Color(0xFF3B82F6),
-                        () async {
-                          final isLoggedIn = await LoginPopup.show(
+                        () {
+                          Navigator.push(
                             context,
-                            message: 'Login to withdraw funds',
+                            MaterialPageRoute(builder: (_) => const DepositScreen()),
                           );
-                          if (isLoggedIn && mounted) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const WithdrawScreen()),
-                            );
-                          }
                         },
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: _buildQuickAction(
-                        'Invite',
-                        Icons.card_giftcard,
-                        const Color(0xFFF59E0B),
-                        () async {
-                          final isLoggedIn = await LoginPopup.show(
+                        'History',
+                        Icons.history,
+                        const Color(0xFF8B5CF6),
+                        () {
+                          Navigator.push(
                             context,
-                            message: 'Login to get your referral link',
+                            MaterialPageRoute(builder: (_) => const TransactionsScreen()),
                           );
-                          if (isLoggedIn && mounted) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const ReferralScreen()),
-                            );
-                          }
                         },
                       ),
                     ),
@@ -585,363 +271,91 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       ),
                     ],
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Text(
-                          'Exchange BDT to INR',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1E293B),
-                          ),
+                  child: Column(
+                    children: [
+                      // Tab Bar
+                      Container(
+                        margin: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFEF3C7),
+                        child: TabBar(
+                          controller: _tabController,
+                          indicator: BoxDecoration(
+                            color: const Color(0xFF6366F1),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.info_outline, color: Color(0xFFD97706), size: 18),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  'Rate updates in ${exchangeProvider.countdown}s • 100 BDT = ₹${(exchangeProvider.baseRate * 100).toStringAsFixed(2)}',
-                                  style: const TextStyle(fontSize: 11, color: Color(0xFF92400E)),
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: exchangeProvider.countdown > 10
-                                      ? const Color(0xFFD97706)
-                                      : const Color(0xFFEF4444),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        value: exchangeProvider.countdown / 60,
-                                        strokeWidth: 2,
-                                        backgroundColor: Colors.white.withOpacity(0.3),
-                                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      '${exchangeProvider.countdown}s',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        TextField(
-                          controller: _amountController,
-                          keyboardType: TextInputType.number,
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                          decoration: InputDecoration(
-                            labelText: 'Enter BDT Amount',
-                            prefixText: '৳ ',
-                            prefixStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                            filled: true,
-                            fillColor: const Color(0xFFF8FAFC),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide.none,
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            AmountChip(amount: '1,000', onTap: () => _amountController.text = '1000'),
-                            AmountChip(amount: '5,000', onTap: () => _amountController.text = '5000'),
-                            AmountChip(amount: '10,000', onTap: () => _amountController.text = '10000'),
-                            AmountChip(amount: '25,000', onTap: () => _amountController.text = '25000'),
+                          labelColor: Colors.white,
+                          unselectedLabelColor: const Color(0xFF64748B),
+                          dividerColor: Colors.transparent,
+                          tabs: const [
+                            Tab(text: 'Exchange'),
+                            Tab(text: 'Calculator'),
                           ],
                         ),
-                        const SizedBox(height: 20),
-                        
-                        // Animated Result Card
-                        ScaleTransition(
-                          scale: _cardAnimation,
-                          child: _convertedAmount > 0
-                              ? Container(
-                                  padding: const EdgeInsets.all(20),
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [Color(0xFF10B981), Color(0xFF059669)],
-                                    ),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      const Text(
-                                        'You will receive',
-                                        style: TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        '₹${_convertedAmount.toStringAsFixed(2)}',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 32,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'Rate: ${_appliedRate.toStringAsFixed(4)}',
-                                        style: const TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
+                      ),
+
+                      // Tab Content
+                      SizedBox(
+                        height: 400,
+                        child: TabBarView(
+                          controller: _tabController,
+                          children: [
+                            _buildExchangeTab(exchangeProvider),
+                            _buildCalculatorTab(exchangeProvider),
+                          ],
                         ),
-                        
-                        if (_convertedAmount > 0) const SizedBox(height: 20),
-                        
-                        ElevatedButton(
-                          onPressed: _proceedToPayment,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF6366F1),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: const Text(
-                            'Continue to Payment',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
 
-            // Rate Chart Section - Eye-Catching Design
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Color(0xFF6366F1),
-                            Color(0xFF8B5CF6),
-                            Color(0xFFA855F7),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF6366F1).withOpacity(0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: const Icon(
-                              Icons.show_chart_rounded,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          const Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Live Rate Analytics',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    letterSpacing: -0.3,
-                                  ),
-                                ),
-                                SizedBox(height: 2),
-                                Text(
-                                  '24-hour trend visualization',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white70,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.3),
-                                width: 1,
-                              ),
-                            ),
-                            child: const Row(
-                              children: [
-                                Icon(Icons.trending_up, color: Colors.white, size: 16),
-                                SizedBox(width: 4),
-                                Text(
-                                  'LIVE',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    RateChart(currentRate: exchangeProvider.baseRate),
-                  ],
-                ),
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
-
-            // Updates/Announcements Section (Dynamic)
+            // Recent Transactions
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Live Updates',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1E293B),
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Recent Activity',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1E293B),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const TransactionsScreen()),
+                            );
+                          },
+                          child: const Text('View All'),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 12),
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 500),
-                      transitionBuilder: (Widget child, Animation<double> animation) {
-                        return FadeTransition(
-                          opacity: animation,
-                          child: SlideTransition(
-                            position: Tween<Offset>(
-                              begin: const Offset(0.0, 0.3),
-                              end: Offset.zero,
-                            ).animate(animation),
-                            child: child,
-                          ),
-                        );
-                      },
-                      child: Container(
-                        key: ValueKey<int>(_currentUpdateIndex),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              _updates[_currentUpdateIndex]['color'].withOpacity(0.1),
-                              _updates[_currentUpdateIndex]['color'].withOpacity(0.05),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: _updates[_currentUpdateIndex]['color'].withOpacity(0.3),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: _updates[_currentUpdateIndex]['color'].withOpacity(0.2),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                _updates[_currentUpdateIndex]['icon'],
-                                color: _updates[_currentUpdateIndex]['color'],
-                                size: 20,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                _updates[_currentUpdateIndex]['text'],
-                                style: TextStyle(
-                                  color: _updates[_currentUpdateIndex]['color'].withOpacity(0.9),
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                            Icon(
-                              Icons.arrow_forward_ios,
-                              color: _updates[_currentUpdateIndex]['color'],
-                              size: 16,
-                            ),
-                          ],
-                        ),
-                      ),
+                    _buildRecentTransaction(
+                      'Exchange Completed',
+                      '৳10,000 → ₹6,997',
+                      'Today, 2:30 PM',
+                      Icons.swap_horiz,
+                      const Color(0xFF10B981),
+                    ),
+                    _buildRecentTransaction(
+                      'Deposit Approved',
+                      '৳5,000',
+                      'Yesterday, 4:15 PM',
+                      Icons.add_circle,
+                      const Color(0xFF3B82F6),
                     ),
                   ],
                 ),
@@ -960,58 +374,36 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [color, color.withOpacity(0.85)],
+          colors: [color, color.withOpacity(0.8)],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.4),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-          BoxShadow(
-            color: color.withOpacity(0.2),
-            blurRadius: 30,
-            offset: const Offset(0, 12),
+            color: color.withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: Colors.white, size: 22),
-          ),
-          const SizedBox(height: 14),
+          Icon(icon, color: Colors.white.withOpacity(0.8), size: 24),
+          const SizedBox(height: 12),
           Text(
             title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.3,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 12,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
             amount,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 24,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
-              letterSpacing: -0.5,
-              shadows: [
-                Shadow(
-                  color: Colors.black26,
-                  blurRadius: 4,
-                  offset: Offset(0, 2),
-                ),
-              ],
             ),
           ),
         ],
@@ -1036,15 +428,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           ],
         ),
-        child: Column(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(height: 8),
+            Icon(icon, color: color, size: 20),
+            const SizedBox(width: 8),
             Text(
               title,
               style: TextStyle(
                 color: color,
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1054,27 +447,285 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildDefaultAvatar(user) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFA855F7)],
-        ),
+  Widget _buildExchangeTab(ExchangeProvider exchangeProvider) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: _amountController,
+            keyboardType: TextInputType.number,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            decoration: InputDecoration(
+              labelText: 'Enter BDT Amount',
+              prefixText: '৳ ',
+              prefixStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              filled: true,
+              fillColor: const Color(0xFFF8FAFC),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _buildAmountChip('1,000'),
+              _buildAmountChip('5,000'),
+              _buildAmountChip('10,000'),
+              _buildAmountChip('25,000'),
+            ],
+          ),
+          const SizedBox(height: 24),
+          if (_convertedAmount > 0) ...[
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF10B981), Color(0xFF059669)],
+                ),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                children: [
+                  const Text(
+                    'You will receive',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '₹${_convertedAmount.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Rate: ${_appliedRate.toStringAsFixed(4)}',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
+          const Spacer(),
+          ElevatedButton(
+            onPressed: _proceedToPayment,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6366F1),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 0,
+            ),
+            child: const Text(
+              'Continue to Payment',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
       ),
-      child: Center(
+    );
+  }
+
+  Widget _buildCalculatorTab(ExchangeProvider exchangeProvider) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('1,000 BDT', style: TextStyle(fontSize: 16)),
+                    Text('₹${(1000 * exchangeProvider.baseRate).toStringAsFixed(2)}',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                const Divider(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('5,000 BDT', style: TextStyle(fontSize: 16)),
+                    Text('₹${(5000 * exchangeProvider.baseRate).toStringAsFixed(2)}',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                const Divider(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('10,000 BDT', style: TextStyle(fontSize: 16)),
+                    Text('₹${(10000 * exchangeProvider.baseRate).toStringAsFixed(2)}',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                const Divider(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('25,000 BDT', style: TextStyle(fontSize: 16)),
+                    Text('₹${(25000 * exchangeProvider.baseRate).toStringAsFixed(2)}',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                const Divider(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('50,000 BDT', style: TextStyle(fontSize: 16)),
+                    Text('₹${(50000 * exchangeProvider.baseRate).toStringAsFixed(2)}',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFEF3C7),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline, color: Color(0xFFD97706), size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Rate updates every 15 seconds. Current rate: ${exchangeProvider.baseRate.toStringAsFixed(4)}',
+                    style: const TextStyle(fontSize: 12, color: Color(0xFF92400E)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAmountChip(String amount) {
+    return InkWell(
+      onTap: () {
+        _amountController.text = amount.replaceAll(',', '');
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
         child: Text(
-          (user?.fullName ?? 'U')[0].toUpperCase(),
+          '৳$amount',
           style: const TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            letterSpacing: 0.5,
+            color: Color(0xFF475569),
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ),
     );
   }
 
+  Widget _buildRecentTransaction(
+    String title,
+    String amount,
+    String time,
+    IconData icon,
+    Color color,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1E293B),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  time,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF94A3B8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            amount,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

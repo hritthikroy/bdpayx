@@ -18,7 +18,7 @@ app.use((req, res, next) => {
 });
 
 // Serve static files from Flutter web directory
-const webPath = path.join(__dirname, 'flutter_app', 'build', 'web');
+const webPath = path.join(__dirname, '..', 'flutter_app', 'build', 'web');
 app.use(express.static(webPath));
 
 // Fallback to index.html for all other routes (SPA routing)

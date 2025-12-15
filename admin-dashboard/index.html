@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -8,9 +9,10 @@
     <meta name="theme-color" content="#6366F1">
     <title>BDPayX Admin - Modern Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles-modern.css">
+    <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
 </head>
+
 <body>
     <!-- Mobile Header -->
     <header class="mobile-header">
@@ -18,7 +20,9 @@
             <button class="menu-btn" onclick="toggleMenu()">
                 <i class="fas fa-bars"></i>
             </button>
-            <div class="logo-mobile">BDPayX</div>
+            <div class="logo-mobile">
+                <img src="logo.png" alt="BDPayX" style="height: 32px; width: auto;">
+            </div>
         </div>
         <div class="mobile-header-right">
             <button class="notification-btn" onclick="showNotifications()">
@@ -330,6 +334,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="charts.js"></script>
-    <script src="app-modern.js"></script>
+    <script src="app.js"></script>
 </body>
+
 </html>

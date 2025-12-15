@@ -11,8 +11,10 @@ import 'config/supabase_config.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize Supabase
-  await SupabaseConfig.initialize();
+  // Initialize Supabase in background (non-blocking for super fast startup)
+  SupabaseConfig.initialize().catchError((e) {
+    debugPrint('Supabase init error: $e');
+  });
   
   runApp(const MyApp());
 }
@@ -34,7 +36,7 @@ class MyApp extends StatelessWidget {
         theme: _buildLightTheme(),
         darkTheme: _buildDarkTheme(),
         themeMode: ThemeMode.system,
-        home: const AppInitializer(),
+        home: const MainNavigation(), // Direct to main screen for instant loading
         routes: {
           '/login': (context) => const LoginScreen(),
           '/main': (context) => const MainNavigation(),
@@ -118,13 +120,13 @@ class _AppInitializerState extends State<AppInitializer> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final exchangeProvider = Provider.of<ExchangeProvider>(context, listen: false);
     
-    // Initialize exchange provider immediately (no delay)
+    // Initialize exchange provider in background
     exchangeProvider.initialize();
     
-    // Load token in parallel
+    // Load token in background
     authProvider.loadToken();
     
-    // Navigate immediately without waiting
+    // Navigate IMMEDIATELY for super fast loading
     if (mounted) {
       Navigator.pushReplacementNamed(context, '/main');
     }

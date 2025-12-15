@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'dart:ui';
 import 'dart:math' as math;
+import '../providers/exchange_provider.dart';
+import '../providers/auth_provider.dart';
 import 'home/home_screen.dart';
 import 'transactions/transactions_screen.dart';
 import 'chat/support_screen.dart';
@@ -17,7 +20,6 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
   int _currentIndex = 0;
   double _scrollOffset = 0.0;
   final ScrollController _scrollController = ScrollController();
-  late AnimationController _waveController;
   late AnimationController _rippleController;
   late List<AnimationController> _iconControllers;
 
@@ -38,10 +40,6 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
   @override
   void initState() {
     super.initState();
-    _waveController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 3),
-    )..repeat();
     
     _rippleController = AnimationController(
       vsync: this,
@@ -57,12 +55,27 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
     );
     
     _iconControllers[0].forward();
+    
+    // Initialize providers in background (non-blocking)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        try {
+          final exchangeProvider = Provider.of<ExchangeProvider>(context, listen: false);
+          final authProvider = Provider.of<AuthProvider>(context, listen: false);
+          
+          // Initialize in background
+          exchangeProvider.initialize();
+          authProvider.loadToken();
+        } catch (e) {
+          debugPrint('Provider init error: $e');
+        }
+      }
+    });
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
-    _waveController.dispose();
     _rippleController.dispose();
     for (var controller in _iconControllers) {
       controller.dispose();
@@ -166,18 +179,18 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
         borderRadius: BorderRadius.circular(30),
         child: Stack(
           children: [
-            // Animated water flow background
-            AnimatedBuilder(
-              animation: _waveController,
-              builder: (context, child) {
-                return CustomPaint(
-                  painter: WaterFlowPainter(
-                    animation: _waveController.value,
-                    color: _navItems[_currentIndex].color,
-                  ),
-                  size: Size.infinite,
-                );
-              },
+            // Simple gradient background (optimized for performance)
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    _navItems[_currentIndex].color.withOpacity(0.15),
+                    _navItems[_currentIndex].color.withOpacity(0.05),
+                  ],
+                ),
+              ),
             ),
             // Glass effect
             BackdropFilter(
@@ -244,83 +257,54 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
               scale: scale,
               child: Transform.rotate(
                 angle: rotation,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          // Ripple effect
-                          if (isSelected)
-                            AnimatedBuilder(
-                              animation: _rippleController,
-                              builder: (context, child) {
-                                return Container(
-                                  width: 50 * (1 + _rippleController.value),
-                                  height: 50 * (1 + _rippleController.value),
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: item.color.withOpacity(
-                                      0.2 * (1 - _rippleController.value),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          // Icon container with glass effect
-                          Container(
-                            width: 50,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: isSelected
-                                  ? LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: [
-                                        item.color.withOpacity(0.8),
-                                        item.color.withOpacity(0.6),
-                                      ],
-                                    )
-                                  : null,
-                              boxShadow: isSelected
-                                  ? [
-                                      BoxShadow(
-                                        color: item.color.withOpacity(0.4),
-                                        blurRadius: 15,
-                                        offset: const Offset(0, 5),
-                                      ),
-                                    ]
-                                  : null,
-                            ),
-                            child: Icon(
-                              item.icon,
-                              color: isSelected ? Colors.white : const Color(0xFF64748B),
-                              size: 26,
-                            ),
-                          ),
-                        ],
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Icon container with glass effect
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: isSelected
+                            ? LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  item.color.withOpacity(0.8),
+                                  item.color.withOpacity(0.6),
+                                ],
+                              )
+                            : null,
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: item.color.withOpacity(0.3),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ]
+                            : null,
                       ),
-                      const SizedBox(height: 4),
-                      // Label with fade animation
-                      AnimatedOpacity(
-                        opacity: isSelected ? 1.0 : 0.6,
-                        duration: const Duration(milliseconds: 200),
-                        child: Text(
-                          item.label,
-                          style: TextStyle(
-                            color: isSelected ? item.color : const Color(0xFF64748B),
-                            fontSize: 11,
-                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
+                      child: Icon(
+                        item.icon,
+                        color: isSelected ? Colors.white : const Color(0xFF64748B),
+                        size: 18,
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 3),
+                    // Label
+                    Text(
+                      item.label,
+                      style: TextStyle(
+                        color: isSelected ? item.color : const Color(0xFF64748B),
+                        fontSize: 9,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                        height: 1.0,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             );

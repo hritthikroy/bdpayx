@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#6366F1">
+    <title>BDPayX Admin - Demo (No Auth)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <div class="mobile-header-left">
+            <button class="menu-btn" onclick="alert('Menu clicked!')">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="logo-mobile">
+                <img src="logo.png" alt="BDPayX" style="height: 32px; width: auto;">
+            </div>
+        </div>
+        <div class="mobile-header-right">
+            <button class="notification-btn" onclick="alert('Notifications clicked!')">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge">3</span>
+            </button>
+            <div class="admin-avatar">A</div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-container">
+        <div class="content-wrapper">
+            <!-- Dashboard Page -->
+            <div id="dashboard-page" class="page active">
+                <!-- Stats Grid -->
+                <div class="stats-grid-modern">
+                    <div class="stat-card-modern">
+                        <div class="stat-icon-modern">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-value-modern">1,234</div>
+                        <div class="stat-label-modern">Total Users</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i> 12%
+                        </div>
+                    </div>
+
+                    <div class="stat-card-modern success">
+                        <div class="stat-icon-modern">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-value-modern">856</div>
+                        <div class="stat-label-modern">Active Now</div>
+                    </div>
+
+                    <div class="stat-card-modern warning">
+                        <div class="stat-icon-modern">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-value-modern">42</div>
+                        <div class="stat-label-modern">Pending</div>
+                    </div>
+
+                    <div class="stat-card-modern danger">
+                        <div class="stat-icon-modern">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="stat-value-modern">৳45.2K</div>
+                        <div class="stat-label-modern">Today's Volume</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i> 8%
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="action-cards">
+                    <a href="#" class="action-card" onclick="event.preventDefault(); alert('Add User');">
+                        <div class="action-card-icon">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div class="action-card-label">Add User</div>
+                    </a>
+
+                    <a href="#" class="action-card success" onclick="event.preventDefault(); alert('Approve TX');">
+                        <div class="action-card-icon">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="action-card-label">Approve TX</div>
+                    </a>
+
+                    <a href="#" class="action-card warning" onclick="event.preventDefault(); alert('Update Rate');">
+                        <div class="action-card-icon">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+                        <div class="action-card-label">Update Rate</div>
+                    </a>
+
+                    <a href="#" class="action-card danger" onclick="event.preventDefault(); alert('Support');">
+                        <div class="action-card-icon">
+                            <i class="fas fa-headset"></i>
+                        </div>
+                        <div class="action-card-label">Support</div>
+                    </a>
+                </div>
+
+                <!-- Recent Transactions -->
+                <div class="list-modern">
+                    <div class="list-header-modern">
+                        <div class="list-title-modern">Recent Transactions</div>
+                        <a href="#" class="list-action-modern" onclick="event.preventDefault();">View All</a>
+                    </div>
+                    <a href="#" class="list-item-modern" onclick="event.preventDefault();">
+                        <div class="list-item-icon">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+                        <div class="list-item-content">
+                            <div class="list-item-title">John Doe</div>
+                            <div class="list-item-subtitle">5,000 BDT → 3,500 INR</div>
+                        </div>
+                        <div class="list-item-badge success">completed</div>
+                    </a>
+                    <a href="#" class="list-item-modern" onclick="event.preventDefault();">
+                        <div class="list-item-icon">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+                        <div class="list-item-content">
+                            <div class="list-item-title">Jane Smith</div>
+                            <div class="list-item-subtitle">10,000 BDT → 7,000 INR</div>
+                        </div>
+                        <div class="list-item-badge warning">pending</div>
+                    </a>
+                    <a href="#" class="list-item-modern" onclick="event.preventDefault();">
+                        <div class="list-item-icon">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+                        <div class="list-item-content">
+                            <div class="list-item-title">Bob Johnson</div>
+                            <div class="list-item-subtitle">3,000 BDT → 2,100 INR</div>
+                        </div>
+                        <div class="list-item-badge success">completed</div>
+                    </a>
+                </div>
+
+                <!-- Support Tickets -->
+                <div class="list-modern">
+                    <div class="list-header-modern">
+                        <div class="list-title-modern">Support Tickets</div>
+                        <a href="#" class="list-action-modern" onclick="event.preventDefault();">View All</a>
+                    </div>
+                    <a href="#" class="list-item-modern" onclick="event.preventDefault();">
+                        <div class="list-item-icon">
+                            <i class="fas fa-ticket-alt"></i>
+                        </div>
+                        <div class="list-item-content">
+                            <div class="list-item-title">🔴 Payment Issue</div>
+                            <div class="list-item-subtitle">Sarah Williams</div>
+                        </div>
+                        <div class="list-item-badge warning">open</div>
+                    </a>
+                    <a href="#" class="list-item-modern" onclick="event.preventDefault();">
+                        <div class="list-item-icon">
+                            <i class="fas fa-ticket-alt"></i>
+                        </div>
+                        <div class="list-item-content">
+                            <div class="list-item-title">🟡 Account Verification</div>
+                            <div class="list-item-subtitle">Mike Brown</div>
+                        </div>
+                        <div class="list-item-badge info">replied</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Theme Toggle Button -->
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="#" class="nav-item-mobile active" onclick="event.preventDefault();">
+            <div class="icon"><i class="fas fa-home"></i></div>
+            <span>Home</span>
+        </a>
+        <a href="#" class="nav-item-mobile" onclick="event.preventDefault();">
+            <div class="icon"><i class="fas fa-users"></i></div>
+            <span>Users</span>
+        </a>
+        <a href="#" class="nav-item-mobile" onclick="event.preventDefault();">
+            <div class="icon"><i class="fas fa-exchange-alt"></i></div>
+            <span>Transactions</span>
+        </a>
+        <a href="#" class="nav-item-mobile" onclick="event.preventDefault();">
+            <div class="icon"><i class="fas fa-headset"></i></div>
+            <span>Support</span>
+        </a>
+        <a href="#" class="nav-item-mobile" onclick="event.preventDefault();">
+            <div class="icon"><i class="fas fa-cog"></i></div>
+            <span>Settings</span>
+        </a>
+    </nav>
+
+    <script>
+        // Theme Toggle
+        function toggleTheme() {
+            const body = document.body;
+            const themeToggle = document.querySelector('.theme-toggle i');
+
+            body.classList.toggle('dark-theme');
+
+            // Update icon
+            if (body.classList.contains('dark-theme')) {
+                themeToggle.className = 'fas fa-sun';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                themeToggle.className = 'fas fa-moon';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // Load saved theme on page load
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const themeToggle = document.querySelector('.theme-toggle i');
+
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+                if (themeToggle) {
+                    themeToggle.className = 'fas fa-sun';
+                }
+            }
+        }
+
+        // Initialize theme on load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTheme();
+        });
+
+        // Navigation
+        document.querySelectorAll('.nav-item-mobile').forEach(item => {
+            item.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelectorAll('.nav-item-mobile').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+
+</html>

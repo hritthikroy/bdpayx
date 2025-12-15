@@ -8,7 +8,7 @@ let currentTransactionId = null;
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     if (!authToken) {
-        window.location.href = 'login-modern.html';
+        window.location.href = 'login.html';
         return;
     }
 
@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Socket.IO Connection
 function initializeSocket() {
     socket = io('http://localhost:8081');
-    
+
     socket.on('connect', () => {
         console.log('Connected to server');
         socket.emit('authenticate', {
@@ -52,30 +52,30 @@ function initializeSocket() {
 function navigateTo(page) {
     event?.preventDefault();
     currentPage = page;
-    
+
     // Hide all pages
     document.querySelectorAll('.page').forEach(p => {
         p.style.display = 'none';
     });
-    
+
     // Show selected page
     document.getElementById(`${page}-page`).style.display = 'block';
-    
+
     // Update bottom nav
     document.querySelectorAll('.nav-item-mobile').forEach(item => {
         item.classList.remove('active');
     });
     document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
-    
+
     // Load page data
     loadCurrentPage();
-    
+
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function loadCurrentPage() {
-    switch(currentPage) {
+    switch (currentPage) {
         case 'dashboard':
             loadDashboard();
             break;
@@ -97,19 +97,11 @@ async function loadDashboard() {
         const response = await fetch(`${API_BASE}/admin/v2/dashboard`, {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
-        
+
         if (!response.ok) throw new Error('Failed to load dashboard');
-        
+
         const data = await response.json();
-        updateDashboardStats(data);
-        
-        // Initialize charts with data
-        if (typeof initializeCharts === 'function') {
-            initializeCharts(data);
-        }
-        
-        const data = await response.json();
-        
+
         if (data.error) {
             showToast(data.error, 'error');
             return;
@@ -121,6 +113,11 @@ async function loadDashboard() {
         document.getElementById('active-users').textContent = overview.activeUsers || 0;
         document.getElementById('pending-tx').textContent = overview.pendingTransactions || 0;
         document.getElementById('today-volume').textContent = formatNumber(overview.totalVolume || 0);
+
+        // Initialize charts with data
+        if (typeof initializeCharts === 'function') {
+            initializeCharts(data);
+        }
 
         // Load recent transactions
         if (data.recentTransactions) {
@@ -137,9 +134,9 @@ function loadRecentTransactions(transactions) {
     container.innerHTML = '';
 
     transactions.slice(0, 5).forEach(tx => {
-        const statusClass = tx.status === 'completed' ? 'success' : 
-                          tx.status === 'pending' ? 'warning' : 'danger';
-        
+        const statusClass = tx.status === 'completed' ? 'success' :
+            tx.status === 'pending' ? 'warning' : 'danger';
+
         const item = `
             <a href="#" class="list-item-modern" onclick="viewTransaction(${tx.id})">
                 <div class="list-item-icon">
@@ -164,9 +161,9 @@ async function loadUsers() {
             `${API_BASE}/admin/v2/users?search=${search}`,
             { headers: { 'Authorization': `Bearer ${authToken}` } }
         );
-        
+
         const data = await response.json();
-        
+
         if (data.error) {
             showToast(data.error, 'error');
             return;
@@ -210,9 +207,9 @@ async function loadTransactions() {
             `${API_BASE}/admin/v2/transactions?status=${status}`,
             { headers: { 'Authorization': `Bearer ${authToken}` } }
         );
-        
+
         const data = await response.json();
-        
+
         if (data.error) {
             showToast(data.error, 'error');
             return;
@@ -227,9 +224,9 @@ async function loadTransactions() {
         }
 
         data.transactions.forEach(tx => {
-            const statusClass = tx.status === 'completed' ? 'success' : 
-                              tx.status === 'pending' ? 'warning' : 'danger';
-            
+            const statusClass = tx.status === 'completed' ? 'success' :
+                tx.status === 'pending' ? 'warning' : 'danger';
+
             const item = `
                 <a href="#" class="list-item-modern" onclick="viewTransaction(${tx.id})">
                     <div class="list-item-icon">
@@ -258,9 +255,9 @@ async function loadSupport() {
             `${API_BASE}/support/tickets?status=${status}`,
             { headers: { 'Authorization': `Bearer ${authToken}` } }
         );
-        
+
         const data = await response.json();
-        
+
         if (data.error) {
             showToast(data.error, 'error');
             return;
@@ -275,11 +272,11 @@ async function loadSupport() {
         }
 
         data.tickets.forEach(ticket => {
-            const statusClass = ticket.status === 'closed' ? 'success' : 
-                              ticket.status === 'replied' ? 'info' : 'warning';
-            const priorityIcon = ticket.priority === 'high' ? '🔴' : 
-                               ticket.priority === 'normal' ? '🟡' : '🟢';
-            
+            const statusClass = ticket.status === 'closed' ? 'success' :
+                ticket.status === 'replied' ? 'info' : 'warning';
+            const priorityIcon = ticket.priority === 'high' ? '🔴' :
+                ticket.priority === 'normal' ? '🟡' : '🟢';
+
             const item = `
                 <a href="#" class="list-item-modern" onclick="viewTicket(${ticket.id})">
                     <div class="list-item-icon">
@@ -304,14 +301,14 @@ async function loadSupport() {
 async function viewTransaction(id) {
     event?.preventDefault();
     currentTransactionId = id;
-    
+
     try {
         const response = await fetch(`${API_BASE}/admin/v2/transactions/${id}`, {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
-        
+
         const data = await response.json();
-        
+
         if (data.error) {
             showToast(data.error, 'error');
             return;
@@ -342,7 +339,7 @@ async function viewTransaction(id) {
                 </div>
             </div>
         `;
-        
+
         document.getElementById('transaction-details').innerHTML = details;
         openModal('transaction-modal');
     } catch (error) {
@@ -354,7 +351,7 @@ async function viewTransaction(id) {
 // Approve Transaction
 async function approveTransaction() {
     if (!currentTransactionId) return;
-    
+
     try {
         const response = await fetch(`${API_BASE}/admin/v2/transactions/${currentTransactionId}/status`, {
             method: 'PUT',
@@ -381,7 +378,7 @@ async function approveTransaction() {
 // Reject Transaction
 async function rejectTransaction() {
     if (!currentTransactionId) return;
-    
+
     try {
         const response = await fetch(`${API_BASE}/admin/v2/transactions/${currentTransactionId}/status`, {
             method: 'PUT',
@@ -424,14 +421,14 @@ function showToast(message, type = 'info') {
         <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
         <div style="flex: 1;">${message}</div>
     `;
-    
+
     document.body.appendChild(toast);
-    
+
     // Haptic feedback
     if ('vibrate' in navigator) {
         navigator.vibrate(50);
     }
-    
+
     setTimeout(() => {
         toast.style.animation = 'slideDown 0.3s ease';
         setTimeout(() => toast.remove(), 300);
@@ -455,14 +452,14 @@ function getUserIdFromToken() {
 function logout() {
     event?.preventDefault();
     localStorage.removeItem('admin_token');
-    window.location.href = 'login-modern.html';
+    window.location.href = 'login.html';
 }
 
 // Event Listeners
 function setupEventListeners() {
     // Search users
     document.getElementById('user-search')?.addEventListener('input', debounce(loadUsers, 500));
-    
+
     // Close modals on backdrop click
     document.querySelectorAll('.modal-modern').forEach(modal => {
         modal.addEventListener('click', (e) => {
@@ -539,9 +536,9 @@ document.head.appendChild(style);
 function toggleTheme() {
     const body = document.body;
     const themeToggle = document.querySelector('.theme-toggle i');
-    
+
     body.classList.toggle('dark-theme');
-    
+
     // Update icon
     if (body.classList.contains('dark-theme')) {
         themeToggle.className = 'fas fa-sun';
@@ -550,7 +547,7 @@ function toggleTheme() {
         themeToggle.className = 'fas fa-moon';
         localStorage.setItem('theme', 'light');
     }
-    
+
     // Reinitialize charts with new theme
     if (typeof handleThemeChange === 'function') {
         handleThemeChange();
@@ -561,7 +558,7 @@ function toggleTheme() {
 function loadTheme() {
     const savedTheme = localStorage.getItem('theme');
     const themeToggle = document.querySelector('.theme-toggle i');
-    
+
     if (savedTheme === 'dark') {
         document.body.classList.add('dark-theme');
         if (themeToggle) {

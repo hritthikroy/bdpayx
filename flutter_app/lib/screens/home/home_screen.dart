@@ -23,10 +23,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   double _appliedRate = 0;
   late AnimationController _cardAnimationController;
   late Animation<double> _cardAnimation;
-  late AnimationController _avatarPulseController;
-  late Animation<double> _avatarPulseAnimation;
-  late AnimationController _avatarTiltController;
-  late Animation<double> _avatarTiltAnimation;
   int _currentUpdateIndex = 0;
   
   // Dynamic updates list
@@ -86,48 +82,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       curve: Curves.easeOutBack,
     );
     
-    // Avatar pulse animation - subtle and professional
-    _avatarPulseController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    );
-    _avatarPulseAnimation = Tween<double>(begin: 1.0, end: 1.08).animate(
-      CurvedAnimation(
-        parent: _avatarPulseController,
-        curve: Curves.easeInOut,
-      ),
-    );
-    
-    // Avatar tilt animation - simulates head movement
-    _avatarTiltController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
-      vsync: this,
-    );
-    _avatarTiltAnimation = Tween<double>(begin: -0.05, end: 0.05).animate(
-      CurvedAnimation(
-        parent: _avatarTiltController,
-        curve: Curves.easeInOut,
-      ),
-    );
-    
-    _startAvatarAnimations();
     _startUpdateRotation();
-  }
-  
-  void _startAvatarAnimations() {
-    // Start pulse animation
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        _avatarPulseController.forward().then((_) {
-          _avatarPulseController.reverse().then((_) {
-            _startAvatarAnimations();
-          });
-        });
-      }
-    });
-    
-    // Start tilt animation (head movement)
-    _avatarTiltController.repeat(reverse: true);
   }
   
   void _startUpdateRotation() {
@@ -144,8 +99,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void dispose() {
     _cardAnimationController.dispose();
-    _avatarPulseController.dispose();
-    _avatarTiltController.dispose();
     _amountController.dispose();
     super.dispose();
   }
@@ -287,50 +240,38 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 Expanded(
                                   child: Row(
                                     children: [
-                                      // User Avatar - Animated
-                                      ScaleTransition(
-                                        scale: _avatarPulseAnimation,
-                                        child: RotationTransition(
-                                          turns: _avatarTiltAnimation,
-                                          child: Container(
-                                            width: 50,
-                                            height: 50,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              border: Border.all(
-                                                color: Colors.white,
-                                                width: 2.5,
-                                              ),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.black.withOpacity(0.3),
-                                                  blurRadius: 12,
-                                                  offset: const Offset(0, 4),
-                                                ),
-                                              ],
+                                      // User Avatar - Simple and Fast
+                                      Container(
+                                        width: 50,
+                                        height: 50,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          gradient: const LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFA855F7)],
+                                          ),
+                                          border: Border.all(
+                                            color: Colors.white,
+                                            width: 2.5,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withOpacity(0.2),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 2),
                                             ),
-                                            child: ClipOval(
-                                              child: Container(
-                                                decoration: const BoxDecoration(
-                                                  gradient: LinearGradient(
-                                                    begin: Alignment.topLeft,
-                                                    end: Alignment.bottomRight,
-                                                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFA855F7)],
-                                                  ),
-                                                ),
-                                                child: Center(
-                                                  child: Text(
-                                                    user?.fullName?.substring(0, 1).toUpperCase() ?? 
-                                                    user?.email?.substring(0, 1).toUpperCase() ?? 
-                                                    'U',
-                                                    style: const TextStyle(
-                                                      fontSize: 24,
-                                                      fontWeight: FontWeight.bold,
-                                                      color: Colors.white,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
+                                          ],
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            user?.fullName?.substring(0, 1).toUpperCase() ?? 
+                                            user?.email?.substring(0, 1).toUpperCase() ?? 
+                                            'U',
+                                            style: const TextStyle(
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
                                             ),
                                           ),
                                         ),
@@ -965,6 +906,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
               ),
             ),
+            
+            // Bottom padding to prevent overlap with bottom navigation
+            const SliverToBoxAdapter(child: SizedBox(height: 150)),
           ],
         ),
       ),

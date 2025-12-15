@@ -51,8 +51,3 @@ flutter:
   assets:
     - assets/images/
     - assets/animations/
-  
-  fonts:
-    - family: MaterialIcons
-      fonts:
-        - asset: packages/flutter/src/material/icons/MaterialIcons-Regular.otf

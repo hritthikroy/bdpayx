@@ -407,7 +407,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   const Icon(Icons.trending_up_rounded, color: Colors.white, size: 18),
                                   const SizedBox(width: 8),
                                   Text(
-                                    '1 BDT = ₹${exchangeProvider.baseRate.toStringAsFixed(4)}',
+                                    '100 BDT = ₹${(exchangeProvider.baseRate * 100).toStringAsFixed(2)}',
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 14,

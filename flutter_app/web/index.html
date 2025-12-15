@@ -23,34 +23,24 @@
   <link href="https://fonts.googleapis.com/css2?family=Material+Icons&family=Material+Icons+Outlined&family=Material+Icons+Round&family=Material+Icons+Sharp&display=block" rel="stylesheet">
   
   <style>
-    /* Load Material Icons from local assets with Google Fonts fallback */
+    /* Force Material Icons font loading */
     @font-face {
       font-family: 'MaterialIcons';
       font-style: normal;
       font-weight: 400;
-      src: local('Material Icons'),
-           local('MaterialIcons-Regular'),
-           url('assets/fonts/MaterialIcons-Regular.otf') format('opentype'),
-           url('https://fonts.gstatic.com/s/materialicons/v140/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2') format('woff2');
+      src: url('https://fonts.gstatic.com/s/materialicons/v140/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2') format('woff2');
+      font-display: block;
     }
     
-    /* Ensure icons use the correct font */
-    .material-icons {
-      font-family: 'Material Icons', 'MaterialIcons' !important;
-      font-weight: normal;
-      font-style: normal;
-      font-size: 24px;
-      display: inline-block;
-      line-height: 1;
-      text-transform: none;
-      letter-spacing: normal;
-      word-wrap: normal;
-      white-space: nowrap;
-      direction: ltr;
+    /* Fallback for all icon elements */
+    * {
       -webkit-font-smoothing: antialiased;
-      text-rendering: optimizeLegibility;
       -moz-osx-font-smoothing: grayscale;
-      font-feature-settings: 'liga';
+    }
+    
+    /* Force icon font on all elements that might contain icons */
+    flt-glass-pane * {
+      font-family: 'MaterialIcons', 'Roboto', sans-serif !important;
     }
   </style>
   <script>

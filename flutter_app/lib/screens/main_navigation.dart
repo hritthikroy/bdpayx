@@ -24,6 +24,7 @@ class _MainNavigationState extends State<MainNavigation>
   int _currentIndex = 2; // Start with Home (center button)
   final List<GlobalKey> _navKeys = List.generate(5, (_) => GlobalKey());
   late AnimationController _waveController;
+  late AnimationController _homeAnimationController;
   late List<AnimationController> _iconControllers;
   late List<Animation<double>> _scaleAnimations;
   late List<Animation<double>> _rotationAnimations;
@@ -33,18 +34,18 @@ class _MainNavigationState extends State<MainNavigation>
 
   // Cache screens for instant switching - no rebuild
   late final List<Widget> _screens = [
-    const TransactionsScreen(),
+    const RateAlertsScreen(),        // Swapped: Rate Alerts now at position 0
     const SupportScreen(),
     const HomeScreen(),
-    const RateAlertsScreen(),
+    const TransactionsScreen(),      // Swapped: Transaction History now at position 3
     const ProfileScreen(),
   ];
 
   final List<NavItem> _navItems = [
-    NavItem(icon: Icons.history_rounded, label: 'History', color: Color(0xFF10B981)),
+    NavItem(icon: Icons.notifications_rounded, label: 'Alerts', color: Color(0xFFF59E0B)),     // Swapped: Alerts now first
     NavItem(icon: Icons.support_agent_rounded, label: 'Support', color: Color(0xFF06B6D4)),
     NavItem(icon: Icons.home_rounded, label: 'Home', color: Color(0xFF6366F1)), // Center button - Home
-    NavItem(icon: Icons.notifications_rounded, label: 'Alerts', color: Color(0xFFF59E0B)),
+    NavItem(icon: Icons.history_rounded, label: 'History', color: Color(0xFF10B981)),          // Swapped: History now at position 3
     NavItem(icon: Icons.account_circle_rounded, label: 'Profile', color: Color(0xFFEC4899)),
   ];
 
@@ -58,6 +59,12 @@ class _MainNavigationState extends State<MainNavigation>
       vsync: this,
     )..repeat();
     
+    // Home icon continuous animation controller
+    _homeAnimationController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    );
+    
     // Fast animation controller setup
     _iconControllers = List.generate(
       _navItems.length,
@@ -67,12 +74,14 @@ class _MainNavigationState extends State<MainNavigation>
       ),
     );
 
-    // Simplified scale animations
-    _scaleAnimations = _iconControllers.map((controller) {
-      return Tween<double>(begin: 1.0, end: 1.0).animate(
-        CurvedAnimation(parent: controller, curve: Curves.easeOutBack),
+    // Enhanced scale animations with different values for home icon
+    _scaleAnimations = List.generate(_navItems.length, (index) {
+      // Home icon (center button) gets more dramatic animation
+      final endScale = index == 2 ? 1.3 : 1.2;
+      return Tween<double>(begin: 1.0, end: endScale).animate(
+        CurvedAnimation(parent: _iconControllers[index], curve: Curves.easeOutBack),
       );
-    }).toList();
+    });
 
     // Simplified rotation animations
     _rotationAnimations = _iconControllers.map((controller) {
@@ -89,6 +98,13 @@ class _MainNavigationState extends State<MainNavigation>
     
     // Defer heavy initialization to after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) => _deferredInit());
+    
+    // Start home animation since it's the default selected tab
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_currentIndex == 2) {
+        _homeAnimationController.repeat();
+      }
+    });
   }
   
   void _deferredInit() {
@@ -133,6 +149,9 @@ class _MainNavigationState extends State<MainNavigation>
   }
 
   void _showPinSetupDialog() {
+    // Prevent multiple dialogs
+    if (ModalRoute.of(context)?.isCurrent != true) return;
+    
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -196,6 +215,7 @@ class _MainNavigationState extends State<MainNavigation>
   void dispose() {
     _appLockService.dispose();
     _waveController.dispose();
+    _homeAnimationController.dispose();
     for (var controller in _iconControllers) {
       controller.dispose();
     }
@@ -274,10 +294,10 @@ class _MainNavigationState extends State<MainNavigation>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildNavItem(0), // History
+                  _buildNavItem(0), // Alerts (swapped)
                   _buildNavItem(1), // Support
                   const SizedBox(width: 64), // Space for floating button
-                  _buildNavItem(3), // Alerts
+                  _buildNavItem(3), // History (swapped)
                   _buildNavItem(4), // Profile
                 ],
               ),
@@ -302,6 +322,10 @@ class _MainNavigationState extends State<MainNavigation>
       onTap: () {
         setState(() => _currentIndex = centerIndex);
         _iconControllers[centerIndex].forward(from: 0.0);
+        // Start continuous animation for home icon
+        if (_currentIndex == centerIndex) {
+          _homeAnimationController.repeat();
+        }
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
@@ -338,10 +362,15 @@ class _MainNavigationState extends State<MainNavigation>
                 scale: scaleValue,
                 child: Transform.translate(
                   offset: Offset(0, bounceValue),
-                  child: Icon(
-                    Icons.home_rounded,
-                    size: 28,
-                    color: isSelected ? Colors.white : const Color(0xFF64748B),
+                  child: AnimatedBuilder(
+                    animation: _homeAnimationController,
+                    builder: (context, child) {
+                      return AnimatedHomeIcon(
+                        isSelected: isSelected,
+                        color: isSelected ? Colors.white : const Color(0xFF64748B),
+                        progress: isSelected ? _homeAnimationController.value : _scaleAnimations[centerIndex].value,
+                      );
+                    },
                   ),
                 ),
               );
@@ -363,6 +392,10 @@ class _MainNavigationState extends State<MainNavigation>
       onTap: () {
         setState(() => _currentIndex = index);
         _iconControllers[index].forward(from: 0.0);
+        // Stop home animation when other tabs are selected
+        if (index != 2) {
+          _homeAnimationController.stop();
+        }
       },
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
@@ -413,8 +446,8 @@ class _MainNavigationState extends State<MainNavigation>
     final progress = _iconControllers[index].value;
 
     switch (index) {
-      case 0: // History
-        return AnimatedHistoryIcon(
+      case 0: // Alerts (swapped)
+        return AnimatedAlertsIcon(
           isSelected: isSelected,
           color: color,
           progress: progress,
@@ -431,8 +464,8 @@ class _MainNavigationState extends State<MainNavigation>
           color: color,
           progress: progress,
         );
-      case 3: // Alerts
-        return AnimatedAlertsIcon(
+      case 3: // History (swapped)
+        return AnimatedHistoryIcon(
           isSelected: isSelected,
           color: color,
           progress: progress,

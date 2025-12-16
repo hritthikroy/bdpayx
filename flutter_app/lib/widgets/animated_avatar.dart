@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
-import 'package:sensors_plus/sensors_plus.dart';
-import 'dart:async';
 
 class AnimatedAvatar extends StatefulWidget {
   final double size;
@@ -20,81 +18,113 @@ class AnimatedAvatar extends StatefulWidget {
 class _AnimatedAvatarState extends State<AnimatedAvatar>
     with TickerProviderStateMixin {
   late AnimationController _blinkController;
-  late AnimationController _floatController;
   late AnimationController _glowController;
+  late AnimationController _breatheController;
+  late AnimationController _lookAroundController;
+  late AnimationController _eyeMovementController;
+  
   late Animation<double> _blinkAnimation;
-  late Animation<double> _floatAnimation;
   late Animation<double> _glowAnimation;
+  late Animation<double> _breatheAnimation;
+  late Animation<double> _lookAroundAnimation;
+  late Animation<double> _eyeMovementAnimation;
 
-  StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
-  double _tiltX = 0.0;
-  double _tiltY = 0.0;
+
 
   @override
   void initState() {
     super.initState();
 
+    // Blinking animation - natural eye blinks
     _blinkController = AnimationController(
-      duration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 150),
       vsync: this,
     );
-    _blinkAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
+    _blinkAnimation = Tween<double>(begin: 1.0, end: 0.1).animate(
       CurvedAnimation(parent: _blinkController, curve: Curves.easeInOut),
     );
 
-    // Gentle floating animation (subtle up/down)
-    _floatController = AnimationController(
-      duration: const Duration(milliseconds: 3000),
-      vsync: this,
-    );
-    _floatAnimation = Tween<double>(begin: -3.0, end: 3.0).animate(
-      CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
-    );
-
-    // Glow pulsing animation
+    // Glow pulsing animation - subtle breathing glow
     _glowController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 2000),
       vsync: this,
     );
-    _glowAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
+    _glowAnimation = Tween<double>(begin: 0.6, end: 1.0).animate(
       CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
     );
 
-    _startBlinking();
-    _startFloating();
-    _startGlowing();
-    _startAccelerometer();
+    // Breathing animation - subtle size changes
+    _breatheController = AnimationController(
+      duration: const Duration(milliseconds: 3000),
+      vsync: this,
+    );
+    _breatheAnimation = Tween<double>(begin: 0.98, end: 1.02).animate(
+      CurvedAnimation(parent: _breatheController, curve: Curves.easeInOut),
+    );
+
+    // Look around animation - subtle head movements
+    _lookAroundController = AnimationController(
+      duration: const Duration(milliseconds: 8000),
+      vsync: this,
+    );
+    _lookAroundAnimation = Tween<double>(begin: -0.05, end: 0.05).animate(
+      CurvedAnimation(parent: _lookAroundController, curve: Curves.easeInOut),
+    );
+
+    // Eye movement animation - pupils looking around
+    _eyeMovementController = AnimationController(
+      duration: const Duration(milliseconds: 4000),
+      vsync: this,
+    );
+    _eyeMovementAnimation = Tween<double>(begin: -0.3, end: 0.3).animate(
+      CurvedAnimation(parent: _eyeMovementController, curve: Curves.easeInOut),
+    );
+
+    _startRealisticAnimations();
   }
 
-  void _startAccelerometer() {
-    _accelerometerSubscription = accelerometerEventStream().listen(
-      (AccelerometerEvent event) {
-        if (mounted) {
-          setState(() {
-            _tiltX = (event.x / 10).clamp(-1.0, 1.0);
-            _tiltY = (event.y / 10).clamp(-1.0, 1.0);
-          });
-        }
-      },
-      onError: (error) {},
-    );
+
+
+  void _startRealisticAnimations() {
+    // Start all realistic animations
+    _startBlinking();
+    _startBreathing();
+    _startLookingAround();
+    _startEyeMovement();
+    _startGlowing();
   }
 
   void _startBlinking() {
-    Future.delayed(Duration(seconds: 2 + math.Random().nextInt(3)), () {
+    // Random blink intervals (2-6 seconds) - more human-like
+    final nextBlink = 2000 + math.Random().nextInt(4000);
+    Future.delayed(Duration(milliseconds: nextBlink), () {
       if (mounted) {
         _blinkController.forward().then((_) {
-          _blinkController.reverse().then((_) {
-            _startBlinking();
+          Future.delayed(const Duration(milliseconds: 50), () {
+            _blinkController.reverse().then((_) {
+              _startBlinking();
+            });
           });
         });
       }
     });
   }
 
-  void _startFloating() {
+  void _startBreathing() {
     if (mounted) {
-      _floatController.repeat(reverse: true);
+      _breatheController.repeat(reverse: true);
+    }
+  }
+
+  void _startLookingAround() {
+    if (mounted) {
+      _lookAroundController.repeat(reverse: true);
+    }
+  }
+
+  void _startEyeMovement() {
+    if (mounted) {
+      _eyeMovementController.repeat(reverse: true);
     }
   }
 
@@ -107,9 +137,10 @@ class _AnimatedAvatarState extends State<AnimatedAvatar>
   @override
   void dispose() {
     _blinkController.dispose();
-    _floatController.dispose();
     _glowController.dispose();
-    _accelerometerSubscription?.cancel();
+    _breatheController.dispose();
+    _lookAroundController.dispose();
+    _eyeMovementController.dispose();
     super.dispose();
   }
 
@@ -122,8 +153,10 @@ class _AnimatedAvatarState extends State<AnimatedAvatar>
       child: AnimatedBuilder(
         animation: Listenable.merge([
           _blinkAnimation,
-          _floatAnimation,
           _glowAnimation,
+          _breatheAnimation,
+          _lookAroundAnimation,
+          _eyeMovementAnimation,
         ]),
         builder: (context, child) {
           return Stack(
@@ -175,15 +208,11 @@ class _AnimatedAvatarState extends State<AnimatedAvatar>
                 ),
               ),
               
-              // Main avatar with realistic 3D movement
-              Transform.translate(
-                offset: Offset(0, _floatAnimation.value),
-                child: Transform(
-                  alignment: Alignment.center,
-                  transform: Matrix4.identity()
-                    ..setEntry(3, 2, 0.001) // Add 3D perspective
-                    ..rotateY(math.sin(_floatAnimation.value * 0.5) * 0.2) // Look left/right naturally
-                    ..rotateX(math.cos(_floatAnimation.value * 0.3) * 0.15), // Nod up/down naturally
+              // Main avatar with realistic movements
+              Transform.scale(
+                scale: _breatheAnimation.value, // Subtle breathing
+                child: Transform.rotate(
+                  angle: _lookAroundAnimation.value, // Subtle head tilt
                   child: Container(
                     width: widget.size * 0.85,
                     height: widget.size * 0.85,
@@ -196,19 +225,19 @@ class _AnimatedAvatarState extends State<AnimatedAvatar>
                         width: widget.size * 0.05,
                       ),
                       boxShadow: [
-                        // Purple glow
+                        // Purple glow that pulses with breathing
                         BoxShadow(
                           color: const Color(0xFF8B5CF6).withOpacity(0.6 * _glowAnimation.value),
-                          blurRadius: 25,
-                          spreadRadius: 4,
+                          blurRadius: 25 * _breatheAnimation.value,
+                          spreadRadius: 4 * _breatheAnimation.value,
                         ),
-                        // 3D drop shadow
+                        // Dynamic shadow that moves with head tilt
                         BoxShadow(
                           color: Colors.black.withOpacity(0.3),
                           blurRadius: 15,
                           offset: Offset(
-                            math.sin(_floatAnimation.value * 0.5) * 5,
-                            5 + math.cos(_floatAnimation.value * 0.3) * 3,
+                            _lookAroundAnimation.value * 10,
+                            5 + (_lookAroundAnimation.value.abs() * 3),
                           ),
                         ),
                       ],
@@ -217,65 +246,85 @@ class _AnimatedAvatarState extends State<AnimatedAvatar>
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
-                          // Eyes with 3D positioning
+                          // Eyes with realistic movement
                           Positioned(
                             top: widget.size * 0.3,
-                            left: widget.size * 0.2 + (math.sin(_floatAnimation.value * 0.5) * widget.size * 0.05),
+                            left: widget.size * 0.2 + (_eyeMovementAnimation.value * widget.size * 0.02),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                // Left eye
-                                Transform.scale(
-                                  scale: 1.0 - (math.sin(_floatAnimation.value * 0.5).abs() * 0.1),
-                                  child: Container(
-                                    width: widget.size * 0.12,
-                                    height: widget.size * 0.2 * _blinkAnimation.value,
-                                    decoration: BoxDecoration(
-                                      gradient: const LinearGradient(
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
-                                        colors: [
-                                          Color(0xFF9333EA),
-                                          Color(0xFF7C3AED),
-                                        ],
-                                      ),
-                                      borderRadius: BorderRadius.circular(100),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: const Color(0xFF8B5CF6).withOpacity(0.7),
-                                          blurRadius: 8,
-                                          spreadRadius: 2,
-                                        ),
+                                // Left eye with pupil movement
+                                Container(
+                                  width: widget.size * 0.12,
+                                  height: widget.size * 0.2 * _blinkAnimation.value,
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Color(0xFF9333EA),
+                                        Color(0xFF7C3AED),
                                       ],
                                     ),
+                                    borderRadius: BorderRadius.circular(100),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFF8B5CF6).withOpacity(0.7 * _glowAnimation.value),
+                                        blurRadius: 8 * _breatheAnimation.value,
+                                        spreadRadius: 2 * _breatheAnimation.value,
+                                      ),
+                                    ],
                                   ),
+                                  child: _blinkAnimation.value > 0.3 ? Center(
+                                    child: Transform.translate(
+                                      offset: Offset(_eyeMovementAnimation.value * 2, 0),
+                                      child: Container(
+                                        width: widget.size * 0.04,
+                                        height: widget.size * 0.08 * _blinkAnimation.value,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(50),
+                                        ),
+                                      ),
+                                    ),
+                                  ) : null,
                                 ),
                                 SizedBox(width: widget.size * 0.15),
-                                // Right eye
-                                Transform.scale(
-                                  scale: 1.0 - (math.sin(_floatAnimation.value * 0.5).abs() * 0.1),
-                                  child: Container(
-                                    width: widget.size * 0.12,
-                                    height: widget.size * 0.2 * _blinkAnimation.value,
-                                    decoration: BoxDecoration(
-                                      gradient: const LinearGradient(
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
-                                        colors: [
-                                          Color(0xFF9333EA),
-                                          Color(0xFF7C3AED),
-                                        ],
-                                      ),
-                                      borderRadius: BorderRadius.circular(100),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: const Color(0xFF8B5CF6).withOpacity(0.7),
-                                          blurRadius: 8,
-                                          spreadRadius: 2,
-                                        ),
+                                // Right eye with pupil movement
+                                Container(
+                                  width: widget.size * 0.12,
+                                  height: widget.size * 0.2 * _blinkAnimation.value,
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Color(0xFF9333EA),
+                                        Color(0xFF7C3AED),
                                       ],
                                     ),
+                                    borderRadius: BorderRadius.circular(100),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFF8B5CF6).withOpacity(0.7 * _glowAnimation.value),
+                                        blurRadius: 8 * _breatheAnimation.value,
+                                        spreadRadius: 2 * _breatheAnimation.value,
+                                      ),
+                                    ],
                                   ),
+                                  child: _blinkAnimation.value > 0.3 ? Center(
+                                    child: Transform.translate(
+                                      offset: Offset(_eyeMovementAnimation.value * 2, 0),
+                                      child: Container(
+                                        width: widget.size * 0.04,
+                                        height: widget.size * 0.08 * _blinkAnimation.value,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(50),
+                                        ),
+                                      ),
+                                    ),
+                                  ) : null,
                                 ),
                               ],
                             ),

@@ -6,7 +6,6 @@ import 'providers/exchange_provider.dart';
 import 'providers/transaction_provider.dart';
 import 'providers/security_provider.dart';
 import 'screens/splash_screen.dart';
-import 'screens/auth/login_screen.dart';
 import 'screens/main_navigation.dart';
 import 'config/supabase_config.dart';
 
@@ -64,9 +63,6 @@ class MyApp extends StatelessWidget {
         onGenerateRoute: (settings) {
           Widget page;
           switch (settings.name) {
-            case '/login':
-              page = const LoginScreen();
-              break;
             case '/main':
               page = const MainNavigation();
               break;
@@ -79,7 +75,6 @@ class MyApp extends StatelessWidget {
           return _createSmoothRoute(page, settings);
         },
         routes: {
-          '/login': (context) => const LoginScreen(),
           '/main': (context) => const MainNavigation(),
           '/splash': (context) => const SplashScreen(),
         },

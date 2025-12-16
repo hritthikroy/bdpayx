@@ -6,7 +6,7 @@ import '../../widgets/login_popup.dart';
 import '../../widgets/amount_chip.dart';
 import '../../widgets/rate_chart.dart';
 import '../../widgets/animated_avatar.dart';
-import '../../widgets/animated_number.dart';
+
 import '../exchange/payment_screen.dart';
 import '../wallet/deposit_screen.dart';
 import '../wallet/withdraw_screen.dart';
@@ -35,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   double _animatedInrBalance = 0.0;
   final double _demoBdtBalance = 100.0;
   bool _isInrBalanceUpdating = false;
+  double _lastKnownRate = 0.0;
   
   // System updates and notifications
   final List<Map<String, dynamic>> _updates = [
@@ -105,6 +106,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       final exchangeProvider = Provider.of<ExchangeProvider>(context, listen: false);
       _animatedInrBalance = _demoBdtBalance * exchangeProvider.baseRate;
       
+      // Store the current rate to detect actual changes
+      _lastKnownRate = exchangeProvider.baseRate;
+      
       // Add listener to exchange provider for rate changes
       exchangeProvider.addListener(_onExchangeRateChanged);
     });
@@ -114,6 +118,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     if (!mounted) return;
     
     final exchangeProvider = Provider.of<ExchangeProvider>(context, listen: false);
+    
+    // Only proceed if the rate actually changed (not just countdown updates)
+    if ((exchangeProvider.baseRate - _lastKnownRate).abs() < 0.0001) {
+      return; // No significant rate change, ignore this notification
+    }
+    
+    _lastKnownRate = exchangeProvider.baseRate;
     final targetInrBalance = _demoBdtBalance * exchangeProvider.baseRate;
     
     // Also update the converted amount if user has entered an amount
@@ -125,33 +136,38 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       });
     }
     
-    // Only animate balance if there's a significant change
-    if ((targetInrBalance - _animatedInrBalance).abs() > 0.01) {
+    // Only animate balance if there's a significant change and not already updating
+    if ((targetInrBalance - _animatedInrBalance).abs() > 0.01 && !_isInrBalanceUpdating) {
       setState(() {
         _isInrBalanceUpdating = true;
       });
       
-      // Animate the number counting - smooth and simple
-      _inrBalanceAnimation = Tween<double>(
-        begin: _animatedInrBalance,
-        end: targetInrBalance,
-      ).animate(CurvedAnimation(
-        parent: _inrBalanceAnimationController,
-        curve: Curves.easeInOutCubic,
-      ))..addListener(() {
-        if (mounted) {
-          setState(() {
-            _animatedInrBalance = _inrBalanceAnimation.value;
-          });
-        }
-      });
-      
-      _inrBalanceAnimationController.forward(from: 0).then((_) {
-        if (mounted) {
-          setState(() {
-            _isInrBalanceUpdating = false;
-          });
-        }
+      // Add a small delay to prevent simultaneous loading with other elements
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (!mounted) return;
+        
+        // Animate the number counting - smooth and simple
+        _inrBalanceAnimation = Tween<double>(
+          begin: _animatedInrBalance,
+          end: targetInrBalance,
+        ).animate(CurvedAnimation(
+          parent: _inrBalanceAnimationController,
+          curve: Curves.easeInOutCubic,
+        ))..addListener(() {
+          if (mounted) {
+            setState(() {
+              _animatedInrBalance = _inrBalanceAnimation.value;
+            });
+          }
+        });
+        
+        _inrBalanceAnimationController.forward(from: 0).then((_) {
+          if (mounted) {
+            setState(() {
+              _isInrBalanceUpdating = false;
+            });
+          }
+        });
       });
     }
   }
@@ -272,238 +288,278 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
           cacheExtent: 500, // Pre-render more content
           slivers: [
-            // App Bar - More Compact and Gorgeous
-            SliverAppBar(
-              expandedHeight: 180,
-              floating: false,
-              pinned: false,
-              backgroundColor: const Color(0xFF6366F1),
-              flexibleSpace: FlexibleSpaceBar(
-                background: Container(
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFA855F7)],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF6366F1).withOpacity(0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
+            // Header Section - Fixed Architecture
+            SliverToBoxAdapter(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFA855F7)],
                   ),
-                  child: Stack(
-                    children: [
-                      // Decorative circles
-                      Positioned(
-                        top: -50,
-                        right: -50,
-                        child: Container(
-                          width: 200,
-                          height: 200,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white.withOpacity(0.05),
-                          ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF6366F1).withOpacity(0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Stack(
+                  children: [
+                    // Decorative circles
+                    Positioned(
+                      top: -50,
+                      right: -50,
+                      child: Container(
+                        width: 200,
+                        height: 200,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(0.05),
                         ),
                       ),
-                      Positioned(
-                        bottom: -30,
-                        left: -30,
-                        child: Container(
-                          width: 150,
-                          height: 150,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white.withOpacity(0.03),
-                          ),
+                    ),
+                    Positioned(
+                      bottom: -30,
+                      left: -30,
+                      child: Container(
+                        width: 150,
+                        height: 150,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(0.03),
                         ),
                       ),
-                      // Content
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 50, 20, 16),
+                    ),
+                    // Content with proper spacing
+                    SafeArea(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // Top Row: User Info + Actions
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
+                                // Left Side: User Info Card
                                 Expanded(
+                                  flex: 2,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        color: Colors.white.withOpacity(0.2),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        // Avatar
+                                        AnimatedAvatar(
+                                          size: 40,
+                                          userName: user?.fullName ?? user?.email ?? 'User',
+                                        ),
+                                        const SizedBox(width: 12),
+                                        // User Info
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Hello, ${user?.fullName?.split(' ').first ?? 'User'}',
+                                                style: const TextStyle(
+                                                  color: Colors.white70,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              const SizedBox(height: 2),
+                                              const Text(
+                                                'BDPayX Exchange',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.bold,
+                                                  letterSpacing: -0.3,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                // Right Side: Action Buttons
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.2),
+                                      width: 1,
+                                    ),
+                                  ),
                                   child: Row(
                                     children: [
-                                      // Animated Avatar with Blinking Eyes
-                                      AnimatedAvatar(
-                                        size: 50,
-                                        userName: user?.fullName ?? user?.email ?? 'User',
+                                      InkWell(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => const SupportScreen(),
+                                            ),
+                                          );
+                                        },
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withOpacity(0.15),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: const Icon(
+                                            Icons.support_agent_rounded,
+                                            color: Colors.white,
+                                            size: 18,
+                                          ),
+                                        ),
                                       ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'Hello, ${user?.fullName?.split(' ').first ?? 'User'}',
-                                              style: const TextStyle(
-                                                color: Colors.white70,
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
+                                      const SizedBox(width: 6),
+                                      InkWell(
+                                        onTap: () {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: const Text('No new notifications'),
+                                              backgroundColor: const Color(0xFF6366F1),
+                                              behavior: SnackBarBehavior.floating,
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                              duration: const Duration(seconds: 2),
                                             ),
-                                            const SizedBox(height: 2),
-                                            const Text(
-                                              'BDPayX Exchange',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                                letterSpacing: -0.5,
-                                              ),
-                                            ),
-                                          ],
+                                          );
+                                        },
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withOpacity(0.15),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: const Icon(
+                                            Icons.notifications_rounded,
+                                            color: Colors.white,
+                                            size: 18,
+                                          ),
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                Row(
-                                  children: [
-                                    InkWell(
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => const SupportScreen(),
-                                          ),
-                                        );
-                                      },
-                                      borderRadius: BorderRadius.circular(14),
-                                      child: Container(
-                                        padding: const EdgeInsets.all(10),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.15),
-                                          borderRadius: BorderRadius.circular(14),
-                                          border: Border.all(
-                                            color: Colors.white.withOpacity(0.2),
-                                            width: 1,
-                                          ),
-                                        ),
-                                        child: const Icon(
-                                          Icons.support_agent_rounded,
-                                          color: Colors.white,
-                                          size: 22,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    InkWell(
-                                      onTap: () {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: const Text('No new notifications'),
-                                            backgroundColor: const Color(0xFF6366F1),
-                                            behavior: SnackBarBehavior.floating,
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                            duration: const Duration(seconds: 2),
-                                          ),
-                                        );
-                                      },
-                                      borderRadius: BorderRadius.circular(14),
-                                      child: Container(
-                                        padding: const EdgeInsets.all(10),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.15),
-                                          borderRadius: BorderRadius.circular(14),
-                                          border: Border.all(
-                                            color: Colors.white.withOpacity(0.2),
-                                            width: 1,
-                                          ),
-                                        ),
-                                        child: const Icon(
-                                          Icons.notifications_rounded,
-                                          color: Colors.white,
-                                          size: 22,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
                               ],
                             ),
-                            const Spacer(),
+                            const SizedBox(height: 16),
+                            // Bottom: Live Exchange Rate Card
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(16),
+                                color: Colors.white.withOpacity(0.12),
+                                borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withOpacity(0.25),
                                   width: 1,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 5),
                                   ),
                                 ],
                               ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
+                              child: Column(
                                 children: [
-                                  const Icon(Icons.trending_up_rounded, color: Colors.white, size: 18),
-                                  const SizedBox(width: 8),
+                                  // Header
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(6),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF10B981),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: const Icon(
+                                          Icons.trending_up_rounded,
+                                          color: Colors.white,
+                                          size: 14,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Text(
+                                        'LIVE EXCHANGE RATE',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1.0,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  // Exchange Rate
                                   Text(
                                     '100 BDT = ₹${(exchangeProvider.baseRate * 100).toStringAsFixed(2)}',
                                     style: const TextStyle(
                                       color: Colors.white,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: 0.3,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: -0.5,
                                     ),
                                   ),
-                                  const SizedBox(width: 10),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF10B981),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: const Text(
-                                      'LIVE',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        TweenAnimationBuilder<double>(
-                                          tween: Tween(
-                                            begin: exchangeProvider.countdown / 60,
-                                            end: exchangeProvider.countdown / 60,
+                                  const SizedBox(height: 8),
+                                  // Status Row
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF10B981),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: const Text(
+                                          'LIVE',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 0.5,
                                           ),
-                                          duration: const Duration(milliseconds: 800),
-                                          curve: Curves.easeInOut,
-                                          builder: (context, value, child) {
-                                            return SizedBox(
-                                              width: 12,
-                                              height: 12,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.2),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            SizedBox(
+                                              width: 10,
+                                              height: 10,
                                               child: CircularProgressIndicator(
-                                                value: value,
-                                                strokeWidth: 2,
+                                                value: exchangeProvider.countdown / 60,
+                                                strokeWidth: 1.5,
                                                 backgroundColor: Colors.white.withOpacity(0.3),
                                                 valueColor: AlwaysStoppedAnimation<Color>(
                                                   exchangeProvider.countdown > 10
@@ -511,35 +567,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                                       : const Color(0xFFEF4444),
                                                 ),
                                               ),
-                                            );
-                                          },
-                                        ),
-                                        const SizedBox(width: 4),
-                                        AnimatedSwitcher(
-                                          duration: const Duration(milliseconds: 300),
-                                          transitionBuilder: (child, animation) {
-                                            return FadeTransition(
-                                              opacity: animation,
-                                              child: ScaleTransition(
-                                                scale: animation,
-                                                child: child,
-                                              ),
-                                            );
-                                          },
-                                          child: Text(
-                                            '${exchangeProvider.countdown}s',
-                                            key: ValueKey(exchangeProvider.countdown),
-                                            style: TextStyle(
-                                              color: exchangeProvider.countdown > 10
-                                                  ? Colors.white
-                                                  : const Color(0xFFFFCDD2),
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.bold,
                                             ),
-                                          ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              '${exchangeProvider.countdown}s',
+                                              style: TextStyle(
+                                                color: exchangeProvider.countdown > 10
+                                                    ? Colors.white
+                                                    : const Color(0xFFFFCDD2),
+                                                fontSize: 9,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
@@ -547,8 +590,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -616,18 +659,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         Expanded(
                           child: _buildBalanceCard(
                             'BDT Balance',
-                            _isBalanceHidden ? '৳****' : '৳${_demoBdtBalance.toStringAsFixed(2)}',
+                            _isBalanceHidden ? '৳ ****' : '৳ ${_demoBdtBalance.toStringAsFixed(2)}',
                             const Color(0xFF10B981),
-                            Icons.account_balance_wallet,
+                            null, // Use custom BDT symbol instead of icon
                             false,
                             showDemoBadge: true,
+                            currencySymbol: '৳',
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: _buildBalanceCard(
                             'INR Balance',
-                            _isBalanceHidden ? '₹****' : '₹${_animatedInrBalance.toStringAsFixed(2)}',
+                            _isBalanceHidden ? '₹ ****' : '₹ ${_animatedInrBalance.toStringAsFixed(2)}',
                             const Color(0xFF8B5CF6),
                             Icons.currency_rupee,
                             true,
@@ -1158,7 +1202,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildBalanceCard(String title, String amount, Color color, IconData icon, bool isAnimated, {bool showDemoBadge = false}) {
+  Widget _buildBalanceCard(String title, String amount, Color color, IconData? icon, bool isAnimated, {bool showDemoBadge = false, String? currencySymbol}) {
     Widget cardContent = Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -1186,6 +1230,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
@@ -1193,7 +1238,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: Colors.white, size: 22),
+                child: currencySymbol != null 
+                  ? Text(
+                      currencySymbol,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+                  : Icon(icon, color: Colors.white, size: 22),
               ),
               if (isAnimated)
                 AnimatedContainer(
@@ -1201,7 +1255,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: _isInrBalanceUpdating 
-                        ? const Color(0xFF10B981).withOpacity(0.9)
+                        ? const Color(0xFF3B82F6).withOpacity(0.9)
                         : Colors.white.withOpacity(0.25),
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -1209,12 +1263,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (_isInrBalanceUpdating)
-                        const SizedBox(
+                        SizedBox(
                           width: 8,
                           height: 8,
                           child: CircularProgressIndicator(
                             strokeWidth: 1.5,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
                         )
                       else
@@ -1228,7 +1282,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
                       const SizedBox(width: 4),
                       Text(
-                        _isInrBalanceUpdating ? 'UPDATING' : 'LIVE',
+                        _isInrBalanceUpdating ? 'SYNC' : 'LIVE',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 9,
@@ -1258,7 +1312,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 18),
           Text(
             title,
             style: const TextStyle(

@@ -5,6 +5,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/transaction_provider.dart';
 import '../../widgets/login_popup.dart';
 
+
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key});
 
@@ -22,22 +23,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   Future<void> _loadTransactions() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     
-    // Check if user is logged in
-    if (!authProvider.isAuthenticated) {
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        await LoginPopup.show(
-          context,
-          message: 'Login to view your transactions',
-        );
-      });
-      return;
-    }
-    
-    final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
-    if (authProvider.token != null) {
+    // Only load transactions if user is authenticated, don't show popup automatically
+    if (authProvider.isAuthenticated && authProvider.token != null) {
+      final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
       await transactionProvider.fetchTransactions(authProvider.token!);
     }
   }
+
+
 
   Color _getStatusColor(String status) {
     switch (status) {
@@ -54,10 +47,20 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
-        child: Column(
+        child: authProvider.isAuthenticated 
+          ? _buildAuthenticatedTransactions()
+          : _buildLoginPrompt(),
+      ),
+    );
+  }
+
+  Widget _buildAuthenticatedTransactions() {
+    return Column(
           children: [
             // Modern Header with Gradient - No back button for main nav screens
             Container(
@@ -310,8 +313,166 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               ),
             ),
           ],
+        );
+  }
+
+
+}
+  Widget _buildLoginPrompt() {
+    return Column(
+      children: [
+        // Header
+        Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFA855F7)],
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(
+                    Icons.history_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Transaction History',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'Login to view your transactions',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-      ),
+        
+        // Login prompt content
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 20,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      const Icon(
+                        Icons.receipt_long_outlined,
+                        size: 80,
+                        color: Color(0xFF6366F1),
+                      ),
+                      const SizedBox(height: 24),
+                      const Text(
+                        'No Transactions Yet',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1E293B),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Login to view your transaction history and track all your exchanges',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Color(0xFF64748B),
+                          height: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () async {
+                            final success = await LoginPopup.show(context, message: 'Login to view your transactions');
+                            if (success && mounted) {
+                              // Transactions will automatically update due to provider changes
+                            }
+                          },
+                          icon: const Icon(Icons.g_mobiledata, size: 24),
+                          label: const Text(
+                            'Sign in with Google',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF4285F4),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextButton(
+                        onPressed: () {
+                          // Navigate to home screen
+                          if (mounted) {
+                            DefaultTabController.of(context)?.animateTo(2);
+                          }
+                        },
+                        child: const Text(
+                          'Browse Exchange Rates',
+                          style: TextStyle(
+                            color: Color(0xFF6366F1),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
-}

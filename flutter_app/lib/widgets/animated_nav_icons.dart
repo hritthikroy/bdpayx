@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
-/// Animated Home Icon - Beautiful House with Smoke Animation
+/// Animated Home Icon - Modern Smart Home with Dynamic Elements
 class AnimatedHomeIcon extends StatelessWidget {
   final bool isSelected;
   final Color color;
@@ -53,84 +53,215 @@ class AnimatedHomePainter extends CustomPainter {
 
     final center = Offset(size.width / 2, size.height / 2);
     
-    // Smooth bounce effect
-    final bounce = math.sin(progress * math.pi) * 2;
+    // Dynamic elastic bounce with overshoot - enhanced for center button
+    final elasticProgress = _elasticOut(progress);
+    final scale = 1.0 + (elasticProgress * (isSelected ? 0.25 : 0.15));
+    final bounce = math.sin(progress * math.pi * 2) * (isSelected ? 2.5 : 1.5);
     
     canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.scale(scale);
+    canvas.translate(-center.dx, -center.dy);
     canvas.translate(0, -bounce);
 
-    // House roof with chimney
+    // Modern house roof with dynamic angle
+    final roofRotation = progress * 0.1;
+    canvas.save();
+    canvas.translate(center.dx, center.dy - 6);
+    canvas.rotate(roofRotation);
+    canvas.translate(-center.dx, -(center.dy - 6));
+    
     final roofPath = Path();
     roofPath.moveTo(center.dx, center.dy - 11);
-    roofPath.lineTo(center.dx - 11, center.dy);
-    roofPath.lineTo(center.dx + 11, center.dy);
+    roofPath.lineTo(center.dx - 10, center.dy - 1);
+    roofPath.lineTo(center.dx + 10, center.dy - 1);
     roofPath.close();
 
-    // House body
+    if (isSelected) canvas.drawPath(roofPath, fillPaint);
+    canvas.drawPath(roofPath, paint);
+    canvas.restore();
+
+    // Smart home body with tech elements
     final bodyPath = Path();
     bodyPath.addRRect(RRect.fromRectAndRadius(
-      Rect.fromLTWH(center.dx - 8, center.dy, 16, 12),
-      const Radius.circular(1.5),
+      Rect.fromLTWH(center.dx - 8, center.dy - 1, 16, 13),
+      const Radius.circular(2),
     ));
 
-    // Door with rounded top
+    if (isSelected) canvas.drawPath(bodyPath, fillPaint);
+    canvas.drawPath(bodyPath, paint);
+
+    // Animated smart door with LED strip
     final doorPath = Path();
     doorPath.addRRect(RRect.fromRectAndRadius(
-      Rect.fromLTWH(center.dx - 2.5, center.dy + 4, 5, 8),
+      Rect.fromLTWH(center.dx - 2.5, center.dy + 3, 5, 9),
       const Radius.circular(2.5),
     ));
-
-    // Window
-    final windowPath = Path();
-    windowPath.addRRect(RRect.fromRectAndRadius(
-      Rect.fromLTWH(center.dx + 3, center.dy + 3, 4, 4),
-      const Radius.circular(1),
-    ));
-
-    // Chimney
-    final chimneyPath = Path();
-    chimneyPath.addRect(Rect.fromLTWH(center.dx + 4, center.dy - 9, 4, 6));
-
-    if (isSelected) {
-      canvas.drawPath(roofPath, fillPaint);
-      canvas.drawPath(bodyPath, fillPaint);
-    }
-    
-    canvas.drawPath(roofPath, paint);
-    canvas.drawPath(bodyPath, paint);
     canvas.drawPath(doorPath, paint);
-    canvas.drawPath(windowPath, paint);
-    canvas.drawPath(chimneyPath, paint);
 
-    // Animated smoke from chimney when selected
+    // LED door strip animation
     if (isSelected && progress > 0) {
-      final smokePaint = Paint()
-        ..color = color.withOpacity(0.4 * (1 - progress))
+      final ledPaint = Paint()
+        ..color = color.withOpacity(0.8)
         ..style = PaintingStyle.fill;
       
       for (int i = 0; i < 3; i++) {
-        final smokeY = center.dy - 12 - (progress * 8) - (i * 4);
-        final smokeX = center.dx + 6 + math.sin(progress * math.pi * 2 + i) * 2;
-        final smokeSize = 2.0 + (progress * 2) - (i * 0.5);
-        if (smokeSize > 0) {
-          canvas.drawCircle(
-            Offset(smokeX, smokeY),
-            smokeSize,
-            smokePaint..color = color.withOpacity(0.3 * (1 - progress) * (1 - i * 0.3)),
-          );
-        }
+        final ledProgress = (progress * 3 - i).clamp(0.0, 1.0);
+        final ledOpacity = math.sin(ledProgress * math.pi);
+        canvas.drawCircle(
+          Offset(center.dx - 1.5, center.dy + 5 + i * 2),
+          1.5,
+          ledPaint..color = color.withOpacity(ledOpacity * 0.6),
+        );
       }
+    }
+
+    // Smart windows with animated glow
+    final windowGlow = isSelected ? math.sin(progress * math.pi * 4) * 0.3 + 0.7 : 0.3;
+    final windowPaint = Paint()
+      ..color = color.withOpacity(windowGlow)
+      ..style = PaintingStyle.fill;
+
+    // Left window
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(center.dx - 6.5, center.dy + 2, 3, 3),
+        const Radius.circular(1),
+      ),
+      windowPaint,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(center.dx - 6.5, center.dy + 2, 3, 3),
+        const Radius.circular(1),
+      ),
+      paint..strokeWidth = 1.5,
+    );
+
+    // Right window
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(center.dx + 3.5, center.dy + 2, 3, 3),
+        const Radius.circular(1),
+      ),
+      windowPaint,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(center.dx + 3.5, center.dy + 2, 3, 3),
+        const Radius.circular(1),
+      ),
+      paint..strokeWidth = 1.5,
+    );
+
+    // Rotating satellite dish/antenna
+    if (isSelected) {
+      final dishRotation = progress * math.pi * 4;
+      canvas.save();
+      canvas.translate(center.dx + 6, center.dy - 8);
+      canvas.rotate(dishRotation);
+      
+      // Dish
+      canvas.drawArc(
+        Rect.fromCenter(center: Offset.zero, width: 6, height: 4),
+        0, math.pi, false,
+        paint..strokeWidth = 1.5,
+      );
+      
+      // Signal waves
+      for (int i = 0; i < 2; i++) {
+        final waveRadius = 3.0 + i * 2.0;
+        canvas.drawArc(
+          Rect.fromCenter(center: Offset.zero, width: waveRadius * 2, height: waveRadius),
+          -math.pi / 3, math.pi / 1.5, false,
+          Paint()
+            ..color = color.withOpacity(0.4 * (1 - i * 0.3))
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1,
+        );
+      }
+      canvas.restore();
     }
 
     canvas.restore();
 
-    // Glow effect when selected
-    if (isSelected) {
-      final glowPaint = Paint()
-        ..color = color.withOpacity(0.1)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
-      canvas.drawCircle(center, 14, glowPaint);
+    // WiFi/Smart signals emanating from house
+    if (isSelected && progress > 0) {
+      final signalPaint = Paint()
+        ..color = color.withOpacity(0.4)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5;
+      
+      for (int i = 0; i < 3; i++) {
+        final signalProgress = (progress * 2 - i * 0.3).clamp(0.0, 1.0);
+        final signalRadius = 8 + signalProgress * 12;
+        final signalOpacity = (1 - signalProgress) * 0.6;
+        
+        // WiFi arc signals
+        canvas.drawArc(
+          Rect.fromCenter(center: center, width: signalRadius * 2, height: signalRadius * 2),
+          -math.pi / 4, -math.pi / 2, false,
+          signalPaint..color = color.withOpacity(signalOpacity),
+        );
+      }
     }
+
+    // Smart home energy pulse - enhanced
+    if (isSelected) {
+      final pulseRadius = 8 + math.sin(progress * math.pi * 8) * 4;
+      final pulsePaint = Paint()
+        ..color = color.withOpacity(0.3 + math.sin(progress * math.pi * 4) * 0.1)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5;
+      
+      canvas.drawCircle(center, pulseRadius, pulsePaint);
+      
+      // Additional inner pulse
+      final innerPulseRadius = 4 + math.sin(progress * math.pi * 10) * 2;
+      canvas.drawCircle(center, innerPulseRadius, 
+        pulsePaint..strokeWidth = 1.5..color = color.withOpacity(0.4));
+    }
+
+    // Floating smart particles
+    if (isSelected && progress > 0) {
+      final particlePaint = Paint()
+        ..color = color.withOpacity(0.6)
+        ..style = PaintingStyle.fill;
+      
+      for (int i = 0; i < 4; i++) {
+        final angle = (progress * math.pi * 2) + (i * math.pi / 2);
+        final radius = 12 + math.sin(progress * math.pi + i) * 3;
+        final particleX = center.dx + math.cos(angle) * radius;
+        final particleY = center.dy + math.sin(angle) * radius;
+        final particleSize = 1.5 + math.sin(progress * math.pi * 3 + i) * 0.5;
+        
+        canvas.drawCircle(
+          Offset(particleX, particleY),
+          particleSize,
+          particlePaint..color = color.withOpacity(0.4 + math.sin(progress * math.pi * 2 + i) * 0.2),
+        );
+      }
+    }
+
+    // Enhanced glow effect with pulsing - more prominent
+    if (isSelected) {
+      final glowIntensity = 0.2 + math.sin(progress * math.pi * 4) * 0.1;
+      final glowPaint = Paint()
+        ..color = color.withOpacity(glowIntensity)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16);
+      canvas.drawCircle(center, 20, glowPaint);
+      
+      // Additional outer glow
+      final outerGlowPaint = Paint()
+        ..color = color.withOpacity(glowIntensity * 0.5)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 24);
+      canvas.drawCircle(center, 28, outerGlowPaint);
+    }
+  }
+
+  double _elasticOut(double t) {
+    if (t == 0 || t == 1) return t;
+    return math.pow(2, -10 * t) * math.sin((t - 0.1) * 5 * math.pi) + 1;
   }
 
   @override

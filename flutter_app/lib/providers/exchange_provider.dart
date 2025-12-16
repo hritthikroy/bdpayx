@@ -42,11 +42,11 @@ class ExchangeProvider with ChangeNotifier {
   void startAutoRefresh() {
     _countdown = 60;
     
-    // Countdown timer (updates every second) with smooth notifications
+    // Countdown timer (updates every second) with minimal notifications
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (_countdown > 0) {
         _countdown--;
-        // Notify listeners for smooth countdown animation
+        // Only notify listeners for countdown updates (not rate changes)
         notifyListeners();
       } else {
         _countdown = 60;
@@ -58,7 +58,6 @@ class ExchangeProvider with ChangeNotifier {
     _refreshTimer = Timer.periodic(const Duration(seconds: 60), (_) {
       fetchExchangeRate();
       _countdown = 60;
-      notifyListeners();
     });
   }
 

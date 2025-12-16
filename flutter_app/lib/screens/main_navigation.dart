@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'dart:ui';
-import 'dart:math' as Math;
 import '../providers/exchange_provider.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/animated_nav_icons.dart';
@@ -463,86 +461,4 @@ class NavItem {
   NavItem({required this.icon, required this.label, required this.color});
 }
 
-class WaveBackgroundPainter extends CustomPainter {
-  final double animationValue;
-  final Color color;
 
-  WaveBackgroundPainter({
-    required this.animationValue,
-    required this.color,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final scrollOffset = animationValue * size.width * 0.3;
-    
-    // Very subtle animated gradient bars scrolling left to right
-    for (int i = 0; i < 2; i++) {
-      final barX = ((scrollOffset + (i * size.width / 1.5)) % (size.width + 60)) - 60;
-      final barPaint = Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [
-            Colors.transparent,
-            color.withOpacity(0.02),
-            color.withOpacity(0.04),
-            color.withOpacity(0.02),
-            Colors.transparent,
-          ],
-        ).createShader(Rect.fromLTWH(barX, 0, 60, size.height));
-      
-      canvas.drawRect(
-        Rect.fromLTWH(barX, 0, 60, size.height),
-        barPaint,
-      );
-    }
-
-    // Very gentle animated waves at the bottom only
-    final waveHeight = 6.0;
-    final waveLength = size.width / 1.5;
-    final waveOffset = animationValue * size.width * 0.5;
-
-    // Wave 1 - Bottom layer
-    final paint1 = Paint()
-      ..color = color.withOpacity(0.03)
-      ..style = PaintingStyle.fill;
-
-    final path1 = Path();
-    path1.moveTo(0, size.height);
-    
-    for (double i = 0; i <= size.width; i += 3) {
-      final y = size.height - 15 + 
-          waveHeight * Math.sin(((i + waveOffset) / waveLength * 2 * Math.pi));
-      path1.lineTo(i, y);
-    }
-
-    path1.lineTo(size.width, size.height);
-    path1.close();
-    canvas.drawPath(path1, paint1);
-
-    // Wave 2 - Top layer
-    final paint2 = Paint()
-      ..color = color.withOpacity(0.05)
-      ..style = PaintingStyle.fill;
-
-    final path2 = Path();
-    path2.moveTo(0, size.height);
-    
-    for (double i = 0; i <= size.width; i += 3) {
-      final y = size.height - 10 + 
-          waveHeight * Math.sin(((i + waveOffset * 1.3) / waveLength * 2 * Math.pi) + 1.5);
-      path2.lineTo(i, y);
-    }
-
-    path2.lineTo(size.width, size.height);
-    path2.close();
-    canvas.drawPath(path2, paint2);
-  }
-
-  @override
-  bool shouldRepaint(WaveBackgroundPainter oldDelegate) {
-    return oldDelegate.animationValue != animationValue ||
-        oldDelegate.color != color;
-  }
-}

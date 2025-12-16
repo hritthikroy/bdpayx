@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:ui';
-import 'dart:math' as math;
+import 'dart:math' as Math;
 import '../providers/exchange_provider.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/animated_nav_icons.dart';
+import '../services/app_lock_service.dart';
 import 'home/home_screen.dart';
 import 'transactions/transactions_screen.dart';
 import 'chat/support_screen.dart';
 import 'profile/profile_screen.dart';
+import 'alerts/rate_alerts_screen.dart';
+import 'security/app_lock_screen.dart';
+import 'security/setup_pin_screen.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -16,67 +21,183 @@ class MainNavigation extends StatefulWidget {
   State<MainNavigation> createState() => _MainNavigationState();
 }
 
-class _MainNavigationState extends State<MainNavigation> with TickerProviderStateMixin {
-  int _currentIndex = 0;
-  double _scrollOffset = 0.0;
-  final ScrollController _scrollController = ScrollController();
-  late AnimationController _rippleController;
+class _MainNavigationState extends State<MainNavigation>
+    with TickerProviderStateMixin {
+  int _currentIndex = 2; // Start with Home (center button)
+  final List<GlobalKey> _navKeys = List.generate(5, (_) => GlobalKey());
+  late AnimationController _waveController;
   late List<AnimationController> _iconControllers;
+  late List<Animation<double>> _scaleAnimations;
+  late List<Animation<double>> _rotationAnimations;
+  late List<Animation<double>> _bounceAnimations;
+  bool _isLocked = false;
+  final AppLockService _appLockService = AppLockService();
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
+  // Cache screens for instant switching - no rebuild
+  late final List<Widget> _screens = [
     const TransactionsScreen(),
     const SupportScreen(),
+    const HomeScreen(),
+    const RateAlertsScreen(),
     const ProfileScreen(),
   ];
 
   final List<NavItem> _navItems = [
-    NavItem(icon: Icons.home_rounded, label: 'Home', color: const Color(0xFF6366F1)),
-    NavItem(icon: Icons.receipt_long_rounded, label: 'History', color: const Color(0xFF8B5CF6)),
-    NavItem(icon: Icons.chat_bubble_rounded, label: 'Support', color: const Color(0xFFA855F7)),
-    NavItem(icon: Icons.person_rounded, label: 'Profile', color: const Color(0xFFEC4899)),
+    NavItem(icon: Icons.history_rounded, label: 'History', color: Color(0xFF10B981)),
+    NavItem(icon: Icons.support_agent_rounded, label: 'Support', color: Color(0xFF06B6D4)),
+    NavItem(icon: Icons.home_rounded, label: 'Home', color: Color(0xFF6366F1)), // Center button - Home
+    NavItem(icon: Icons.notifications_rounded, label: 'Alerts', color: Color(0xFFF59E0B)),
+    NavItem(icon: Icons.account_circle_rounded, label: 'Profile', color: Color(0xFFEC4899)),
   ];
 
   @override
   void initState() {
     super.initState();
     
-    _rippleController = AnimationController(
+    // Minimal sync initialization - only what's needed for first frame
+    _waveController = AnimationController(
+      duration: const Duration(seconds: 8),
       vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-
+    )..repeat();
+    
+    // Fast animation controller setup
     _iconControllers = List.generate(
       _navItems.length,
       (index) => AnimationController(
+        duration: const Duration(milliseconds: 400), // Faster animations
         vsync: this,
-        duration: const Duration(milliseconds: 300),
       ),
     );
+
+    // Simplified scale animations
+    _scaleAnimations = _iconControllers.map((controller) {
+      return Tween<double>(begin: 1.0, end: 1.0).animate(
+        CurvedAnimation(parent: controller, curve: Curves.easeOutBack),
+      );
+    }).toList();
+
+    // Simplified rotation animations
+    _rotationAnimations = _iconControllers.map((controller) {
+      return Tween<double>(begin: 0.0, end: 0.0).animate(controller);
+    }).toList();
+
+    // Simplified bounce animations
+    _bounceAnimations = _iconControllers.map((controller) {
+      return TweenSequence<double>([
+        TweenSequenceItem(tween: Tween<double>(begin: 0.0, end: -6.0), weight: 40),
+        TweenSequenceItem(tween: Tween<double>(begin: -6.0, end: 0.0), weight: 60),
+      ]).animate(CurvedAnimation(parent: controller, curve: Curves.easeOutCubic));
+    }).toList();
     
-    _iconControllers[0].forward();
+    // Defer heavy initialization to after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) => _deferredInit());
+  }
+  
+  void _deferredInit() {
+    if (!mounted) return;
     
-    // Initialize providers in background (non-blocking)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        try {
-          final exchangeProvider = Provider.of<ExchangeProvider>(context, listen: false);
-          final authProvider = Provider.of<AuthProvider>(context, listen: false);
-          
-          // Initialize in background
-          exchangeProvider.initialize();
-          authProvider.loadToken();
-        } catch (e) {
-          debugPrint('Provider init error: $e');
-        }
-      }
+    // Initialize providers in background
+    try {
+      final exchangeProvider = Provider.of<ExchangeProvider>(context, listen: false);
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      exchangeProvider.initialize();
+      authProvider.loadToken();
+    } catch (e) {
+      debugPrint('Provider init error: $e');
+    }
+    
+    // Initialize app lock service
+    _appLockService.initialize(() {
+      if (mounted) setState(() => _isLocked = true);
     });
+    
+    // Check PIN setup after delay
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (mounted) _checkPinSetup();
+    });
+  }
+
+  Future<void> _checkPinSetup() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    
+    // Only show PIN setup if user is logged in
+    if (!authProvider.isAuthenticated) return;
+    
+    final shouldShow = await _appLockService.shouldShowPinSetup();
+    if (shouldShow && mounted) {
+      // Wait a bit for the UI to settle
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      if (mounted) {
+        _showPinSetupDialog();
+      }
+    }
+  }
+
+  void _showPinSetupDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: const [
+            Icon(Icons.security, color: Color(0xFF8B5CF6)),
+            SizedBox(width: 12),
+            Text('Secure Your Account'),
+          ],
+        ),
+        content: const Text(
+          'Set up a 4-digit PIN to protect your transactions and secure your account.',
+          style: TextStyle(fontSize: 15),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              _appLockService.markPinSetupShown();
+              Navigator.pop(context);
+            },
+            child: const Text('Later'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SetupPinScreen(),
+                ),
+              );
+              if (result == true) {
+                _appLockService.markPinSetupShown();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Transaction PIN set successfully! 🎉'),
+                      backgroundColor: Color(0xFF10B981),
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF8B5CF6),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text('Set Up Now'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
-    _rippleController.dispose();
+    _appLockService.dispose();
+    _waveController.dispose();
     for (var controller in _iconControllers) {
       controller.dispose();
     }
@@ -86,142 +207,87 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBody: true,
       backgroundColor: const Color(0xFFF8FAFC),
       body: Stack(
         children: [
-          // Main content
-          NotificationListener<ScrollNotification>(
-            onNotification: (notification) {
-              if (notification is ScrollUpdateNotification) {
-                setState(() {
-                  _scrollOffset = notification.metrics.pixels.clamp(0.0, 100.0);
-                });
-              }
-              return false;
-            },
-            child: _screens[_currentIndex],
+          // Use IndexedStack for instant tab switching - keeps all screens alive
+          IndexedStack(
+            index: _currentIndex,
+            children: _screens,
           ),
-          // Top blue nav bar (appears on scroll)
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            top: _scrollOffset > 50 ? 0 : -80,
+          Positioned(
             left: 0,
             right: 0,
-            child: Container(
-              height: 80,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF6366F1).withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'BDPayX',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.notifications_rounded, color: Colors.white),
-                        onPressed: () {},
-                      ),
-                    ],
-                  ),
-                ),
+            bottom: 0,
+            child: RepaintBoundary(child: _buildNavBar()),
+          ),
+          // App lock overlay
+          if (_isLocked)
+            Positioned.fill(
+              child: AppLockScreen(
+                onUnlock: () {
+                  _appLockService.unlock();
+                  setState(() {
+                    _isLocked = false;
+                  });
+                },
               ),
             ),
-          ),
         ],
       ),
-      bottomNavigationBar: _buildGlassNavBar(),
     );
   }
 
-  Widget _buildGlassNavBar() {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      height: 75,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: _navItems[_currentIndex].color.withOpacity(0.3),
-            blurRadius: 30,
-            offset: const Offset(0, 10),
-            spreadRadius: 0,
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
+  Widget _buildNavBar() {
+    return Center(
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 400),
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 24),
         child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
           children: [
-            // Simple gradient background (optimized for performance)
+            // Clean, professional navigation bar
             Container(
+              height: 64,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    _navItems[_currentIndex].color.withOpacity(0.15),
-                    _navItems[_currentIndex].color.withOpacity(0.05),
-                  ],
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(32),
+                border: Border.all(
+                  color: const Color(0xFFE2E8F0),
+                  width: 1,
                 ),
-              ),
-            ),
-            // Glass effect
-            BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.white.withOpacity(0.7),
-                      Colors.white.withOpacity(0.3),
-                    ],
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF1E293B).withOpacity(0.08),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                    spreadRadius: 0,
                   ),
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.5),
-                    width: 1.5,
+                  BoxShadow(
+                    color: const Color(0xFF1E293B).withOpacity(0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                    spreadRadius: 0,
                   ),
-                ),
+                ],
               ),
-            ),
-            // Navigation items
-            SafeArea(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: List.generate(
-                  _navItems.length,
-                  (index) => _buildGlassNavItem(index),
-                ),
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildNavItem(0), // History
+                  _buildNavItem(1), // Support
+                  const SizedBox(width: 64), // Space for floating button
+                  _buildNavItem(3), // Alerts
+                  _buildNavItem(4), // Profile
+                ],
               ),
+            ),
+            // Floating center button (perfectly centered)
+            Positioned(
+              top: -14,
+              child: _buildFloatingCenterButton(),
             ),
           ],
         ),
@@ -229,79 +295,107 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
     );
   }
 
-  Widget _buildGlassNavItem(int index) {
+  Widget _buildFloatingCenterButton() {
+    final centerIndex = 2; // Middle button
+    final item = _navItems[centerIndex];
+    final isSelected = _currentIndex == centerIndex;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() => _currentIndex = centerIndex);
+        _iconControllers[centerIndex].forward(from: 0.0);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+        transform: Matrix4.translationValues(0, isSelected ? -2 : 4, 0),
+        child: Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isSelected ? item.color : Colors.white,
+            border: Border.all(
+              color: isSelected ? item.color : const Color(0xFFE2E8F0),
+              width: isSelected ? 0 : 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: isSelected 
+                    ? item.color.withOpacity(0.3)
+                    : const Color(0xFF1E293B).withOpacity(0.12),
+                blurRadius: isSelected ? 16 : 12,
+                offset: const Offset(0, 4),
+                spreadRadius: isSelected ? 2 : 0,
+              ),
+            ],
+          ),
+          child: AnimatedBuilder(
+            animation: _iconControllers[centerIndex],
+            builder: (context, child) {
+              final scaleValue = 1.0 + (_scaleAnimations[centerIndex].value - 1.0) * 0.5;
+              final bounceValue = _bounceAnimations[centerIndex].value * 0.25;
+              
+              return Transform.scale(
+                scale: scaleValue,
+                child: Transform.translate(
+                  offset: Offset(0, bounceValue),
+                  child: Icon(
+                    Icons.home_rounded,
+                    size: 28,
+                    color: isSelected ? Colors.white : const Color(0xFF64748B),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(int index) {
+    // Skip center button (index 2) as it's the floating button
+    if (index == 2) return const SizedBox.shrink();
+    
     final isSelected = _currentIndex == index;
     final item = _navItems[index];
-    
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          if (_currentIndex != index) {
-            setState(() {
-              _iconControllers[_currentIndex].reverse();
-              _currentIndex = index;
-              _iconControllers[index].forward();
-            });
-            _rippleController.forward(from: 0);
-          }
-        },
+
+    return GestureDetector(
+      onTap: () {
+        setState(() => _currentIndex = index);
+        _iconControllers[index].forward(from: 0.0);
+      },
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: 56,
+        height: 56,
         child: AnimatedBuilder(
           animation: _iconControllers[index],
           builder: (context, child) {
-            final scale = isSelected 
-                ? 1.0 + (_iconControllers[index].value * 0.2)
-                : 1.0;
-            final rotation = _iconControllers[index].value * 0.1;
+            final bounceValue = _bounceAnimations[index].value * 0.4;
+            final scaleValue = _scaleAnimations[index].value;
             
-            return Transform.scale(
-              scale: scale,
-              child: Transform.rotate(
-                angle: rotation,
+            return Transform.translate(
+              offset: Offset(0, bounceValue),
+              child: Transform.scale(
+                scale: scaleValue,
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Icon container with glass effect
-                    Container(
-                      width: 40,
-                      height: 40,
+                    // Clean icon without glow
+                    _buildCustomIcon(index, isSelected),
+                    const SizedBox(height: 4),
+                    // Simple indicator bar
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeOutCubic,
+                      width: isSelected ? 20 : 0,
+                      height: 3,
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: isSelected
-                            ? LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  item.color.withOpacity(0.8),
-                                  item.color.withOpacity(0.6),
-                                ],
-                              )
-                            : null,
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: item.color.withOpacity(0.3),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ]
-                            : null,
-                      ),
-                      child: Icon(
-                        item.icon,
-                        color: isSelected ? Colors.white : const Color(0xFF64748B),
-                        size: 18,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    // Label
-                    Text(
-                      item.label,
-                      style: TextStyle(
-                        color: isSelected ? item.color : const Color(0xFF64748B),
-                        fontSize: 9,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                        height: 1.0,
+                        color: item.color,
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
                   ],
@@ -313,93 +407,142 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
       ),
     );
   }
+
+  Widget _buildCustomIcon(int index, bool isSelected) {
+    final item = _navItems[index];
+    // Use item color for selected, dark gray for unselected
+    final color = isSelected ? item.color : const Color(0xFF64748B);
+    final progress = _iconControllers[index].value;
+
+    switch (index) {
+      case 0: // History
+        return AnimatedHistoryIcon(
+          isSelected: isSelected,
+          color: color,
+          progress: progress,
+        );
+      case 1: // Support
+        return AnimatedSupportIcon(
+          isSelected: isSelected,
+          color: color,
+          progress: progress,
+        );
+      case 2: // Home (Center button)
+        return AnimatedHomeIcon(
+          isSelected: isSelected,
+          color: color,
+          progress: progress,
+        );
+      case 3: // Alerts
+        return AnimatedAlertsIcon(
+          isSelected: isSelected,
+          color: color,
+          progress: progress,
+        );
+      case 4: // Profile
+        return AnimatedProfileIcon(
+          isSelected: isSelected,
+          color: color,
+          progress: progress,
+        );
+      default:
+        return Icon(
+          _navItems[index].icon,
+          color: color,
+          size: 26,
+        );
+    }
+  }
 }
 
 class NavItem {
   final IconData icon;
   final String label;
   final Color color;
-  
+
   NavItem({required this.icon, required this.label, required this.color});
 }
 
-// Custom painter for water flow effect
-class WaterFlowPainter extends CustomPainter {
-  final double animation;
+class WaveBackgroundPainter extends CustomPainter {
+  final double animationValue;
   final Color color;
 
-  WaterFlowPainter({required this.animation, required this.color});
+  WaveBackgroundPainter({
+    required this.animationValue,
+    required this.color,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          color.withOpacity(0.1),
-          color.withOpacity(0.05),
-          color.withOpacity(0.15),
-        ],
-        stops: [
-          (animation - 0.3).clamp(0.0, 1.0),
-          animation.clamp(0.0, 1.0),
-          (animation + 0.3).clamp(0.0, 1.0),
-        ],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
-      ..style = PaintingStyle.fill;
-
-    final path = Path();
-    final waveHeight = 8.0;
-    final waveLength = size.width / 3;
-
-    path.moveTo(0, size.height / 2);
-
-    for (double i = 0; i <= size.width; i++) {
-      final y = size.height / 2 +
-          math.sin((i / waveLength + animation * 2 * math.pi) * 2 * math.pi) *
-              waveHeight;
-      path.lineTo(i, y);
+    final scrollOffset = animationValue * size.width * 0.3;
+    
+    // Very subtle animated gradient bars scrolling left to right
+    for (int i = 0; i < 2; i++) {
+      final barX = ((scrollOffset + (i * size.width / 1.5)) % (size.width + 60)) - 60;
+      final barPaint = Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [
+            Colors.transparent,
+            color.withOpacity(0.02),
+            color.withOpacity(0.04),
+            color.withOpacity(0.02),
+            Colors.transparent,
+          ],
+        ).createShader(Rect.fromLTWH(barX, 0, 60, size.height));
+      
+      canvas.drawRect(
+        Rect.fromLTWH(barX, 0, 60, size.height),
+        barPaint,
+      );
     }
 
-    path.lineTo(size.width, size.height);
-    path.lineTo(0, size.height);
-    path.close();
+    // Very gentle animated waves at the bottom only
+    final waveHeight = 6.0;
+    final waveLength = size.width / 1.5;
+    final waveOffset = animationValue * size.width * 0.5;
 
-    canvas.drawPath(path, paint);
+    // Wave 1 - Bottom layer
+    final paint1 = Paint()
+      ..color = color.withOpacity(0.03)
+      ..style = PaintingStyle.fill;
 
-    // Second wave
+    final path1 = Path();
+    path1.moveTo(0, size.height);
+    
+    for (double i = 0; i <= size.width; i += 3) {
+      final y = size.height - 15 + 
+          waveHeight * Math.sin(((i + waveOffset) / waveLength * 2 * Math.pi));
+      path1.lineTo(i, y);
+    }
+
+    path1.lineTo(size.width, size.height);
+    path1.close();
+    canvas.drawPath(path1, paint1);
+
+    // Wave 2 - Top layer
     final paint2 = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.bottomRight,
-        end: Alignment.topLeft,
-        colors: [
-          color.withOpacity(0.08),
-          color.withOpacity(0.03),
-        ],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
+      ..color = color.withOpacity(0.05)
       ..style = PaintingStyle.fill;
 
     final path2 = Path();
-    path2.moveTo(0, size.height / 2 + 10);
-
-    for (double i = 0; i <= size.width; i++) {
-      final y = size.height / 2 +
-          10 +
-          math.cos((i / waveLength - animation * 2 * math.pi) * 2 * math.pi) *
-              waveHeight;
+    path2.moveTo(0, size.height);
+    
+    for (double i = 0; i <= size.width; i += 3) {
+      final y = size.height - 10 + 
+          waveHeight * Math.sin(((i + waveOffset * 1.3) / waveLength * 2 * Math.pi) + 1.5);
       path2.lineTo(i, y);
     }
 
     path2.lineTo(size.width, size.height);
-    path2.lineTo(0, size.height);
     path2.close();
-
     canvas.drawPath(path2, paint2);
   }
 
   @override
-  bool shouldRepaint(WaterFlowPainter oldDelegate) {
-    return animation != oldDelegate.animation || color != oldDelegate.color;
+  bool shouldRepaint(WaveBackgroundPainter oldDelegate) {
+    return oldDelegate.animationValue != animationValue ||
+        oldDelegate.color != color;
   }
 }

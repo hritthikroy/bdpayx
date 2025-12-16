@@ -5,10 +5,13 @@ import '../../providers/exchange_provider.dart';
 import '../../widgets/login_popup.dart';
 import '../../widgets/amount_chip.dart';
 import '../../widgets/rate_chart.dart';
+import '../../widgets/animated_avatar.dart';
+import '../../widgets/animated_number.dart';
 import '../exchange/payment_screen.dart';
 import '../wallet/deposit_screen.dart';
 import '../wallet/withdraw_screen.dart';
 import '../referral/referral_screen.dart';
+import '../chat/support_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -23,49 +26,57 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   double _appliedRate = 0;
   late AnimationController _cardAnimationController;
   late Animation<double> _cardAnimation;
+  late AnimationController _inrBalanceAnimationController;
+  late Animation<double> _inrBalanceAnimation;
+
   int _currentUpdateIndex = 0;
+  final List<int> _shownUpdates = [];
+  bool _isBalanceHidden = false;
+  double _animatedInrBalance = 0.0;
+  final double _demoBdtBalance = 100.0;
+  bool _isInrBalanceUpdating = false;
   
-  // Dynamic updates list
+  // System updates and notifications
   final List<Map<String, dynamic>> _updates = [
     {
-      'text': 'User exchanged ৳10,000 to ₹6,997 • Fast & Secure',
-      'icon': Icons.check_circle,
-      'color': Color(0xFF10B981),
-    },
-    {
-      'text': 'New user from Dhaka joined • Welcome bonus active!',
-      'icon': Icons.celebration,
-      'color': Color(0xFFF59E0B),
-    },
-    {
-      'text': '₹50,000 exchanged today • Join the community!',
-      'icon': Icons.trending_up,
+      'text': 'Exchange rate updated • Current: 100 BDT = ₹69.97',
+      'icon': Icons.sync,
       'color': Color(0xFF6366F1),
     },
     {
-      'text': 'Instant withdrawal processed • 2 mins ago',
-      'icon': Icons.flash_on,
-      'color': Color(0xFFEF4444),
+      'text': 'System maintenance scheduled • Tonight 2:00 AM - 3:00 AM',
+      'icon': Icons.build,
+      'color': Color(0xFFF59E0B),
     },
     {
-      'text': 'Exchange rate improved • Best rates guaranteed!',
-      'icon': Icons.star,
-      'color': Color(0xFFFBBF24),
-    },
-    {
-      'text': 'User from Chittagong exchanged ৳25,000 successfully',
-      'icon': Icons.verified,
+      'text': 'New security features enabled • Enhanced account protection',
+      'icon': Icons.security,
       'color': Color(0xFF10B981),
     },
     {
-      'text': '100+ transactions completed today • Trusted platform',
-      'icon': Icons.security,
+      'text': 'Transaction processing time • Average: 2-5 minutes',
+      'icon': Icons.schedule,
       'color': Color(0xFF8B5CF6),
     },
     {
-      'text': 'Referral bonus paid ৳500 • Invite friends now!',
-      'icon': Icons.card_giftcard,
+      'text': 'Daily transaction limit • Exchange up to ৳100,000',
+      'icon': Icons.info_outline,
+      'color': Color(0xFF06B6D4),
+    },
+    {
+      'text': 'KYC verification required • Complete for higher limits',
+      'icon': Icons.verified_user,
+      'color': Color(0xFF10B981),
+    },
+    {
+      'text': 'Customer support available • 24/7 live chat assistance',
+      'icon': Icons.support_agent,
       'color': Color(0xFFEC4899),
+    },
+    {
+      'text': 'Payment methods • bKash, Nagad, Rocket accepted',
+      'icon': Icons.payment,
+      'color': Color(0xFF8B5CF6),
     },
   ];
 
@@ -82,14 +93,86 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       curve: Curves.easeOutBack,
     );
     
+    _inrBalanceAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+    
     _startUpdateRotation();
+    
+    // Initialize INR balance and listen to exchange rate changes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final exchangeProvider = Provider.of<ExchangeProvider>(context, listen: false);
+      _animatedInrBalance = _demoBdtBalance * exchangeProvider.baseRate;
+      
+      // Add listener to exchange provider for rate changes
+      exchangeProvider.addListener(_onExchangeRateChanged);
+    });
   }
   
+  void _onExchangeRateChanged() {
+    if (!mounted) return;
+    
+    final exchangeProvider = Provider.of<ExchangeProvider>(context, listen: false);
+    final targetInrBalance = _demoBdtBalance * exchangeProvider.baseRate;
+    
+    // Also update the converted amount if user has entered an amount
+    final enteredAmount = double.tryParse(_amountController.text);
+    if (enteredAmount != null && enteredAmount > 0) {
+      setState(() {
+        _convertedAmount = exchangeProvider.quickCalculate(enteredAmount);
+        _appliedRate = exchangeProvider.baseRate;
+      });
+    }
+    
+    // Only animate balance if there's a significant change
+    if ((targetInrBalance - _animatedInrBalance).abs() > 0.01) {
+      setState(() {
+        _isInrBalanceUpdating = true;
+      });
+      
+      // Animate the number counting - smooth and simple
+      _inrBalanceAnimation = Tween<double>(
+        begin: _animatedInrBalance,
+        end: targetInrBalance,
+      ).animate(CurvedAnimation(
+        parent: _inrBalanceAnimationController,
+        curve: Curves.easeInOutCubic,
+      ))..addListener(() {
+        if (mounted) {
+          setState(() {
+            _animatedInrBalance = _inrBalanceAnimation.value;
+          });
+        }
+      });
+      
+      _inrBalanceAnimationController.forward(from: 0).then((_) {
+        if (mounted) {
+          setState(() {
+            _isInrBalanceUpdating = false;
+          });
+        }
+      });
+    }
+  }
+  
+
+  
   void _startUpdateRotation() {
-    Future.delayed(const Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 4), () {
       if (mounted) {
         setState(() {
-          _currentUpdateIndex = (_currentUpdateIndex + 1) % _updates.length;
+          int nextIndex;
+          do {
+            nextIndex = DateTime.now().millisecondsSinceEpoch % _updates.length;
+          } while (_shownUpdates.contains(nextIndex) && _shownUpdates.length < _updates.length);
+          
+          _currentUpdateIndex = nextIndex;
+          _shownUpdates.add(nextIndex);
+          
+          if (_shownUpdates.length >= _updates.length) {
+            _shownUpdates.clear();
+          }
         });
         _startUpdateRotation();
       }
@@ -98,7 +181,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    // Remove listener from exchange provider
+    final exchangeProvider = Provider.of<ExchangeProvider>(context, listen: false);
+    exchangeProvider.removeListener(_onExchangeRateChanged);
+    
     _cardAnimationController.dispose();
+    _inrBalanceAnimationController.dispose();
     _amountController.dispose();
     super.dispose();
   }
@@ -170,20 +258,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    // Use listen: false to prevent unnecessary rebuilds
-    final user = Provider.of<AuthProvider>(context, listen: false).user;
-    final exchangeProvider = Provider.of<ExchangeProvider>(context, listen: false);
+    // Use Selector for minimal rebuilds - only rebuild when specific values change
+    final user = context.select<AuthProvider, dynamic>((p) => p.user);
+    final exchangeProvider = context.watch<ExchangeProvider>();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
         child: CustomScrollView(
+          // Ultra-fast scroll physics for 120fps feel
+          physics: const BouncingScrollPhysics(
+            decelerationRate: ScrollDecelerationRate.fast,
+          ),
+          cacheExtent: 500, // Pre-render more content
           slivers: [
             // App Bar - More Compact and Gorgeous
             SliverAppBar(
               expandedHeight: 180,
               floating: false,
-              pinned: true,
+              pinned: false,
               backgroundColor: const Color(0xFF6366F1),
               flexibleSpace: FlexibleSpaceBar(
                 background: Container(
@@ -240,41 +333,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 Expanded(
                                   child: Row(
                                     children: [
-                                      // User Avatar - Simple and Fast
-                                      Container(
-                                        width: 50,
-                                        height: 50,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          gradient: const LinearGradient(
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                            colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFA855F7)],
-                                          ),
-                                          border: Border.all(
-                                            color: Colors.white,
-                                            width: 2.5,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withOpacity(0.2),
-                                              blurRadius: 8,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                          ],
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            user?.fullName?.substring(0, 1).toUpperCase() ?? 
-                                            user?.email?.substring(0, 1).toUpperCase() ?? 
-                                            'U',
-                                            style: const TextStyle(
-                                              fontSize: 24,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ),
+                                      // Animated Avatar with Blinking Eyes
+                                      AnimatedAvatar(
+                                        size: 50,
+                                        userName: user?.fullName ?? user?.email ?? 'User',
                                       ),
                                       const SizedBox(width: 12),
                                       Expanded(
@@ -306,21 +368,67 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     ],
                                   ),
                                 ),
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.15),
-                                    borderRadius: BorderRadius.circular(14),
-                                    border: Border.all(
-                                      color: Colors.white.withOpacity(0.2),
-                                      width: 1,
+                                Row(
+                                  children: [
+                                    InkWell(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => const SupportScreen(),
+                                          ),
+                                        );
+                                      },
+                                      borderRadius: BorderRadius.circular(14),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.15),
+                                          borderRadius: BorderRadius.circular(14),
+                                          border: Border.all(
+                                            color: Colors.white.withOpacity(0.2),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: const Icon(
+                                          Icons.support_agent_rounded,
+                                          color: Colors.white,
+                                          size: 22,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                  child: const Icon(
-                                    Icons.notifications_rounded,
-                                    color: Colors.white,
-                                    size: 22,
-                                  ),
+                                    const SizedBox(width: 8),
+                                    InkWell(
+                                      onTap: () {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: const Text('No new notifications'),
+                                            backgroundColor: const Color(0xFF6366F1),
+                                            behavior: SnackBarBehavior.floating,
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                            duration: const Duration(seconds: 2),
+                                          ),
+                                        );
+                                      },
+                                      borderRadius: BorderRadius.circular(14),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.15),
+                                          borderRadius: BorderRadius.circular(14),
+                                          border: Border.all(
+                                            color: Colors.white.withOpacity(0.2),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: const Icon(
+                                          Icons.notifications_rounded,
+                                          color: Colors.white,
+                                          size: 22,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -382,29 +490,52 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     ),
                                     child: Row(
                                       children: [
-                                        SizedBox(
-                                          width: 12,
-                                          height: 12,
-                                          child: CircularProgressIndicator(
-                                            value: exchangeProvider.countdown / 60,
-                                            strokeWidth: 2,
-                                            backgroundColor: Colors.white.withOpacity(0.3),
-                                            valueColor: AlwaysStoppedAnimation<Color>(
-                                              exchangeProvider.countdown > 10
-                                                  ? Colors.white
-                                                  : const Color(0xFFEF4444),
-                                            ),
+                                        TweenAnimationBuilder<double>(
+                                          tween: Tween(
+                                            begin: exchangeProvider.countdown / 60,
+                                            end: exchangeProvider.countdown / 60,
                                           ),
+                                          duration: const Duration(milliseconds: 800),
+                                          curve: Curves.easeInOut,
+                                          builder: (context, value, child) {
+                                            return SizedBox(
+                                              width: 12,
+                                              height: 12,
+                                              child: CircularProgressIndicator(
+                                                value: value,
+                                                strokeWidth: 2,
+                                                backgroundColor: Colors.white.withOpacity(0.3),
+                                                valueColor: AlwaysStoppedAnimation<Color>(
+                                                  exchangeProvider.countdown > 10
+                                                      ? Colors.white
+                                                      : const Color(0xFFEF4444),
+                                                ),
+                                              ),
+                                            );
+                                          },
                                         ),
                                         const SizedBox(width: 4),
-                                        Text(
-                                          '${exchangeProvider.countdown}s',
-                                          style: TextStyle(
-                                            color: exchangeProvider.countdown > 10
-                                                ? Colors.white
-                                                : const Color(0xFFFFCDD2),
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
+                                        AnimatedSwitcher(
+                                          duration: const Duration(milliseconds: 300),
+                                          transitionBuilder: (child, animation) {
+                                            return FadeTransition(
+                                              opacity: animation,
+                                              child: ScaleTransition(
+                                                scale: animation,
+                                                child: child,
+                                              ),
+                                            );
+                                          },
+                                          child: Text(
+                                            '${exchangeProvider.countdown}s',
+                                            key: ValueKey(exchangeProvider.countdown),
+                                            style: TextStyle(
+                                              color: exchangeProvider.countdown > 10
+                                                  ? Colors.white
+                                                  : const Color(0xFFFFCDD2),
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
                                         ),
                                       ],
@@ -426,24 +557,84 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(20),
-                child: Row(
+                child: Column(
                   children: [
-                    Expanded(
-                      child: _buildBalanceCard(
-                        'BDT Balance',
-                        '৳${user?.balance.toStringAsFixed(2) ?? '0.00'}',
-                        const Color(0xFF10B981),
-                        Icons.account_balance_wallet,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'My Balances',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1E293B),
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () {
+                            setState(() {
+                              _isBalanceHidden = !_isBalanceHidden;
+                            });
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: const Color(0xFFE2E8F0),
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  _isBalanceHidden ? Icons.visibility_off : Icons.visibility,
+                                  size: 16,
+                                  color: const Color(0xFF64748B),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  _isBalanceHidden ? 'Show' : 'Hide',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF64748B),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildBalanceCard(
-                        'INR Balance',
-                        '₹0.00',
-                        const Color(0xFF8B5CF6),
-                        Icons.currency_rupee,
-                      ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildBalanceCard(
+                            'BDT Balance',
+                            _isBalanceHidden ? '৳****' : '৳${_demoBdtBalance.toStringAsFixed(2)}',
+                            const Color(0xFF10B981),
+                            Icons.account_balance_wallet,
+                            false,
+                            showDemoBadge: true,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildBalanceCard(
+                            'INR Balance',
+                            _isBalanceHidden ? '₹****' : '₹${_animatedInrBalance.toStringAsFixed(2)}',
+                            const Color(0xFF8B5CF6),
+                            Icons.currency_rupee,
+                            true,
+                            showDemoBadge: false,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -550,48 +741,97 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           ),
                         ),
                         const SizedBox(height: 8),
+                        // Auto-updating rate info bar (no manual refresh needed)
                         Container(
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFEF3C7),
+                            color: const Color(0xFFECFDF5),
                             borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFF10B981).withOpacity(0.3)),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.info_outline, color: Color(0xFFD97706), size: 18),
-                              const SizedBox(width: 8),
+                              // Auto-sync icon with animation
+                              TweenAnimationBuilder<double>(
+                                tween: Tween(begin: 0.0, end: 1.0),
+                                duration: Duration(seconds: exchangeProvider.countdown),
+                                builder: (context, value, child) {
+                                  return Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(
+                                          value: 1 - (exchangeProvider.countdown / 60),
+                                          strokeWidth: 2.5,
+                                          backgroundColor: const Color(0xFF10B981).withOpacity(0.2),
+                                          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                                        ),
+                                      ),
+                                      const Icon(Icons.sync, color: Color(0xFF10B981), size: 14),
+                                    ],
+                                  );
+                                },
+                              ),
+                              const SizedBox(width: 10),
                               Expanded(
-                                child: Text(
-                                  'Rate updates in ${exchangeProvider.countdown}s • Current: ${exchangeProvider.baseRate.toStringAsFixed(4)}',
-                                  style: const TextStyle(fontSize: 11, color: Color(0xFF92400E)),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Live Rate • Auto Updates',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF065F46),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    AnimatedSwitcher(
+                                      duration: const Duration(milliseconds: 300),
+                                      child: Text(
+                                        'Next update in ${exchangeProvider.countdown}s',
+                                        key: ValueKey(exchangeProvider.countdown),
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          color: Color(0xFF047857),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
+                              // Live indicator
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: exchangeProvider.countdown > 10
-                                      ? const Color(0xFFD97706)
-                                      : const Color(0xFFEF4444),
+                                  color: const Color(0xFF10B981),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        value: exchangeProvider.countdown / 60,
-                                        strokeWidth: 2,
-                                        backgroundColor: Colors.white.withOpacity(0.3),
-                                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                                    Container(
+                                      width: 6,
+                                      height: 6,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.white.withOpacity(0.5),
+                                            blurRadius: 4,
+                                            spreadRadius: 1,
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      '${exchangeProvider.countdown}s',
-                                      style: const TextStyle(
-                                        fontSize: 12,
+                                    const SizedBox(width: 4),
+                                    const Text(
+                                      'LIVE',
+                                      style: TextStyle(
+                                        fontSize: 10,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white,
                                       ),
@@ -609,25 +849,28 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF1F2937),
+                            color: Color(0xFF1E293B), // Darker color for better visibility
                           ),
                           decoration: InputDecoration(
                             labelText: 'Enter BDT Amount',
+                            labelStyle: const TextStyle(
+                              color: Color(0x991E293B), // Semi-transparent dark color
+                            ),
                             prefixText: '৳ ',
                             prefixStyle: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF1F2937),
+                              color: Color(0xFF1E293B), // Darker color for better visibility
                             ),
                             filled: true,
-                            fillColor: const Color(0xFFF8FAFC),
+                            fillColor: const Color(0xFFFFFFFF), // Pure white background for contrast
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
                               borderSide: BorderSide.none,
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                              borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -823,7 +1066,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
-            // Updates/Announcements Section (Dynamic)
+            // Live Updates Section
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -906,17 +1149,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
               ),
             ),
-            
+
             // Bottom padding to prevent overlap with bottom navigation
-            const SliverToBoxAdapter(child: SizedBox(height: 150)),
+            const SliverToBoxAdapter(child: SizedBox(height: 90)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildBalanceCard(String title, String amount, Color color, IconData icon) {
-    return Container(
+  Widget _buildBalanceCard(String title, String amount, Color color, IconData icon, bool isAnimated, {bool showDemoBadge = false}) {
+    Widget cardContent = Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -941,13 +1184,79 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: Colors.white, size: 22),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: Colors.white, size: 22),
+              ),
+              if (isAnimated)
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _isInrBalanceUpdating 
+                        ? const Color(0xFF10B981).withOpacity(0.9)
+                        : Colors.white.withOpacity(0.25),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_isInrBalanceUpdating)
+                        const SizedBox(
+                          width: 8,
+                          height: 8,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 1.5,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      else
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _isInrBalanceUpdating ? 'UPDATING' : 'LIVE',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              if (showDemoBadge)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF59E0B).withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'DEMO',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 14),
           Text(
@@ -979,6 +1288,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ],
       ),
     );
+    
+    return cardContent;
   }
 
   Widget _buildQuickAction(String title, IconData icon, Color color, VoidCallback onTap) {

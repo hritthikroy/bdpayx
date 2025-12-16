@@ -59,7 +59,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Modern Header with Gradient
+            // Modern Header with Gradient - No back button for main nav screens
             Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
@@ -68,63 +68,60 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFA855F7)],
                 ),
               ),
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Row(
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: IconButton(
-                            icon: const Icon(Icons.arrow_back, color: Colors.white),
-                            onPressed: () => Navigator.pop(context),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Transaction History',
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                'View all your exchanges',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white70,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.receipt_long,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                      ],
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Icon(
+                        Icons.history_rounded,
+                        color: Colors.white,
+                        size: 26,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                ],
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Transaction History',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'View all your exchanges',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.filter_list_rounded,
+                        color: Colors.white,
+                        size: 22,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             
@@ -185,6 +182,13 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     child: ListView.builder(
                       padding: const EdgeInsets.all(20),
                       itemCount: provider.transactions.length,
+                      // Performance optimizations
+                      physics: const BouncingScrollPhysics(
+                        decelerationRate: ScrollDecelerationRate.fast,
+                      ),
+                      cacheExtent: 500,
+                      addAutomaticKeepAlives: false,
+                      addRepaintBoundaries: true,
                       itemBuilder: (context, index) {
                         final transaction = provider.transactions[index];
                         return Container(

@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/security_provider.dart';
 import '../../widgets/login_popup.dart';
 import '../../widgets/animated_avatar.dart';
 import 'kyc_screen.dart';
 import 'bank_cards_screen.dart';
 import '../referral/referral_screen.dart';
 import '../statement/statement_screen.dart';
+import '../security/security_settings_screen.dart';
+import '../security/setup_pin_screen.dart';
+import '../security/change_pin_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -16,12 +21,16 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  bool _hasPinSet = false;
+  bool _isCheckingPin = true;
+
   @override
   void initState() {
     super.initState();
     // Check login when profile screen is opened
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkLogin();
+      _checkPinStatus();
     });
   }
 
@@ -35,20 +44,59 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _checkPinStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final pin = prefs.getString('transaction_pin');
+    setState(() {
+      _hasPinSet = pin != null && pin.isNotEmpty;
+      _isCheckingPin = false;
+    });
+  }
+
+  Future<void> _handleSecurityTap() async {
+    if (_hasPinSet) {
+      // PIN is set, go to security settings
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const SecuritySettingsScreen()),
+      ).then((_) => _checkPinStatus());
+    } else {
+      // No PIN set, show setup
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const SetupPinScreen()),
+      );
+      if (result == true) {
+        _checkPinStatus();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Transaction PIN set successfully'),
+              backgroundColor: Color(0xFF10B981),
+            ),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final user = Provider.of<AuthProvider>(context).user;
+    final user = context.select<AuthProvider, dynamic>((p) => p.user);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
         child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(
+            decelerationRate: ScrollDecelerationRate.fast,
+          ),
           child: Column(
             children: [
-              // Modern Header with Gradient
+              // Modern Header with Gradient - No back button for main nav screens
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -63,20 +111,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Column(
                   children: [
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: IconButton(
-                            icon: const Icon(Icons.arrow_back, color: Colors.white),
-                            onPressed: () => Navigator.pop(context),
+                        const Text(
+                          'My Profile',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const Spacer(),
                         Container(
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(12),
@@ -84,11 +130,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: const Icon(
                             Icons.settings_outlined,
                             color: Colors.white,
+                            size: 22,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
                     Container(
                       width: 110,
                       height: 110,
@@ -282,6 +329,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         );
                       },
                     ),
+                    _buildSecurityMenuItem(context),
                     _buildMenuItem(
                       context,
                       icon: Icons.card_giftcard,
@@ -356,6 +404,110 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSecurityMenuItem(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                const Color(0xFF8B5CF6).withOpacity(0.2),
+                const Color(0xFF8B5CF6).withOpacity(0.1),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Icon(
+            Icons.security,
+            color: Color(0xFF8B5CF6),
+            size: 22,
+          ),
+        ),
+        title: const Text(
+          'Security',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 15,
+            color: Color(0xFF1E293B),
+          ),
+        ),
+        subtitle: _isCheckingPin
+            ? const Text(
+                'Checking...',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF64748B),
+                ),
+              )
+            : Row(
+                children: [
+                  Text(
+                    _hasPinSet ? 'PIN & Biometric settings' : 'Set up transaction PIN',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF64748B),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: _hasPinSet
+                          ? const Color(0xFF10B981).withOpacity(0.1)
+                          : const Color(0xFFF59E0B).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: _hasPinSet
+                            ? const Color(0xFF10B981).withOpacity(0.3)
+                            : const Color(0xFFF59E0B).withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _hasPinSet ? Icons.check_circle : Icons.warning_amber_rounded,
+                          size: 12,
+                          color: _hasPinSet ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _hasPinSet ? 'Active' : 'Not Set',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: _hasPinSet ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+        trailing: const Icon(
+          Icons.chevron_right,
+          color: Color(0xFF94A3B8),
+        ),
+        onTap: _handleSecurityTap,
       ),
     );
   }

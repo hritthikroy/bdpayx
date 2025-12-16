@@ -5,6 +5,7 @@ class User {
   final String? fullName;
   final String kycStatus;
   final double balance;
+  final double inrBalance;
   final String? photoUrl;
   final String? loginMethod;
 
@@ -15,6 +16,7 @@ class User {
     this.fullName,
     required this.kycStatus,
     required this.balance,
+    this.inrBalance = 0.0,
     this.photoUrl,
     this.loginMethod,
   });
@@ -27,6 +29,7 @@ class User {
       fullName: json['full_name'] ?? json['display_name'],
       kycStatus: json['kyc_status'] ?? 'pending',
       balance: double.parse(json['balance']?.toString() ?? '0'),
+      inrBalance: double.parse(json['inr_balance']?.toString() ?? '0'),
       photoUrl: json['photo_url'],
       loginMethod: json['login_method'],
     );
@@ -40,6 +43,7 @@ class User {
       'full_name': fullName,
       'kyc_status': kycStatus,
       'balance': balance,
+      'inr_balance': inrBalance,
       'photo_url': photoUrl,
       'login_method': loginMethod,
     };

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/exchange_provider.dart';
+import '../../widgets/login_popup.dart';
 import 'deposit_screen.dart';
 import 'withdraw_screen.dart';
 import '../referral/referral_screen.dart';
-import '../../widgets/platform_advantages.dart';
+import '../profile/bank_cards_screen.dart';
 
 class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
@@ -14,217 +15,378 @@ class WalletScreen extends StatefulWidget {
   State<WalletScreen> createState() => _WalletScreenState();
 }
 
-class _WalletScreenState extends State<WalletScreen> {
-  double _bdtBalance = 0;
-  double _inrBalance = 0;
-  List<Map<String, dynamic>> _transactions = [];
+class _WalletScreenState extends State<WalletScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _cardController;
+  bool _isBalanceHidden = false;
+  int _selectedCardIndex = 0;
+
+  // Demo data
+  final double _bdtBalance = 12500.00;
+  final double _inrBalance = 8750.00;
 
   @override
   void initState() {
     super.initState();
-    _loadWalletData();
+    _cardController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
   }
 
-  Future<void> _loadWalletData() async {
-    // TODO: Implement API calls
-    setState(() {
-      _bdtBalance = 0;
-      _inrBalance = 0;
-    });
+  @override
+  void dispose() {
+    _cardController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final user = Provider.of<AuthProvider>(context).user;
+    final user = context.select<AuthProvider, dynamic>((p) => p.user);
+    final exchangeProvider = context.watch<ExchangeProvider>();
 
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Header with balances
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(
+          decelerationRate: ScrollDecelerationRate.fast,
+        ),
+        slivers: [
+          // Header
+          SliverToBoxAdapter(
+            child: Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFF59E0B), Color(0xFFEA580C)],
                 ),
               ),
-              child: Column(
-                children: [
-                  const Text(
-                    'My Wallet',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: _buildBalanceCard(
-                          'BDT Balance',
-                          '৳${_bdtBalance.toStringAsFixed(2)}',
-                          Colors.white,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'My Wallet',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              _buildHeaderButton(
+                                Icons.visibility_outlined,
+                                () => setState(
+                                    () => _isBalanceHidden = !_isBalanceHidden),
+                              ),
+                              const SizedBox(width: 8),
+                              _buildHeaderButton(Icons.qr_code_scanner, () {}),
+                            ],
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildBalanceCard(
-                          'INR Balance',
-                          '₹${_inrBalance.toStringAsFixed(2)}',
-                          Colors.white70,
+                      const SizedBox(height: 24),
+                      // Total Balance Card
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.2),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Total Balance',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 6,
+                                        height: 6,
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFF10B981),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      const Text(
+                                        'Active',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _isBalanceHidden
+                                  ? '৳ ••••••'
+                                  : '৳ ${_bdtBalance.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: -1,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _isBalanceHidden
+                                  ? '≈ ₹ ••••••'
+                                  : '≈ ₹ ${(_bdtBalance * exchangeProvider.baseRate).toStringAsFixed(2)}',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.7),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
             ),
+          ),
 
-            // Quick Actions
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildQuickAction(
-                    icon: Icons.add_card,
-                    label: 'Deposit',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const DepositScreen()),
-                      );
-                    },
-                  ),
-                  _buildQuickAction(
-                    icon: Icons.money,
-                    label: 'Withdraw',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const WithdrawScreen()),
-                      );
-                    },
-                  ),
-                  _buildQuickAction(
-                    icon: Icons.card_giftcard,
-                    label: 'Invite',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const ReferralScreen()),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-
-            // Live Transaction Notification
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFEF3C7),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.volume_up, color: Colors.orange),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      '${DateFormat('HH:mm').format(DateTime.now())} User exchanged ৳5,000 to ₹3,500',
-                      style: TextStyle(
-                        color: Colors.grey[800],
-                        fontSize: 14,
-                      ),
+          // Quick Actions Grid
+          SliverToBoxAdapter(
+            child: Transform.translate(
+              offset: const Offset(0, -15),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 20,
+                      offset: const Offset(0, 4),
                     ),
-                  ),
-                  const Icon(Icons.chevron_right, color: Colors.grey),
-                ],
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildActionButton(
+                      Icons.add_rounded,
+                      'Add Money',
+                      const Color(0xFF10B981),
+                      () => _navigateWithLogin(const DepositScreen()),
+                    ),
+                    _buildActionButton(
+                      Icons.send_rounded,
+                      'Send',
+                      const Color(0xFF3B82F6),
+                      () => _navigateWithLogin(const WithdrawScreen()),
+                    ),
+                    _buildActionButton(
+                      Icons.account_balance_rounded,
+                      'Withdraw',
+                      const Color(0xFF8B5CF6),
+                      () => _navigateWithLogin(const WithdrawScreen()),
+                    ),
+                    _buildActionButton(
+                      Icons.card_giftcard_rounded,
+                      'Rewards',
+                      const Color(0xFFF59E0B),
+                      () => _navigateWithLogin(const ReferralScreen()),
+                    ),
+                  ],
+                ),
               ),
             ),
+          ),
 
-            // Transaction history
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // Currency Balances
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Recent Transactions',
+                    'Currency Balances',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E293B),
                     ),
                   ),
-                  TextButton(
-                    onPressed: () {},
-                    child: const Text('View All'),
+                  const SizedBox(height: 12),
+                  _buildCurrencyCard(
+                    '🇧🇩',
+                    'BDT',
+                    'Bangladeshi Taka',
+                    _bdtBalance,
+                    '৳',
+                    const Color(0xFF10B981),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildCurrencyCard(
+                    '🇮🇳',
+                    'INR',
+                    'Indian Rupee',
+                    _inrBalance,
+                    '₹',
+                    const Color(0xFF8B5CF6),
                   ),
                 ],
               ),
             ),
+          ),
 
-            Expanded(
-              child: _transactions.isEmpty
-                  ? const Center(
+          // Payment Methods
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Payment Methods',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1E293B),
+                        ),
+                      ),
+                      TextButton.icon(
+                        onPressed: () => _navigateWithLogin(const BankCardsScreen()),
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('Add'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: const Color(0xFFF59E0B),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  _buildPaymentMethod(
+                    'assets/bkash.png',
+                    'bKash',
+                    '•••• 4521',
+                    true,
+                    const Color(0xFFE2136E),
+                  ),
+                  const SizedBox(height: 10),
+                  _buildPaymentMethod(
+                    'assets/nagad.png',
+                    'Nagad',
+                    '•••• 7832',
+                    false,
+                    const Color(0xFFFF6B00),
+                  ),
+                  const SizedBox(height: 10),
+                  _buildPaymentMethod(
+                    'assets/rocket.png',
+                    'Rocket',
+                    'Not linked',
+                    false,
+                    const Color(0xFF8B2F89),
+                    isLinked: false,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Promo Banner
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.receipt_long, size: 64, color: Colors.grey),
-                          SizedBox(height: 16),
+                          const Text(
+                            'Invite Friends',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
                           Text(
-                            'No transactions yet',
-                            style: TextStyle(color: Colors.grey),
+                            'Get ৳50 for each friend who joins',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.8),
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          ElevatedButton(
+                            onPressed: () =>
+                                _navigateWithLogin(const ReferralScreen()),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: const Color(0xFF6366F1),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 10),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: const Text('Invite Now'),
                           ),
                         ],
                       ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      itemCount: _transactions.length,
-                      itemBuilder: (context, index) {
-                        final tx = _transactions[index];
-                        return _buildTransactionItem(tx);
-                      },
                     ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBalanceCard(String label, String amount, Color textColor) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: textColor.withOpacity(0.8),
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            amount,
-            style: TextStyle(
-              color: textColor,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+                    const Icon(
+                      Icons.card_giftcard_rounded,
+                      color: Colors.white24,
+                      size: 80,
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
@@ -232,35 +394,43 @@ class _WalletScreenState extends State<WalletScreen> {
     );
   }
 
-  Widget _buildQuickAction({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildHeaderButton(IconData icon, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(icon, color: Colors.white, size: 22),
+      ),
+    );
+  }
+
+  Widget _buildActionButton(
+      IconData icon, String label, Color color, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                ),
-              ],
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(icon, size: 32, color: const Color(0xFF1E3A8A)),
+            child: Icon(icon, color: color, size: 24),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             label,
             style: const TextStyle(
-              fontSize: 14,
+              fontSize: 11,
               fontWeight: FontWeight.w500,
+              color: Color(0xFF64748B),
             ),
           ),
         ],
@@ -268,30 +438,194 @@ class _WalletScreenState extends State<WalletScreen> {
     );
   }
 
-  Widget _buildTransactionItem(Map<String, dynamic> tx) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: tx['type'] == 'deposit'
-              ? Colors.green.shade50
-              : Colors.red.shade50,
-          child: Icon(
-            tx['type'] == 'deposit' ? Icons.add : Icons.remove,
-            color: tx['type'] == 'deposit' ? Colors.green : Colors.red,
+  Widget _buildCurrencyCard(String flag, String code, String name,
+      double balance, String symbol, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
-        ),
-        title: Text(tx['description']),
-        subtitle: Text(tx['date']),
-        trailing: Text(
-          '${tx['type'] == 'deposit' ? '+' : '-'}৳${tx['amount']}',
-          style: TextStyle(
-            color: tx['type'] == 'deposit' ? Colors.green : Colors.red,
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: Text(flag, style: const TextStyle(fontSize: 24)),
+            ),
           ),
-        ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  code,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1E293B),
+                  ),
+                ),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF64748B),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                _isBalanceHidden
+                    ? '$symbol ••••'
+                    : '$symbol ${balance.toStringAsFixed(2)}',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF10B981).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Text(
+                  '+2.5%',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF10B981),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
+  }
+
+  Widget _buildPaymentMethod(
+      String asset, String name, String detail, bool isPrimary, Color color,
+      {bool isLinked = true}) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: isPrimary
+            ? Border.all(color: color.withOpacity(0.3), width: 1.5)
+            : null,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Center(
+              child: Text(
+                name[0],
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    if (isPrimary) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: color.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          'Primary',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w600,
+                            color: color,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  detail,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isLinked
+                        ? const Color(0xFF64748B)
+                        : const Color(0xFFEF4444),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            isLinked ? Icons.check_circle : Icons.add_circle_outline,
+            color: isLinked ? const Color(0xFF10B981) : const Color(0xFF94A3B8),
+            size: 22,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _navigateWithLogin(Widget screen) async {
+    final isLoggedIn = await LoginPopup.show(context);
+    if (isLoggedIn && mounted) {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+    }
   }
 }

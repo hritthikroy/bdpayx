@@ -42,14 +42,15 @@ class ExchangeProvider with ChangeNotifier {
   void startAutoRefresh() {
     _countdown = 60;
     
-    // Countdown timer (updates every second) - NO NOTIFICATIONS
-    // This prevents unnecessary rebuilds
+    // Countdown timer (updates every second) with smooth notifications
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (_countdown > 0) {
         _countdown--;
-        // Don't notify listeners - countdown is just internal state
+        // Notify listeners for smooth countdown animation
+        notifyListeners();
       } else {
         _countdown = 60;
+        notifyListeners();
       }
     });
     
@@ -57,6 +58,7 @@ class ExchangeProvider with ChangeNotifier {
     _refreshTimer = Timer.periodic(const Duration(seconds: 60), (_) {
       fetchExchangeRate();
       _countdown = 60;
+      notifyListeners();
     });
   }
 

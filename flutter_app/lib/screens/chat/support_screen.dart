@@ -13,6 +13,10 @@ class SupportScreen extends StatelessWidget {
       backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
         child: CustomScrollView(
+          physics: const BouncingScrollPhysics(
+            decelerationRate: ScrollDecelerationRate.fast,
+          ),
+          cacheExtent: 500,
           slivers: [
             // App Bar
             SliverAppBar(

@@ -44,12 +44,14 @@ class ExchangeProvider with ChangeNotifier {
   void startAutoRefresh() {
     _countdown = 60;
     
-    // Countdown timer (updates every second) with minimal notifications
+    // Countdown timer - only notify every 5 seconds to reduce rebuilds
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (_countdown > 0) {
         _countdown--;
-        // Only notify listeners for countdown updates (not rate changes)
-        notifyListeners();
+        // Only notify every 5 seconds or at key moments (10, 5, 0)
+        if (_countdown % 5 == 0 || _countdown <= 5) {
+          notifyListeners();
+        }
       } else {
         _countdown = 60;
         notifyListeners();

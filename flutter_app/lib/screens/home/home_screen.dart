@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/exchange_provider.dart';
@@ -283,16 +284,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
-        child: CustomScrollView(
-          // Ultra-fast scroll physics for 120fps feel
-          physics: const BouncingScrollPhysics(
-            decelerationRate: ScrollDecelerationRate.fast,
-          ),
-          cacheExtent: 500, // Pre-render more content
-          slivers: [
+        child: RepaintBoundary(
+          child: CustomScrollView(
+            // Super smooth scroll physics
+            physics: const ClampingScrollPhysics(),
+            cacheExtent: 1000, // Pre-render more content for smoother scroll
+            slivers: [
             // Header Section - Clean Professional Design
             SliverToBoxAdapter(
-              child: Container(
+              child: RepaintBoundary(
+                child: Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -385,12 +386,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
                                       Text(
-                                        '₹${(exchangeProvider.baseRate * 100).toStringAsFixed(2)}',
+                                        '₹ ${(exchangeProvider.baseRate * 100).toStringAsFixed(2)}',
                                         style: const TextStyle(
                                           color: Color(0xFF1E293B),
                                           fontSize: 26,
                                           fontWeight: FontWeight.bold,
-                                          letterSpacing: -1,
+                                          letterSpacing: -0.5,
                                         ),
                                       ),
                                       const Padding(
@@ -442,15 +443,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               SizedBox(
                                 height: 80,
                                 width: double.infinity,
-                                child: CustomPaint(
-                                  painter: _ProfessionalSparklinePainter(
-                                    data: exchangeProvider.rateHistory.isNotEmpty
-                                        ? exchangeProvider.rateHistory.map((e) => e * 100).toList()
-                                        : [70.0, 69.8, 70.2, 69.9, 70.1, 70.0, 69.95, 70.05],
-                                    primaryColor: const Color(0xFF6366F1),
-                                    secondaryColor: const Color(0xFF8B5CF6),
+                                child: RepaintBoundary(
+                                  child: CustomPaint(
+                                    isComplex: true,
+                                    willChange: false,
+                                    painter: _ProfessionalSparklinePainter(
+                                      data: exchangeProvider.rateHistory.isNotEmpty
+                                          ? exchangeProvider.rateHistory.map((e) => e * 100).toList()
+                                          : [70.0, 69.8, 70.2, 69.9, 70.1, 70.0, 69.95, 70.05],
+                                      primaryColor: const Color(0xFF6366F1),
+                                      secondaryColor: const Color(0xFF8B5CF6),
+                                    ),
+                                    size: const Size(double.infinity, 80),
                                   ),
-                                  size: const Size(double.infinity, 80),
                                 ),
                               ),
                             ],
@@ -461,6 +466,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                 ),
               ),
+            ),
             ),
 
             // Balance Cards
@@ -872,7 +878,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
             // Rate Chart Section - Eye-Catching Design
             SliverToBoxAdapter(
-              child: Padding(
+              child: RepaintBoundary(
+                child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -972,6 +979,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
               ),
             ),
+            ),
 
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
@@ -1063,6 +1071,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             // Bottom padding to prevent overlap with bottom navigation
             const SliverToBoxAdapter(child: SizedBox(height: 90)),
           ],
+        ),
         ),
       ),
     );

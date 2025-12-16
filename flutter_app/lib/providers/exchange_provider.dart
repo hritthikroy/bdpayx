@@ -14,6 +14,7 @@ class ExchangeProvider with ChangeNotifier {
   bool _isLoading = false;
   String? _error;
   bool _isInitialized = false;
+  final List<double> _rateHistory = [0.70, 0.698, 0.702, 0.699, 0.701, 0.70];
 
   double get baseRate => _baseRate;
   double get currentRate => _currentRate;
@@ -21,6 +22,7 @@ class ExchangeProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
   int get countdown => _countdown;
+  List<double> get rateHistory => _rateHistory;
 
   ExchangeProvider() {
     // Initialize with default rate immediately
@@ -74,6 +76,7 @@ class ExchangeProvider with ChangeNotifier {
         // Only notify if rate actually changed and initialized
         if (newRate != _baseRate && _isInitialized) {
           _baseRate = newRate;
+          _updateRateHistory(newRate);
           _error = null;
           notifyListeners();
         } else {
@@ -130,6 +133,13 @@ class ExchangeProvider with ChangeNotifier {
   // Quick calculation without API call for instant feedback
   double quickCalculate(double amount) {
     return amount * _baseRate;
+  }
+
+  void _updateRateHistory(double newRate) {
+    _rateHistory.add(newRate);
+    if (_rateHistory.length > 10) {
+      _rateHistory.removeAt(0);
+    }
   }
 
   @override

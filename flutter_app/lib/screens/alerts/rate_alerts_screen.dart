@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/exchange_provider.dart';
 import '../../widgets/rate_chart.dart';
+import '../../widgets/theme_icons.dart';
 
 class RateAlertsScreen extends StatefulWidget {
   const RateAlertsScreen({super.key});
@@ -82,9 +83,15 @@ class _RateAlertsScreenState extends State<RateAlertsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    '🔔 Rate Alerts',
-                    style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                  Row(
+                    children: [
+                      ThemeIcons.notification(color: Colors.white, size: 28),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Rate Alerts',
+                        style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -100,11 +107,11 @@ class _RateAlertsScreenState extends State<RateAlertsScreen> {
                 color: Colors.white.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.trending_up, color: Colors.white, size: 16),
-                  SizedBox(width: 4),
-                  Text('LIVE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
+                  ThemeIcons.trendingUp(color: Colors.white, size: 16),
+                  const SizedBox(width: 4),
+                  const Text('LIVE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
                 ],
               ),
             ),
@@ -153,12 +160,12 @@ class _RateAlertsScreenState extends State<RateAlertsScreen> {
           borderRadius: BorderRadius.circular(16),
         ),
         alignment: Alignment.centerRight,
-        child: const Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.delete_outline, color: Colors.white, size: 24),
-            SizedBox(width: 8),
-            Text('Delete', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+            ThemeIcons.delete(color: Colors.white, size: 24),
+            const SizedBox(width: 8),
+            const Text('Delete', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
           ],
         ),
       ),
@@ -183,7 +190,11 @@ class _RateAlertsScreenState extends State<RateAlertsScreen> {
               width: 48,
               height: 48,
               decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-              child: Icon(alert.isAbove ? Icons.trending_up : Icons.trending_down, color: color),
+              child: Center(
+                child: alert.isAbove
+                    ? ThemeIcons.trendingUp(color: color, size: 24)
+                    : ThemeIcons.trendingDown(color: color, size: 24),
+              ),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -221,7 +232,9 @@ class _RateAlertsScreenState extends State<RateAlertsScreen> {
                   color: const Color(0xFFEF4444).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.delete_outline, color: Color(0xFFEF4444), size: 20),
+                child: Center(
+                  child: ThemeIcons.delete(color: const Color(0xFFEF4444), size: 20),
+                ),
               ),
             ),
             Switch(
@@ -248,7 +261,7 @@ class _RateAlertsScreenState extends State<RateAlertsScreen> {
                 color: const Color(0xFFEF4444).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.delete_outline, color: Color(0xFFEF4444), size: 24),
+              child: ThemeIcons.delete(color: const Color(0xFFEF4444), size: 24),
             ),
             const SizedBox(width: 12),
             const Text('Delete Alert?'),
@@ -301,7 +314,7 @@ class _RateAlertsScreenState extends State<RateAlertsScreen> {
       padding: const EdgeInsets.all(40),
       child: Column(
         children: [
-          Icon(Icons.notifications_off_outlined, size: 60, color: Colors.grey[300]),
+          ThemeIcons.notificationOff(color: Colors.grey[300]!, size: 60),
           const SizedBox(height: 16),
           const Text('No alerts yet', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF64748B))),
         ],
@@ -321,7 +334,7 @@ class _RateAlertsScreenState extends State<RateAlertsScreen> {
         top: false,
         child: ElevatedButton.icon(
           onPressed: _showAddAlert,
-          icon: const Icon(Icons.add_rounded, color: Colors.white, size: 22),
+          icon: ThemeIcons.add(color: Colors.white, size: 22),
           label: const Text('Create New Alert', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF6366F1),
@@ -393,7 +406,10 @@ class _RateAlertsScreenState extends State<RateAlertsScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.trending_up, color: isAbove ? Colors.white : const Color(0xFF64748B)),
+                            ThemeIcons.trendingUp(
+                              color: isAbove ? Colors.white : const Color(0xFF64748B),
+                              size: 24,
+                            ),
                             const SizedBox(width: 8),
                             Text('Goes Above', style: TextStyle(color: isAbove ? Colors.white : const Color(0xFF64748B), fontWeight: FontWeight.w600)),
                           ],
@@ -415,7 +431,10 @@ class _RateAlertsScreenState extends State<RateAlertsScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.trending_down, color: !isAbove ? Colors.white : const Color(0xFF64748B)),
+                            ThemeIcons.trendingDown(
+                              color: !isAbove ? Colors.white : const Color(0xFF64748B),
+                              size: 24,
+                            ),
                             const SizedBox(width: 8),
                             Text('Goes Below', style: TextStyle(color: !isAbove ? Colors.white : const Color(0xFF64748B), fontWeight: FontWeight.w600)),
                           ],

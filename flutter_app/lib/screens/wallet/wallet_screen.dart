@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/exchange_provider.dart';
 import '../../widgets/login_popup.dart';
+import '../../widgets/theme_icons.dart';
 import 'deposit_screen.dart';
 import 'withdraw_screen.dart';
 import '../referral/referral_screen.dart';
@@ -83,12 +84,12 @@ class _WalletScreenState extends State<WalletScreen>
                           Row(
                             children: [
                               _buildHeaderButton(
-                                Icons.visibility_outlined,
+                                '👁',
                                 () => setState(
                                     () => _isBalanceHidden = !_isBalanceHidden),
                               ),
                               const SizedBox(width: 8),
-                              _buildHeaderButton(Icons.qr_code_scanner, () {}),
+                              _buildHeaderButton('📷', () {}),
                             ],
                           ),
                         ],
@@ -202,25 +203,25 @@ class _WalletScreenState extends State<WalletScreen>
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     _buildActionButton(
-                      Icons.add_rounded,
+                      'wallet',
                       'Add Money',
                       const Color(0xFF10B981),
                       () => _navigateWithLogin(const DepositScreen()),
                     ),
                     _buildActionButton(
-                      Icons.send_rounded,
+                      'send',
                       'Send',
                       const Color(0xFF3B82F6),
                       () => _navigateWithLogin(const WithdrawScreen()),
                     ),
                     _buildActionButton(
-                      Icons.account_balance_rounded,
+                      'bank',
                       'Withdraw',
                       const Color(0xFF8B5CF6),
                       () => _navigateWithLogin(const WithdrawScreen()),
                     ),
                     _buildActionButton(
-                      Icons.card_giftcard_rounded,
+                      'gift',
                       'Rewards',
                       const Color(0xFFF59E0B),
                       () => _navigateWithLogin(const ReferralScreen()),
@@ -289,7 +290,7 @@ class _WalletScreenState extends State<WalletScreen>
                       ),
                       TextButton.icon(
                         onPressed: () => _navigateWithLogin(const BankCardsScreen()),
-                        icon: const Icon(Icons.add, size: 18),
+                        icon: ThemeIcons.add(color: const Color(0xFFF59E0B), size: 18),
                         label: const Text('Add'),
                         style: TextButton.styleFrom(
                           foregroundColor: const Color(0xFFF59E0B),
@@ -379,11 +380,7 @@ class _WalletScreenState extends State<WalletScreen>
                         ],
                       ),
                     ),
-                    const Icon(
-                      Icons.card_giftcard_rounded,
-                      color: Colors.white24,
-                      size: 80,
-                    ),
+                    ThemeIcons.gift(color: Colors.white24, size: 80),
                   ],
                 ),
               ),
@@ -394,7 +391,7 @@ class _WalletScreenState extends State<WalletScreen>
     );
   }
 
-  Widget _buildHeaderButton(IconData icon, VoidCallback onTap) {
+  Widget _buildHeaderButton(String emoji, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -404,13 +401,37 @@ class _WalletScreenState extends State<WalletScreen>
           color: Colors.white.withOpacity(0.15),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, color: Colors.white, size: 22),
+        child: Text(
+          emoji,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 22,
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildActionButton(
-      IconData icon, String label, Color color, VoidCallback onTap) {
+      String iconType, String label, Color color, VoidCallback onTap) {
+    Widget iconWidget;
+    switch (iconType) {
+      case 'wallet':
+        iconWidget = ThemeIcons.wallet(color: color, size: 24);
+        break;
+      case 'send':
+        iconWidget = ThemeIcons.send(color: color, size: 24);
+        break;
+      case 'bank':
+        iconWidget = ThemeIcons.bank(color: color, size: 24);
+        break;
+      case 'gift':
+        iconWidget = ThemeIcons.gift(color: color, size: 24);
+        break;
+      default:
+        iconWidget = ThemeIcons.wallet(color: color, size: 24);
+    }
+    
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -422,7 +443,7 @@ class _WalletScreenState extends State<WalletScreen>
               color: color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(icon, color: color, size: 24),
+            child: iconWidget,
           ),
           const SizedBox(height: 6),
           Text(
@@ -612,11 +633,9 @@ class _WalletScreenState extends State<WalletScreen>
               ],
             ),
           ),
-          Icon(
-            isLinked ? Icons.check_circle : Icons.add_circle_outline,
-            color: isLinked ? const Color(0xFF10B981) : const Color(0xFF94A3B8),
-            size: 22,
-          ),
+          isLinked 
+            ? ThemeIcons.check(color: const Color(0xFF10B981), size: 22)
+            : ThemeIcons.add(color: const Color(0xFF94A3B8), size: 22),
         ],
       ),
     );

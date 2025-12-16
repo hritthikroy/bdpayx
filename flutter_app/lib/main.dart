@@ -21,24 +21,28 @@ void main() {
 
 // All heavy initialization happens after app is visible
 Future<void> _initializeInBackground() async {
-  // Set orientations (non-blocking)
-  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
-  
-  // Set system UI
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-    systemNavigationBarColor: Color(0xFFF8FAFC),
-    systemNavigationBarIconBrightness: Brightness.dark,
-  ));
-  
-  // Initialize Supabase in background
-  SupabaseConfig.initialize().catchError((e) {
-    debugPrint('Supabase init error: $e');
-  });
+  try {
+    // Set orientations (non-blocking)
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+    
+    // Set system UI
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: Color(0xFFF8FAFC),
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ));
+    
+    // Initialize Supabase in background with error handling
+    await SupabaseConfig.initialize().catchError((e) {
+      debugPrint('Supabase init error: $e');
+    });
+  } catch (e) {
+    debugPrint('Background init error: $e');
+  }
 }
 
 class MyApp extends StatelessWidget {

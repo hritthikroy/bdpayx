@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/exchange_provider.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/animated_nav_icons.dart';
+import '../widgets/theme_icons.dart';
 import '../services/app_lock_service.dart';
 import 'home/home_screen.dart';
 import 'transactions/transactions_screen.dart';
@@ -42,11 +43,11 @@ class _MainNavigationState extends State<MainNavigation>
   ];
 
   final List<NavItem> _navItems = [
-    NavItem(icon: Icons.notifications_rounded, label: 'Alerts', color: Color(0xFFF59E0B)),     // Swapped: Alerts now first
-    NavItem(icon: Icons.support_agent_rounded, label: 'Support', color: Color(0xFF06B6D4)),
-    NavItem(icon: Icons.home_rounded, label: 'Home', color: Color(0xFF6366F1)), // Center button - Home
-    NavItem(icon: Icons.history_rounded, label: 'History', color: Color(0xFF10B981)),          // Swapped: History now at position 3
-    NavItem(icon: Icons.account_circle_rounded, label: 'Profile', color: Color(0xFFEC4899)),
+    NavItem(icon: Icons.notifications, label: 'Alerts', color: Color(0xFFF59E0B)),     // Swapped: Alerts now first
+    NavItem(icon: Icons.support_agent, label: 'Support', color: Color(0xFF06B6D4)),
+    NavItem(icon: Icons.home, label: 'Home', color: Color(0xFF6366F1)), // Center button - Home
+    NavItem(icon: Icons.history, label: 'History', color: Color(0xFF10B981)),          // Swapped: History now at position 3
+    NavItem(icon: Icons.account_circle, label: 'Profile', color: Color(0xFFEC4899)),
   ];
 
   @override
@@ -158,10 +159,10 @@ class _MainNavigationState extends State<MainNavigation>
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
-          children: const [
-            Icon(Icons.security, color: Color(0xFF8B5CF6)),
-            SizedBox(width: 12),
-            Text('Secure Your Account'),
+          children: [
+            ThemeIcons.lock(color: const Color(0xFF8B5CF6), size: 24),
+            const SizedBox(width: 12),
+            const Text('Secure Your Account'),
           ],
         ),
         content: const Text(

@@ -6,6 +6,8 @@ import '../../widgets/login_popup.dart';
 import '../../widgets/amount_chip.dart';
 import '../../widgets/rate_chart.dart';
 import '../../widgets/animated_avatar.dart';
+import '../../widgets/theme_icons.dart';
+import '../../widgets/custom_icons.dart';
 
 import '../exchange/payment_screen.dart';
 import '../wallet/deposit_screen.dart';
@@ -41,42 +43,42 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final List<Map<String, dynamic>> _updates = [
     {
       'text': 'Exchange rate updated • Current: 100 BDT = ₹69.97',
-      'icon': Icons.sync,
+      'icon': '🔄', // sync
       'color': Color(0xFF6366F1),
     },
     {
       'text': 'System maintenance scheduled • Tonight 2:00 AM - 3:00 AM',
-      'icon': Icons.build,
+      'icon': '🔧', // build
       'color': Color(0xFFF59E0B),
     },
     {
       'text': 'New security features enabled • Enhanced account protection',
-      'icon': Icons.security,
+      'icon': '🔒', // security
       'color': Color(0xFF10B981),
     },
     {
       'text': 'Transaction processing time • Average: 2-5 minutes',
-      'icon': Icons.schedule,
+      'icon': '⏰', // schedule
       'color': Color(0xFF8B5CF6),
     },
     {
       'text': 'Daily transaction limit • Exchange up to ৳100,000',
-      'icon': Icons.info_outline,
+      'icon': 'ℹ️', // info_outline
       'color': Color(0xFF06B6D4),
     },
     {
       'text': 'KYC verification required • Complete for higher limits',
-      'icon': Icons.verified_user,
+      'icon': '🛡️', // verified_user
       'color': Color(0xFF10B981),
     },
     {
       'text': 'Customer support available • 24/7 live chat assistance',
-      'icon': Icons.support_agent,
+      'icon': '🎧', // support_agent
       'color': Color(0xFFEC4899),
     },
     {
       'text': 'Payment methods • bKash, Nagad, Rocket accepted',
-      'icon': Icons.payment,
+      'icon': '💰', // payment
       'color': Color(0xFF8B5CF6),
     },
   ];
@@ -423,9 +425,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                             color: Colors.white.withOpacity(0.15),
                                             borderRadius: BorderRadius.circular(12),
                                           ),
-                                          child: const Icon(
-                                            Icons.support_agent_rounded,
-                                            color: Colors.white,
+                                          child: CustomIcons.supportAgent(
+                                            color: Colors.white, 
                                             size: 18,
                                           ),
                                         ),
@@ -450,9 +451,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                             color: Colors.white.withOpacity(0.15),
                                             borderRadius: BorderRadius.circular(12),
                                           ),
-                                          child: const Icon(
-                                            Icons.notifications_rounded,
-                                            color: Colors.white,
+                                          child: CustomIcons.notifications(
+                                            color: Colors.white, 
                                             size: 18,
                                           ),
                                         ),
@@ -494,9 +494,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                           color: const Color(0xFF10B981),
                                           borderRadius: BorderRadius.circular(8),
                                         ),
-                                        child: const Icon(
-                                          Icons.trending_up_rounded,
-                                          color: Colors.white,
+                                        child: CustomIcons.trendingUp(
+                                          color: Colors.white, 
                                           size: 14,
                                         ),
                                       ),
@@ -633,11 +632,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(
-                                  _isBalanceHidden ? Icons.visibility_off : Icons.visibility,
-                                  size: 16,
-                                  color: const Color(0xFF64748B),
-                                ),
+                                _isBalanceHidden 
+                                  ? CustomIcons.visibilityOff(color: const Color(0xFF64748B), size: 16)
+                                  : CustomIcons.visibility(color: const Color(0xFF64748B), size: 16),
                                 const SizedBox(width: 6),
                                 Text(
                                   _isBalanceHidden ? 'Show' : 'Hide',
@@ -673,9 +670,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             'INR Balance',
                             _isBalanceHidden ? '₹ ****' : '₹ ${_animatedInrBalance.toStringAsFixed(2)}',
                             const Color(0xFF8B5CF6),
-                            Icons.currency_rupee,
+                            null, // Will use currencySymbol instead
                             true,
                             showDemoBadge: false,
+                            currencySymbol: '₹',
                           ),
                         ),
                       ],
@@ -694,7 +692,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     Expanded(
                       child: _buildQuickAction(
                         'Deposit',
-                        Icons.add_card,
+                        null, // We'll use custom icon
                         const Color(0xFF10B981),
                         () async {
                           final isLoggedIn = await LoginPopup.show(
@@ -714,7 +712,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     Expanded(
                       child: _buildQuickAction(
                         'Withdraw',
-                        Icons.account_balance,
+                        null, // We'll use custom icon
                         const Color(0xFF3B82F6),
                         () async {
                           final isLoggedIn = await LoginPopup.show(
@@ -734,7 +732,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     Expanded(
                       child: _buildQuickAction(
                         'Invite',
-                        Icons.card_giftcard,
+                        null, // We'll use custom icon
                         const Color(0xFFF59E0B),
                         () async {
                           final isLoggedIn = await LoginPopup.show(
@@ -813,7 +811,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                           valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
                                         ),
                                       ),
-                                      const Icon(Icons.sync, color: Color(0xFF10B981), size: 14),
+                                      CustomIcons.sync(color: const Color(0xFF10B981), size: 14),
                                     ],
                                   );
                                 },
@@ -1040,8 +1038,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               color: Colors.white.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(14),
                             ),
-                            child: const Icon(
-                              Icons.show_chart_rounded,
+                            child: CustomIcons.showChart(
                               color: Colors.white,
                               size: 24,
                             ),
@@ -1082,11 +1079,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 width: 1,
                               ),
                             ),
-                            child: const Row(
+                            child: Row(
                               children: [
-                                Icon(Icons.trending_up, color: Colors.white, size: 16),
-                                SizedBox(width: 4),
-                                Text(
+                                ThemeIcons.trendingUp(color: Colors.white, size: 16),
+                                const SizedBox(width: 4),
+                                const Text(
                                   'LIVE',
                                   style: TextStyle(
                                     color: Colors.white,
@@ -1163,10 +1160,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 color: _updates[_currentUpdateIndex]['color'].withOpacity(0.2),
                                 shape: BoxShape.circle,
                               ),
-                              child: Icon(
+                              child: Text(
                                 _updates[_currentUpdateIndex]['icon'],
-                                color: _updates[_currentUpdateIndex]['color'],
-                                size: 20,
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  color: _updates[_currentUpdateIndex]['color'],
+                                ),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -1180,8 +1179,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 ),
                               ),
                             ),
-                            Icon(
-                              Icons.arrow_forward_ios,
+                            CustomIcons.arrowForwardIos(
                               color: _updates[_currentUpdateIndex]['color'],
                               size: 16,
                             ),
@@ -1346,7 +1344,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return cardContent;
   }
 
-  Widget _buildQuickAction(String title, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildQuickAction(String title, IconData? icon, Color color, VoidCallback onTap) {
+    Widget iconWidget;
+    
+    // Use custom emoji icons based on title
+    switch (title) {
+      case 'Deposit':
+        iconWidget = CustomIcons.addCard(color: color, size: 28);
+        break;
+      case 'Withdraw':
+        iconWidget = CustomIcons.accountBalance(color: color, size: 28);
+        break;
+      case 'Invite':
+        iconWidget = CustomIcons.cardGiftcard(color: color, size: 28);
+        break;
+      default:
+        iconWidget = icon != null 
+          ? Icon(icon, color: color, size: 28)
+          : CustomIcons.info(color: color, size: 28);
+    }
+    
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -1365,7 +1382,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ),
         child: Column(
           children: [
-            Icon(icon, color: color, size: 28),
+            iconWidget,
             const SizedBox(height: 8),
             Text(
               title,

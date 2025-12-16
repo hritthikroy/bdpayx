@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../widgets/amount_chip.dart';
+import '../../widgets/theme_icons.dart';
+import '../../widgets/custom_icons.dart';
 
 class DepositScreen extends StatefulWidget {
   const DepositScreen({super.key});
@@ -108,11 +110,7 @@ class _DepositScreenState extends State<DepositScreen> {
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: const Icon(
-                      Icons.account_balance_wallet,
-                      size: 48,
-                      color: Colors.white,
-                    ),
+                    child: ThemeIcons.wallet(color: Colors.white, size: 48),
                   ),
                   const SizedBox(height: 16),
                   const Text(
@@ -236,7 +234,7 @@ class _DepositScreenState extends State<DepositScreen> {
                           'bkash',
                           'bKash',
                           'Mobile Banking',
-                          Icons.phone_android,
+                          'phone',
                           const Color(0xFFE91E63),
                         ),
                         const SizedBox(height: 12),
@@ -244,7 +242,7 @@ class _DepositScreenState extends State<DepositScreen> {
                           'bank_transfer',
                           'Bank Transfer',
                           'Direct bank transfer',
-                          Icons.account_balance,
+                          'bank',
                           const Color(0xFF3B82F6),
                         ),
                       ],
@@ -271,7 +269,7 @@ class _DepositScreenState extends State<DepositScreen> {
                                 color: const Color(0xFFFBBF24),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: const Icon(Icons.info_outline, color: Colors.white, size: 20),
+                              child: CustomIcons.info(color: Colors.white, size: 20),
                             ),
                             const SizedBox(width: 12),
                             const Text(
@@ -336,11 +334,9 @@ class _DepositScreenState extends State<DepositScreen> {
                             ),
                             child: Column(
                               children: [
-                                Icon(
-                                  _proofPath != null ? Icons.check_circle : Icons.cloud_upload_outlined,
-                                  size: 48,
-                                  color: _proofPath != null ? const Color(0xFF10B981) : const Color(0xFF6366F1),
-                                ),
+                                _proofPath != null 
+                                  ? ThemeIcons.check(color: const Color(0xFF10B981), size: 48)
+                                  : ThemeIcons.upload(color: const Color(0xFF6366F1), size: 48),
                                 const SizedBox(height: 12),
                                 Text(
                                   _proofPath != null ? 'Payment proof uploaded!' : 'Upload Payment Proof',
@@ -396,7 +392,7 @@ class _DepositScreenState extends State<DepositScreen> {
     );
   }
 
-  Widget _buildPaymentMethodTile(String value, String title, String subtitle, IconData icon, Color color) {
+  Widget _buildPaymentMethodTile(String value, String title, String subtitle, String emoji, Color color) {
     final isSelected = _selectedMethod == value;
     return InkWell(
       onTap: () => setState(() => _selectedMethod = value),
@@ -418,7 +414,9 @@ class _DepositScreenState extends State<DepositScreen> {
                 color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, color: color, size: 24),
+              child: emoji == 'phone' 
+                ? ThemeIcons.phone(color: color, size: 24)
+                : ThemeIcons.bank(color: color, size: 24),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -444,7 +442,7 @@ class _DepositScreenState extends State<DepositScreen> {
               ),
             ),
             if (isSelected)
-              Icon(Icons.check_circle, color: color, size: 24),
+              ThemeIcons.check(color: color, size: 24),
           ],
         ),
       ),

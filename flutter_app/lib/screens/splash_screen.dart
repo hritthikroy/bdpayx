@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'dart:math' as math;
 import '../providers/auth_provider.dart';
 import '../providers/exchange_provider.dart';
+import '../widgets/theme_icons.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -344,11 +345,7 @@ class _SplashScreenState extends State<SplashScreen>
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Transform.translate(
                 offset: Offset(wave * 0.5, 0),
-                child: const Icon(
-                  Icons.swap_horiz_rounded,
-                  color: Colors.white70,
-                  size: 24,
-                ),
+                child: ThemeIcons.refresh(color: Colors.white70, size: 24),
               ),
             ),
             Transform.translate(
@@ -409,7 +406,7 @@ class _SplashScreenState extends State<SplashScreen>
                           color: Color(0xFFFBBF24),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.bolt, color: Colors.white, size: 14),
+                        child: ThemeIcons.flash(color: Colors.white, size: 14),
                       ),
                       const SizedBox(width: 10),
                       const Text(

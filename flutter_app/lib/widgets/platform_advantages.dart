@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'theme_icons.dart';
 
 class PlatformAdvantages extends StatelessWidget {
   const PlatformAdvantages({super.key});
@@ -19,25 +20,25 @@ class PlatformAdvantages extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           _buildAdvantageItem(
-            icon: Icons.headset_mic,
+            iconType: 'support',
             title: '24 / 7 Support',
             description: 'Got a problem? Just get in touch. Our customer service support team is available 24/7.',
           ),
           const SizedBox(height: 20),
           _buildAdvantageItem(
-            icon: Icons.credit_card,
+            iconType: 'creditCard',
             title: 'Transaction free',
             description: 'Use a variety of payment methods to trade cryptocurrency, free, safe and fast.',
           ),
           const SizedBox(height: 20),
           _buildAdvantageItem(
-            icon: Icons.info_outline,
+            iconType: 'info',
             title: 'Rich information',
             description: 'Gather a wealth of information, let you know the industry dynamics in first time.',
           ),
           const SizedBox(height: 20),
           _buildAdvantageItem(
-            icon: Icons.security,
+            iconType: 'lock',
             title: 'Reliable security',
             description: 'Our sophisticated security measures protect your cryptocurrency from all risks.',
           ),
@@ -47,10 +48,28 @@ class PlatformAdvantages extends StatelessWidget {
   }
 
   Widget _buildAdvantageItem({
-    required IconData icon,
+    required String iconType,
     required String title,
     required String description,
   }) {
+    Widget iconWidget;
+    switch (iconType) {
+      case 'support':
+        iconWidget = ThemeIcons.support(color: const Color(0xFF1E3A8A), size: 28);
+        break;
+      case 'creditCard':
+        iconWidget = ThemeIcons.creditCard(color: const Color(0xFF1E3A8A), size: 28);
+        break;
+      case 'info':
+        iconWidget = ThemeIcons.info(color: const Color(0xFF1E3A8A), size: 28);
+        break;
+      case 'lock':
+        iconWidget = ThemeIcons.lock(color: const Color(0xFF1E3A8A), size: 28);
+        break;
+      default:
+        iconWidget = ThemeIcons.info(color: const Color(0xFF1E3A8A), size: 28);
+    }
+    
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -60,11 +79,7 @@ class PlatformAdvantages extends StatelessWidget {
             color: const Color(0xFF1E3A8A).withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(
-            icon,
-            color: const Color(0xFF1E3A8A),
-            size: 28,
-          ),
+          child: iconWidget,
         ),
         const SizedBox(width: 16),
         Expanded(

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/login_popup.dart';
+import '../../widgets/theme_icons.dart';
+import '../../widgets/custom_icons.dart';
 import 'chat_screen.dart';
 
 class SupportScreen extends StatelessWidget {
@@ -65,8 +67,7 @@ class SupportScreen extends StatelessWidget {
                               ),
                             ],
                           ),
-                          child: Icon(
-                            Icons.support_agent_rounded,
+                          child: CustomIcons.supportAgent(
                             color: colorScheme.onPrimary,
                             size: 24,
                           ),
@@ -110,10 +111,11 @@ class SupportScreen extends StatelessWidget {
                       ),
                       child: Row(
                         children: [
-                          Icon(
-                            Icons.help_outline_rounded,
-                            color: colorScheme.primary,
-                            size: 20,
+                          const Text(
+                            '❓',
+                            style: TextStyle(
+                              fontSize: 20,
+                            ),
                           ),
                           const SizedBox(width: 12),
                           Text(
@@ -141,7 +143,7 @@ class SupportScreen extends StatelessWidget {
                     // Live Chat
                     _buildSupportCard(
                       context,
-                      icon: Icons.chat_bubble,
+                      icon: null, // Will use emoji
                       title: 'Live Chat',
                       subtitle: 'Chat with our support team',
                       color: colorScheme.primary,
@@ -163,7 +165,7 @@ class SupportScreen extends StatelessWidget {
                     // Call
                     _buildSupportCard(
                       context,
-                      icon: Icons.phone,
+                      icon: null, // Will use emoji
                       title: 'Call',
                       subtitle: 'Voice call support',
                       color: const Color(0xFF0088CC),
@@ -177,7 +179,7 @@ class SupportScreen extends StatelessWidget {
                     // Message
                     _buildSupportCard(
                       context,
-                      icon: Icons.message,
+                      icon: null, // Will use emoji
                       title: 'Message',
                       subtitle: 'Send us a message',
                       color: const Color(0xFF0088CC),
@@ -191,7 +193,7 @@ class SupportScreen extends StatelessWidget {
                     // Video Call
                     _buildSupportCard(
                       context,
-                      icon: Icons.video_call,
+                      icon: null, // Will use emoji
                       title: 'Video Call',
                       subtitle: 'Face-to-face support',
                       color: const Color(0xFF0088CC),
@@ -226,7 +228,7 @@ class SupportScreen extends StatelessWidget {
                                   color: colorScheme.primary,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: Icon(Icons.access_time, color: colorScheme.onPrimary, size: 20),
+                                child: CustomIcons.schedule(color: colorScheme.onPrimary, size: 20),
                               ),
                               const SizedBox(width: 12),
                               Text(
@@ -271,7 +273,12 @@ class SupportScreen extends StatelessWidget {
                               color: colorScheme.error,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: Icon(Icons.emergency, color: colorScheme.onError, size: 24),
+                            child: const Text(
+                              '🚨',
+                              style: TextStyle(
+                                fontSize: 24,
+                              ),
+                            ),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
@@ -315,7 +322,7 @@ class SupportScreen extends StatelessWidget {
 
   Widget _buildSupportCard(
     BuildContext context, {
-    required IconData icon,
+    required IconData? icon,
     required String title,
     required String subtitle,
     required Color color,
@@ -323,6 +330,27 @@ class SupportScreen extends StatelessWidget {
   }) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    
+    // Get emoji icon based on title
+    Widget iconWidget;
+    switch (title) {
+      case 'Live Chat':
+        iconWidget = ThemeIcons.support(color: color, size: 28);
+        break;
+      case 'Call':
+        iconWidget = ThemeIcons.phone(color: color, size: 28);
+        break;
+      case 'Message':
+        iconWidget = ThemeIcons.send(color: color, size: 28);
+        break;
+      case 'Video Call':
+        iconWidget = ThemeIcons.play(color: color, size: 28);
+        break;
+      default:
+        iconWidget = icon != null 
+          ? Icon(icon, color: color, size: 28)
+          : ThemeIcons.support(color: color, size: 28);
+    }
     
     return InkWell(
       onTap: onTap,
@@ -349,7 +377,7 @@ class SupportScreen extends StatelessWidget {
                 color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: color, size: 28),
+              child: iconWidget,
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -375,7 +403,7 @@ class SupportScreen extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios, color: color, size: 18),
+            CustomIcons.arrowForwardIos(color: color, size: 18),
           ],
         ),
       ),
@@ -426,7 +454,7 @@ class SupportScreen extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
-            Icon(Icons.phone, color: const Color(0xFF0088CC)),
+            CustomIcons.phone(color: const Color(0xFF0088CC)),
             const SizedBox(width: 12),
             const Text('Call'),
           ],
@@ -474,7 +502,7 @@ class SupportScreen extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
-            Icon(Icons.message, color: const Color(0xFF0088CC)),
+            ThemeIcons.send(color: const Color(0xFF0088CC), size: 24),
             const SizedBox(width: 12),
             const Text('Message'),
           ],
@@ -522,7 +550,13 @@ class SupportScreen extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
-            Icon(Icons.video_call, color: const Color(0xFF0088CC)),
+            const Text(
+              '📹',
+              style: TextStyle(
+                fontSize: 24,
+                color: Color(0xFF0088CC),
+              ),
+            ),
             const SizedBox(width: 12),
             const Text('Video Call'),
           ],

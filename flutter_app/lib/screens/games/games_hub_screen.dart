@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../widgets/login_popup.dart';
+import '../../widgets/theme_icons.dart';
 import 'ludo_game_screen.dart';
 
 class GamesHubScreen extends StatefulWidget {
@@ -69,8 +70,7 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.monetization_on,
-                                    color: Colors.white, size: 20),
+                                ThemeIcons.coin(color: Colors.white, size: 20),
                                 const SizedBox(width: 6),
                                 const Text(
                                   '৳500',
@@ -127,8 +127,8 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                               color: Colors.white.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(16),
                             ),
-                            child: const Center(
-                              child: Text('🎲', style: TextStyle(fontSize: 36)),
+                            child: Center(
+                              child: ThemeIcons.dice(color: Colors.white, size: 36),
                             ),
                           ),
                           const SizedBox(width: 16),
@@ -184,10 +184,12 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                               ],
                             ),
                           ),
-                          const Icon(
-                            Icons.play_circle_fill,
-                            color: Colors.white,
-                            size: 40,
+                          const Text(
+                            '▶️',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 40,
+                            ),
                           ),
                         ],
                       ),
@@ -262,7 +264,7 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
               delegate: SliverChildListDelegate([
                 _buildGameCard(
                   context,
-                  '🎲',
+                  'dice',
                   'Ludo',
                   '2.5K playing',
                   const Color(0xFF6366F1),
@@ -270,7 +272,7 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                 ),
                 _buildGameCard(
                   context,
-                  '🃏',
+                  'gamepad',
                   'Teen Patti',
                   '1.2K playing',
                   const Color(0xFFEF4444),
@@ -279,7 +281,7 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                 ),
                 _buildGameCard(
                   context,
-                  '♠️',
+                  'gamepad',
                   'Rummy',
                   '800 playing',
                   const Color(0xFF10B981),
@@ -288,7 +290,7 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                 ),
                 _buildGameCard(
                   context,
-                  '🎰',
+                  'star',
                   'Spin & Win',
                   '3K playing',
                   const Color(0xFFF59E0B),
@@ -421,15 +423,15 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
             ),
           ),
           const SizedBox(height: 4),
-          Icon(
-            isClaimed ? Icons.check_circle : Icons.card_giftcard,
-            color: isToday
-                ? Colors.white
-                : isClaimed
-                    ? const Color(0xFF10B981)
-                    : const Color(0xFFF59E0B),
-            size: 20,
-          ),
+          isClaimed 
+            ? ThemeIcons.check(
+                color: isToday ? Colors.white : const Color(0xFF10B981),
+                size: 20,
+              )
+            : ThemeIcons.gift(
+                color: isToday ? Colors.white : const Color(0xFFF59E0B),
+                size: 20,
+              ),
           const SizedBox(height: 4),
           Text(
             reward,
@@ -444,9 +446,24 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
     );
   }
 
-  Widget _buildGameCard(BuildContext context, String emoji, String name,
+  Widget _buildGameCard(BuildContext context, String iconType, String name,
       String players, Color color, String gameId,
       {bool comingSoon = false}) {
+    Widget iconWidget;
+    switch (iconType) {
+      case 'dice':
+        iconWidget = ThemeIcons.dice(color: color, size: 28);
+        break;
+      case 'gamepad':
+        iconWidget = ThemeIcons.gamepad(color: color, size: 28);
+        break;
+      case 'star':
+        iconWidget = ThemeIcons.star(color: color, size: 28);
+        break;
+      default:
+        iconWidget = ThemeIcons.gamepad(color: color, size: 28);
+    }
+    
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -477,9 +494,7 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                       color: color.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Center(
-                      child: Text(emoji, style: const TextStyle(fontSize: 28)),
-                    ),
+                    child: Center(child: iconWidget),
                   ),
                   if (comingSoon)
                     Positioned(

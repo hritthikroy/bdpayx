@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/transaction_provider.dart';
 import '../../widgets/login_popup.dart';
+import '../../widgets/theme_icons.dart';
+import '../../widgets/custom_icons.dart';
 
 
 class TransactionsScreen extends StatefulWidget {
@@ -81,8 +83,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      child: const Icon(
-                        Icons.history_rounded,
+                      child: CustomIcons.history(
                         color: Colors.white,
                         size: 26,
                       ),
@@ -117,11 +118,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(
-                        Icons.filter_list_rounded,
-                        color: Colors.white,
-                        size: 22,
-                      ),
+                      child: ThemeIcons.search(color: Colors.white, size: 22),
                     ),
                   ],
                 ),
@@ -151,10 +148,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               color: const Color(0xFF6366F1).withOpacity(0.1),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(
-                              Icons.receipt_long,
-                              size: 64,
-                              color: Color(0xFF6366F1),
+                            child: const Text(
+                              '📄',
+                              style: TextStyle(
+                                fontSize: 64,
+                                color: Color(0xFF6366F1),
+                              ),
                             ),
                           ),
                           const SizedBox(height: 24),
@@ -222,8 +221,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                     ),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  child: Icon(
-                                    Icons.currency_exchange_rounded,
+                                  child: ThemeIcons.refresh(
                                     color: _getStatusColor(transaction.status),
                                     size: 24,
                                   ),
@@ -254,10 +252,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                           ),
                                           const Padding(
                                             padding: EdgeInsets.symmetric(horizontal: 8),
-                                            child: Icon(
-                                              Icons.arrow_forward,
-                                              size: 16,
-                                              color: Color(0xFF64748B),
+                                            child: const Text(
+                                              '▶',
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                color: Color(0xFF64748B),
+                                              ),
                                             ),
                                           ),
                                           Text(
@@ -316,8 +316,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         );
   }
 
-
-}
   Widget _buildLoginPrompt() {
     return Column(
       children: [
@@ -340,8 +338,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Icon(
-                    Icons.history_rounded,
+                  child: CustomIcons.history(
                     color: Colors.white,
                     size: 24,
                   ),
@@ -396,11 +393,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   ),
                   child: Column(
                     children: [
-                      const Icon(
-                        Icons.receipt_long_outlined,
-                        size: 80,
-                        color: Color(0xFF6366F1),
-                      ),
+                      ThemeIcons.document(color: const Color(0xFF6366F1), size: 80),
                       const SizedBox(height: 24),
                       const Text(
                         'No Transactions Yet',
@@ -430,7 +423,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               // Transactions will automatically update due to provider changes
                             }
                           },
-                          icon: const Icon(Icons.g_mobiledata, size: 24),
+                          icon: CustomIcons.login(size: 24),
                           label: const Text(
                             'Sign in with Google',
                             style: TextStyle(
@@ -476,3 +469,4 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       ],
     );
   }
+}

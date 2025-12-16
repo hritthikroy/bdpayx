@@ -20,29 +20,20 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&family=Noto+Color+Emoji&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Icons&family=Material+Icons+Outlined&family=Material+Icons+Round&family=Material+Icons+Sharp&display=block" rel="stylesheet">
+  
+  <!-- Material Icons from Google Fonts CDN -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   
   <style>
-    /* Force Material Icons font loading */
-    @font-face {
-      font-family: 'MaterialIcons';
-      font-style: normal;
-      font-weight: 400;
-      src: url('https://fonts.gstatic.com/s/materialicons/v140/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2') format('woff2');
-      font-display: block;
-    }
-    
-    /* Fallback for all icon elements */
+    /* Ensure all icon elements use the correct font */
     * {
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }
-    
-    /* Force icon font on all elements that might contain icons */
-    flt-glass-pane * {
-      font-family: 'MaterialIcons', 'Roboto', sans-serif !important;
-    }
   </style>
+  
+  <!-- Flutter Icon Fix Script -->
+  <script src="flutter_fix.js"></script>
   <script>
     // Completely disable service worker and clear any existing ones
     var serviceWorkerVersion = null;
@@ -116,6 +107,24 @@
     <div class="spinner"></div>
     <div class="loading-text">Loading BDPayX...</div>
   </div>
-  <script src="flutter_bootstrap.js" async></script>
+  
+  <script src="flutter.js" defer></script>
+  <script>
+    window.addEventListener('load', function(ev) {
+      // Download main.dart.js
+      _flutter.loader.loadEntrypoint({
+        serviceWorker: {
+          serviceWorkerVersion: null,
+        },
+        onEntrypointLoaded: function(engineInitializer) {
+          engineInitializer.initializeEngine({
+            renderer: "html"
+          }).then(function(appRunner) {
+            appRunner.runApp();
+          });
+        }
+      });
+    });
+  </script>
 </body>
 </html>

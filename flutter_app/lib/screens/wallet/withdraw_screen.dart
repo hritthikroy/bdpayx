@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/theme_icons.dart';
+import '../../widgets/custom_icons.dart';
 
 class WithdrawScreen extends StatefulWidget {
   const WithdrawScreen({super.key});
@@ -78,17 +80,17 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
               _buildMethodOption(
                 'bank_transfer',
                 'Bank Transfer',
-                Icons.account_balance,
+                'bank',
               ),
               _buildMethodOption(
                 'bkash',
                 'bKash',
-                Icons.phone_android,
+                'phone',
               ),
               _buildMethodOption(
                 'nagad',
                 'Nagad',
-                Icons.phone_android,
+                'phone',
               ),
 
               const SizedBox(height: 24),
@@ -146,7 +148,7 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline, color: Colors.blue.shade700),
+                    CustomIcons.info(color: Colors.blue.shade700),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -189,14 +191,16 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
     );
   }
 
-  Widget _buildMethodOption(String value, String label, IconData icon) {
+  Widget _buildMethodOption(String value, String label, String iconType) {
     return RadioListTile<String>(
       value: value,
       groupValue: _selectedMethod,
       onChanged: (val) => setState(() => _selectedMethod = val!),
       title: Row(
         children: [
-          Icon(icon, color: const Color(0xFF1E3A8A)),
+          iconType == 'bank' 
+            ? ThemeIcons.bank(color: const Color(0xFF1E3A8A), size: 24)
+            : ThemeIcons.phone(color: const Color(0xFF1E3A8A), size: 24),
           const SizedBox(width: 12),
           Text(label),
         ],

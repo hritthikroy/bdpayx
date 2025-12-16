@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'dart:math' as math;
+import 'theme_icons.dart';
+import 'custom_icons.dart';
 
 class RateChart extends StatefulWidget {
   final double currentRate;
@@ -204,8 +206,7 @@ class _RateChartState extends State<RateChart> with TickerProviderStateMixin {
                                           ),
                                         ],
                                       ),
-                                      child: const Icon(
-                                        Icons.auto_graph_rounded,
+                                      child: CustomIcons.showChart(
                                         color: Colors.white,
                                         size: 22,
                                       ),
@@ -280,11 +281,9 @@ class _RateChartState extends State<RateChart> with TickerProviderStateMixin {
                                       color: Colors.white.withOpacity(0.2),
                                       shape: BoxShape.circle,
                                     ),
-                                    child: Icon(
-                                      isPositive ? Icons.trending_up_rounded : Icons.trending_down_rounded,
-                                      color: Colors.white,
-                                      size: 18,
-                                    ),
+                                    child: isPositive 
+                                      ? ThemeIcons.trendingUp(color: Colors.white, size: 18)
+                                      : ThemeIcons.trendingDown(color: Colors.white, size: 18),
                                   ),
                                   const SizedBox(width: 10),
                                   Column(

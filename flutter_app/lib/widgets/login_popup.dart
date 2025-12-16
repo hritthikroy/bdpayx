@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 
+
 class LoginPopup {
   static Future<bool> show(BuildContext context, {String? message}) async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -43,11 +44,8 @@ class LoginPopup {
                         color: Colors.white.withOpacity(0.2),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
-                        Icons.lock_outline,
-                        size: 48,
-                        color: Colors.white,
-                      ),
+                      child: const Text('🔓', 
+                        style: TextStyle(fontSize: 48, color: Colors.white)),
                     ),
                     const SizedBox(height: 16),
                     const Text(
@@ -126,7 +124,7 @@ class LoginPopup {
                             }
                           }
                         },
-                        icon: const Icon(Icons.g_mobiledata, size: 28),
+                        icon: const Text('🔑', style: TextStyle(fontSize: 28)),
                         label: const Text(
                           'Sign in with Google',
                           style: TextStyle(

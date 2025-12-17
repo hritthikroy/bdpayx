@@ -24,6 +24,9 @@ dependencies:
   http: ^1.1.0
   supabase_flutter: ^2.0.0
   
+  # Security
+  crypto: ^3.0.3
+  
   # Storage
   shared_preferences: ^2.2.2
   
@@ -39,6 +42,9 @@ dependencies:
   intl: ^0.18.1
   flutter_svg: ^2.0.9
   sensors_plus: ^4.0.2
+  
+  # Audio
+  audioplayers: ^5.2.1
 
 dev_dependencies:
   flutter_test:
@@ -47,7 +53,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  
+
   assets:
     - assets/images/
     - assets/animations/

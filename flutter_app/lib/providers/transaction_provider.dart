@@ -31,13 +31,15 @@ class TransactionProvider with ChangeNotifier {
           'exchange_rate': exchangeRate,
           'payment_method': paymentMethod,
         }),
-      );
+      ).timeout(const Duration(seconds: 15)); // Add timeout for transaction creation
 
       if (response.statusCode == 200) {
         final transaction = Transaction.fromJson(json.decode(response.body));
         _transactions.insert(0, transaction);
         notifyListeners();
         return transaction;
+      } else {
+        print('Create transaction failed: Server returned ${response.statusCode}');
       }
     } catch (e) {
       print('Create transaction error: $e');
@@ -51,15 +53,17 @@ class TransactionProvider with ChangeNotifier {
         'POST',
         Uri.parse('${ApiConfig.transactions}/$transactionId/upload-proof'),
       );
-      
+
       request.headers['Authorization'] = 'Bearer $token';
       request.files.add(await http.MultipartFile.fromPath('proof', filePath));
 
       final response = await request.send();
-      
+
       if (response.statusCode == 200) {
         await fetchTransactions(token);
         return true;
+      } else {
+        print('Upload proof failed: Server returned ${response.statusCode}');
       }
     } catch (e) {
       print('Upload proof error: $e');
@@ -69,17 +73,21 @@ class TransactionProvider with ChangeNotifier {
 
   Future<void> fetchTransactions(String token) async {
     _isLoading = true;
-    notifyListeners();
+    if (_transactions.isEmpty) {
+      notifyListeners(); // Notify loading state only if not already loaded
+    }
 
     try {
       final response = await http.get(
         Uri.parse(ApiConfig.transactions),
         headers: {'Authorization': 'Bearer $token'},
-      );
+      ).timeout(const Duration(seconds: 10)); // Add timeout
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         _transactions = data.map((json) => Transaction.fromJson(json)).toList();
+      } else {
+        print('Fetch transactions failed: Server returned ${response.statusCode}');
       }
     } catch (e) {
       print('Fetch transactions error: $e');

@@ -1,0 +1,91 @@
+# Implementation Plan
+
+- [x] 1. Create reusable EmptyStateWidget component
+  - [x] 1.1 Create EmptyStateWidget in flutter_app/lib/widgets/empty_state_widget.dart
+    - Implement widget with icon, title, message, and optional CTA button
+    - Use consistent styling with app theme (indigo/purple gradient accents)
+    - Support customizable colors and icons
+    - _Requirements: 2.1, 2.2, 6.1, 6.2, 6.3, 6.4_
+  - [x] 1.2 Write property test for empty state display
+    - **Property 6: Empty State Display**
+    - **Validates: Requirements 2.1, 6.1, 6.2, 6.3**
+
+- [x] 2. Update AuthProvider to remove demo data and expose real balances
+  - [x] 2.1 Remove demo balance references and add balance getters
+    - Remove any hardcoded demo values
+    - Add `bdtBalance` getter that returns `_user?.balance ?? 0.0`
+    - Add `inrBalance` getter that returns `_user?.inrBalance ?? 0.0`
+    - Add `hasTransactions` getter to check if user has any requests
+    - _Requirements: 1.1, 1.2, 1.4, 5.1_
+  - [x] 2.2 Write property test for balance accuracy
+    - **Property 1: Balance Display Accuracy**
+    - **Validates: Requirements 1.1, 3.1, 3.2, 4.1**
+  - [x] 2.3 Write property test for new user zero balance
+    - **Property 2: New User Zero Balance**
+    - **Validates: Requirements 1.1, 1.4**
+
+- [x] 3. Update HomeScreen to use real user balances
+  - [x] 3.1 Remove _demoBdtBalance and use AuthProvider balances
+    - Remove `final double _demoBdtBalance = 100.0;` 
+    - Update balance card to use `authProvider.bdtBalance`
+    - Update INR calculation to use actual BDT balance * exchange rate
+    - Remove `showDemoBadge: true` from balance cards
+    - _Requirements: 4.1, 4.2, 5.1_
+  - [x] 3.2 Add loading state for balance display
+    - Show shimmer/loading indicator while fetching user data
+    - Display actual balance once loaded
+    - _Requirements: 4.4_
+  - [x] 3.3 Write property test for INR calculation
+    - **Property 5: INR Calculation Accuracy**
+    - **Validates: Requirements 4.2**
+
+- [x] 4. Update WalletScreen to use real balances
+  - [x] 4.1 Remove hardcoded demo balances
+    - Remove `final double _bdtBalance = 12500.00;`
+    - Remove `final double _inrBalance = 8750.00;`
+    - Use `authProvider.bdtBalance` and `authProvider.inrBalance`
+    - _Requirements: 3.1, 3.2, 5.1_
+  - [x] 4.2 Add login check before showing wallet data
+    - If not authenticated, show login prompt
+    - Only display balances for authenticated users
+    - _Requirements: 3.3_
+  - [x] 4.3 Write property test for unauthenticated state
+    - **Property 4: Unauthenticated State Handling**
+    - **Validates: Requirements 3.3, 4.3**
+
+- [x] 5. Update TransactionsScreen with empty state
+  - [x] 5.1 Add empty state UI when no transactions exist
+    - Use EmptyStateWidget when transaction list is empty
+    - Show "No Transactions Yet" with exchange CTA
+    - _Requirements: 2.1, 2.2, 2.4_
+  - [x] 5.2 Add empty states for pending sections
+    - Empty state for pending withdrawals section
+    - Empty state for pending deposits section  
+    - Empty state for pending exchanges section
+    - _Requirements: 6.1, 6.2, 6.3_
+  - [x] 5.3 Write property test for no demo data display
+    - **Property 3: No Demo Data Display**
+    - **Validates: Requirements 1.4, 2.4**
+
+- [x] 6. Implement cache fallback for offline support
+  - [x] 6.1 Update AuthProvider to handle backend unavailability
+    - Return cached balance when backend fails
+    - Return zero if no cache exists
+    - _Requirements: 1.3, 3.4_
+  - [x] 6.2 Write property test for cache fallback
+    - **Property 7: Cache Fallback**
+    - **Validates: Requirements 1.3**
+
+- [x] 7. Final cleanup and verification
+  - [x] 7.1 Search and remove any remaining demo/mock data
+    - Grep for "demo", "mock", "fake", "sample" in dart files
+    - Remove or guard with debug flags
+    - _Requirements: 5.1, 5.2, 5.3, 5.4_
+  - [x] 7.2 Verify all screens show real data
+    - Test home screen with new user
+    - Test wallet screen with new user
+    - Test transactions screen with new user
+    - _Requirements: All_
+
+- [x] 8. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.

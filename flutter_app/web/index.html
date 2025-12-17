@@ -16,33 +16,72 @@
   <!-- Google Sign In -->
   <meta name="google-signin-client_id" content="1071453270740-qojgn6bfqf2dhinr2etkmd92f0has46n.apps.googleusercontent.com">
   
-  <!-- Load fonts -->
+  <!-- Load fonts including Bengali for ৳ symbol -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&family=Noto+Color+Emoji&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Icons&family=Material+Icons+Outlined&family=Material+Icons+Round&family=Material+Icons+Sharp&display=block" rel="stylesheet">
-  
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Material Icons from Google Fonts CDN -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" media="print" onload="this.media='all'">
+
   <style>
-    /* Force Material Icons font loading */
-    @font-face {
-      font-family: 'MaterialIcons';
-      font-style: normal;
-      font-weight: 400;
-      src: url('https://fonts.gstatic.com/s/materialicons/v140/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2') format('woff2');
-      font-display: block;
-    }
-    
-    /* Fallback for all icon elements */
+    /* Ensure all icon elements use the correct font - CRITICAL CSS FOR ICONS */
     * {
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }
-    
-    /* Force icon font on all elements that might contain icons */
-    flt-glass-pane * {
-      font-family: 'MaterialIcons', 'Roboto', sans-serif !important;
+
+    /* Apply Material Icons font to Flutter-generated icon elements */
+    i.material-icons, span.material-icons, .material-icons {
+      font-family: 'Material Icons', serif !important;
+      font-weight: normal;
+      font-style: normal;
+      font-size: 24px;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      display: inline-block;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+      -webkit-font-feature-settings: 'liga';
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Ensure all icon-related classes use the proper font */
+    .flutter-icon, .icon, [class*="icon-"], [class*="Icon"], [class*="icon"] {
+      font-family: 'Material Icons', serif !important;
+    }
+
+    /* Force the font at the document level for any icon elements */
+    *[class*="material-icons"] {
+      font-family: 'Material Icons', serif !important;
+    }
+
+    /* More specific selectors for Flutter web icons */
+    i[class*="Icon"], span[class*="Icon"], div[class*="Icon"] {
+      font-family: 'Material Icons', serif !important;
+    }
+
+    /* Ensure icon elements render properly */
+    .material-icons, .icon, [class*="Icon"] {
+      font-family: 'Material Icons', serif !important;
+      line-height: 1 !important;
+      font-style: normal !important;
+      font-weight: normal !important;
+      letter-spacing: normal !important;
+      text-transform: none !important;
+      display: inline-block !important;
+      white-space: nowrap !important;
+      word-wrap: normal !important;
+      direction: ltr !important;
+      -webkit-font-feature-settings: 'liga' !important;
+      -webkit-font-smoothing: antialiased !important;
     }
   </style>
+
+  <!-- Flutter Icon Fix Script -->
+  <script src="flutter_fix.js"></script>
   <script>
     // Completely disable service worker and clear any existing ones
     var serviceWorkerVersion = null;
@@ -116,6 +155,24 @@
     <div class="spinner"></div>
     <div class="loading-text">Loading BDPayX...</div>
   </div>
-  <script src="flutter_bootstrap.js" async></script>
+  
+  <script src="flutter.js" defer></script>
+  <script>
+    window.addEventListener('load', function(ev) {
+      // Download main.dart.js
+      _flutter.loader.loadEntrypoint({
+        serviceWorker: {
+          serviceWorkerVersion: null,
+        },
+        onEntrypointLoaded: function(engineInitializer) {
+          engineInitializer.initializeEngine({
+            renderer: "canvaskit"
+          }).then(function(appRunner) {
+            appRunner.runApp();
+          });
+        }
+      });
+    });
+  </script>
 </body>
 </html>

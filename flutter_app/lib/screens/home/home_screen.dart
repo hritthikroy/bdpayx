@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/exchange_provider.dart';
 import '../../widgets/login_popup.dart';
 import '../../widgets/amount_chip.dart';
 import '../../widgets/rate_chart.dart';
+import '../../widgets/animated_avatar.dart';
+import '../../widgets/theme_icons.dart';
+import '../../widgets/custom_icons.dart';
+
 import '../exchange/payment_screen.dart';
 import '../wallet/deposit_screen.dart';
 import '../wallet/withdraw_screen.dart';
 import '../referral/referral_screen.dart';
+import '../chat/support_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -23,49 +29,57 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   double _appliedRate = 0;
   late AnimationController _cardAnimationController;
   late Animation<double> _cardAnimation;
+  late AnimationController _inrBalanceAnimationController;
+  late Animation<double> _inrBalanceAnimation;
+
   int _currentUpdateIndex = 0;
+  final List<int> _shownUpdates = [];
+  bool _isBalanceHidden = false;
+  double _animatedInrBalance = 0.0;
+  bool _isInrBalanceUpdating = false;
+  double _lastKnownRate = 0.0;
   
-  // Dynamic updates list
+  // System updates and notifications
   final List<Map<String, dynamic>> _updates = [
     {
-      'text': 'User exchanged ৳10,000 to ₹6,997 • Fast & Secure',
-      'icon': Icons.check_circle,
-      'color': Color(0xFF10B981),
-    },
-    {
-      'text': 'New user from Dhaka joined • Welcome bonus active!',
-      'icon': Icons.celebration,
-      'color': Color(0xFFF59E0B),
-    },
-    {
-      'text': '₹50,000 exchanged today • Join the community!',
-      'icon': Icons.trending_up,
+      'text': 'Exchange rate updated - Current: 100 BDT = 69.97 INR',
+      'iconData': Icons.sync_rounded,
       'color': Color(0xFF6366F1),
     },
     {
-      'text': 'Instant withdrawal processed • 2 mins ago',
-      'icon': Icons.flash_on,
-      'color': Color(0xFFEF4444),
+      'text': 'System maintenance scheduled - Tonight 2:00 AM - 3:00 AM',
+      'iconData': Icons.build_rounded,
+      'color': Color(0xFFF59E0B),
     },
     {
-      'text': 'Exchange rate improved • Best rates guaranteed!',
-      'icon': Icons.star,
-      'color': Color(0xFFFBBF24),
-    },
-    {
-      'text': 'User from Chittagong exchanged ৳25,000 successfully',
-      'icon': Icons.verified,
+      'text': 'New security features enabled - Enhanced account protection',
+      'iconData': Icons.lock_rounded,
       'color': Color(0xFF10B981),
     },
     {
-      'text': '100+ transactions completed today • Trusted platform',
-      'icon': Icons.security,
+      'text': 'Transaction processing time - Average: 2-5 minutes',
+      'iconData': Icons.schedule_rounded,
       'color': Color(0xFF8B5CF6),
     },
     {
-      'text': 'Referral bonus paid ৳500 • Invite friends now!',
-      'icon': Icons.card_giftcard,
+      'text': 'Daily transaction limit - Exchange up to 100,000 BDT',
+      'iconData': Icons.info_outline_rounded,
+      'color': Color(0xFF06B6D4),
+    },
+    {
+      'text': 'KYC verification required - Complete for higher limits',
+      'iconData': Icons.verified_user_rounded,
+      'color': Color(0xFF10B981),
+    },
+    {
+      'text': 'Customer support available - 24/7 live chat assistance',
+      'iconData': Icons.headset_mic_rounded,
       'color': Color(0xFFEC4899),
+    },
+    {
+      'text': 'Payment methods - bKash, Nagad, Rocket accepted',
+      'iconData': Icons.payment_rounded,
+      'color': Color(0xFF8B5CF6),
     },
   ];
 
@@ -82,14 +96,105 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       curve: Curves.easeOutBack,
     );
     
+    _inrBalanceAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+    
     _startUpdateRotation();
+    
+    // Initialize INR balance and listen to exchange rate changes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final exchangeProvider = Provider.of<ExchangeProvider>(context, listen: false);
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final bdtBalance = authProvider.bdtBalance;
+      _animatedInrBalance = bdtBalance * exchangeProvider.baseRate;
+      
+      // Store the current rate to detect actual changes
+      _lastKnownRate = exchangeProvider.baseRate;
+      
+      // Add listener to exchange provider for rate changes
+      exchangeProvider.addListener(_onExchangeRateChanged);
+    });
   }
   
+  void _onExchangeRateChanged() {
+    if (!mounted) return;
+    
+    final exchangeProvider = Provider.of<ExchangeProvider>(context, listen: false);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    
+    // Only proceed if the rate actually changed (not just countdown updates)
+    if ((exchangeProvider.baseRate - _lastKnownRate).abs() < 0.0001) {
+      return; // No significant rate change, ignore this notification
+    }
+    
+    _lastKnownRate = exchangeProvider.baseRate;
+    final bdtBalance = authProvider.bdtBalance;
+    final targetInrBalance = bdtBalance * exchangeProvider.baseRate;
+    
+    // Also update the converted amount if user has entered an amount
+    final enteredAmount = double.tryParse(_amountController.text);
+    if (enteredAmount != null && enteredAmount > 0) {
+      setState(() {
+        _convertedAmount = exchangeProvider.quickCalculate(enteredAmount);
+        _appliedRate = exchangeProvider.baseRate;
+      });
+    }
+    
+    // Only animate balance if there's a significant change and not already updating
+    if ((targetInrBalance - _animatedInrBalance).abs() > 0.01 && !_isInrBalanceUpdating) {
+      setState(() {
+        _isInrBalanceUpdating = true;
+      });
+      
+      // Add a small delay to prevent simultaneous loading with other elements
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (!mounted) return;
+        
+        // Animate the number counting - smooth and simple
+        _inrBalanceAnimation = Tween<double>(
+          begin: _animatedInrBalance,
+          end: targetInrBalance,
+        ).animate(CurvedAnimation(
+          parent: _inrBalanceAnimationController,
+          curve: Curves.easeInOutCubic,
+        ))..addListener(() {
+          if (mounted) {
+            setState(() {
+              _animatedInrBalance = _inrBalanceAnimation.value;
+            });
+          }
+        });
+        
+        _inrBalanceAnimationController.forward(from: 0).then((_) {
+          if (mounted) {
+            setState(() {
+              _isInrBalanceUpdating = false;
+            });
+          }
+        });
+      });
+    }
+  }
+  
+
+  
   void _startUpdateRotation() {
-    Future.delayed(const Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 4), () {
       if (mounted) {
         setState(() {
-          _currentUpdateIndex = (_currentUpdateIndex + 1) % _updates.length;
+          int nextIndex;
+          do {
+            nextIndex = DateTime.now().millisecondsSinceEpoch % _updates.length;
+          } while (_shownUpdates.contains(nextIndex) && _shownUpdates.length < _updates.length);
+          
+          _currentUpdateIndex = nextIndex;
+          _shownUpdates.add(nextIndex);
+          
+          if (_shownUpdates.length >= _updates.length) {
+            _shownUpdates.clear();
+          }
         });
         _startUpdateRotation();
       }
@@ -98,7 +203,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    // Remove listener from exchange provider
+    final exchangeProvider = Provider.of<ExchangeProvider>(context, listen: false);
+    exchangeProvider.removeListener(_onExchangeRateChanged);
+    
     _cardAnimationController.dispose();
+    _inrBalanceAnimationController.dispose();
     _amountController.dispose();
     super.dispose();
   }
@@ -170,241 +280,163 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    // Use listen: false to prevent unnecessary rebuilds
-    final user = Provider.of<AuthProvider>(context, listen: false).user;
-    final exchangeProvider = Provider.of<ExchangeProvider>(context, listen: false);
+    // Use Selector for minimal rebuilds - only rebuild when specific values change
+    final authProvider = context.watch<AuthProvider>();
+    final user = authProvider.user;
+    final bdtBalance = authProvider.bdtBalance;
+    final isLoading = authProvider.isLoading;
+    final exchangeProvider = context.watch<ExchangeProvider>();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            // App Bar - More Compact and Gorgeous
-            SliverAppBar(
-              expandedHeight: 180,
-              floating: false,
-              pinned: true,
-              backgroundColor: const Color(0xFF6366F1),
-              flexibleSpace: FlexibleSpaceBar(
-                background: Container(
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFA855F7)],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF6366F1).withOpacity(0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
+        child: RepaintBoundary(
+          child: CustomScrollView(
+            // Super smooth scroll physics
+            physics: const ClampingScrollPhysics(),
+            cacheExtent: 1000, // Pre-render more content for smoother scroll
+            slivers: [
+            // Header Section - Clean Professional Design
+            SliverToBoxAdapter(
+              child: RepaintBoundary(
+                child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
                   ),
-                  child: Stack(
-                    children: [
-                      // Decorative circles
-                      Positioned(
-                        top: -50,
-                        right: -50,
-                        child: Container(
-                          width: 200,
-                          height: 200,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white.withOpacity(0.05),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: -30,
-                        left: -30,
-                        child: Container(
-                          width: 150,
-                          height: 150,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white.withOpacity(0.03),
-                          ),
-                        ),
-                      ),
-                      // Content
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 50, 20, 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                ),
+                child: SafeArea(
+                  bottom: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                    child: Column(
+                      children: [
+                        // Top Row: Avatar + User Info + Actions
+                        Row(
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Row(
+                            // Avatar
+                            AnimatedAvatar(
+                              size: 44,
+                              userName: user?.fullName ?? user?.email ?? 'User',
+                            ),
+                            const SizedBox(width: 12),
+                            // User Info
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Hello, ${user?.fullName?.split(' ').first ?? 'User'}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Welcome to BDPayX',
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(alpha: 0.7),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Action Buttons
+                            _buildHeaderButton(
+                              Icons.headset_mic_rounded,
+                              () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SupportScreen())),
+                            ),
+                            const SizedBox(width: 8),
+                            _buildHeaderButton(
+                              Icons.notifications_outlined,
+                              () => ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Text('No new notifications'),
+                                  backgroundColor: const Color(0xFF6366F1),
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        // Live Rate Chart Card
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 20,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              // Top Row: Rate + Live Badge
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  // Rate Display
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
-                                      // User Avatar - Simple and Fast
-                                      Container(
-                                        width: 50,
-                                        height: 50,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          gradient: const LinearGradient(
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                            colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFA855F7)],
-                                          ),
-                                          border: Border.all(
-                                            color: Colors.white,
-                                            width: 2.5,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withOpacity(0.2),
-                                              blurRadius: 8,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                          ],
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            user?.fullName?.substring(0, 1).toUpperCase() ?? 
-                                            user?.email?.substring(0, 1).toUpperCase() ?? 
-                                            'U',
-                                            style: const TextStyle(
-                                              fontSize: 24,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white,
-                                            ),
-                                          ),
+                                      Text(
+                                        '₹ ${(exchangeProvider.baseRate * 100).toStringAsFixed(2)}',
+                                        style: const TextStyle(
+                                          color: Color(0xFF1E293B),
+                                          fontSize: 26,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: -0.5,
                                         ),
                                       ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'Hello, ${user?.fullName?.split(' ').first ?? 'User'}',
-                                              style: const TextStyle(
-                                                color: Colors.white70,
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            const SizedBox(height: 2),
-                                            const Text(
-                                              'BDPayX Exchange',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                                letterSpacing: -0.5,
-                                              ),
-                                            ),
-                                          ],
+                                      const Padding(
+                                        padding: EdgeInsets.only(left: 6, bottom: 4),
+                                        child: Text(
+                                          '/100 BDT',
+                                          style: TextStyle(
+                                            color: Color(0xFF94A3B8),
+                                            fontSize: 12,
+                                          ),
                                         ),
                                       ),
                                     ],
                                   ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.15),
-                                    borderRadius: BorderRadius.circular(14),
-                                    border: Border.all(
-                                      color: Colors.white.withOpacity(0.2),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: const Icon(
-                                    Icons.notifications_rounded,
-                                    color: Colors.white,
-                                    size: 22,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const Spacer(),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.2),
-                                  width: 1,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.trending_up_rounded, color: Colors.white, size: 18),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '100 BDT = ₹${(exchangeProvider.baseRate * 100).toStringAsFixed(2)}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: 0.3,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
+                                  // Live Badge with Timer
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF10B981),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: const Text(
-                                      'LIVE',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(10),
+                                      color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(20),
                                     ),
                                     child: Row(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        SizedBox(
-                                          width: 12,
-                                          height: 12,
-                                          child: CircularProgressIndicator(
-                                            value: exchangeProvider.countdown / 60,
-                                            strokeWidth: 2,
-                                            backgroundColor: Colors.white.withOpacity(0.3),
-                                            valueColor: AlwaysStoppedAnimation<Color>(
-                                              exchangeProvider.countdown > 10
-                                                  ? Colors.white
-                                                  : const Color(0xFFEF4444),
-                                            ),
+                                        Container(
+                                          width: 6,
+                                          height: 6,
+                                          decoration: const BoxDecoration(
+                                            color: Color(0xFF10B981),
+                                            shape: BoxShape.circle,
                                           ),
                                         ),
-                                        const SizedBox(width: 4),
+                                        const SizedBox(width: 6),
                                         Text(
-                                          '${exchangeProvider.countdown}s',
-                                          style: TextStyle(
-                                            color: exchangeProvider.countdown > 10
-                                                ? Colors.white
-                                                : const Color(0xFFFFCDD2),
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
+                                          'LIVE • ${exchangeProvider.countdown}s',
+                                          style: const TextStyle(
+                                            color: Color(0xFF10B981),
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
                                           ),
                                         ),
                                       ],
@@ -412,38 +444,117 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   ),
                                 ],
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 16),
+                              // Mini Chart - Professional Theme-Friendly Design
+                              SizedBox(
+                                height: 80,
+                                width: double.infinity,
+                                child: RepaintBoundary(
+                                  child: CustomPaint(
+                                    isComplex: true,
+                                    willChange: false,
+                                    painter: _ProfessionalSparklinePainter(
+                                      data: exchangeProvider.rateHistory.isNotEmpty
+                                          ? exchangeProvider.rateHistory.map((e) => e * 100).toList()
+                                          : [70.0, 69.8, 70.2, 69.9, 70.1, 70.0, 69.95, 70.05],
+                                      primaryColor: const Color(0xFF6366F1),
+                                      secondaryColor: const Color(0xFF8B5CF6),
+                                    ),
+                                    size: const Size(double.infinity, 80),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
+            ),
             ),
 
             // Balance Cards
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(20),
-                child: Row(
+                child: Column(
                   children: [
-                    Expanded(
-                      child: _buildBalanceCard(
-                        'BDT Balance',
-                        '৳${user?.balance.toStringAsFixed(2) ?? '0.00'}',
-                        const Color(0xFF10B981),
-                        Icons.account_balance_wallet,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'My Balances',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1E293B),
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () {
+                            setState(() {
+                              _isBalanceHidden = !_isBalanceHidden;
+                            });
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: const Color(0xFFE2E8F0),
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _isBalanceHidden 
+                                  ? CustomIcons.visibilityOff(color: const Color(0xFF64748B), size: 16)
+                                  : CustomIcons.visibility(color: const Color(0xFF64748B), size: 16),
+                                const SizedBox(width: 6),
+                                Text(
+                                  _isBalanceHidden ? 'Show' : 'Hide',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF64748B),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildBalanceCard(
-                        'INR Balance',
-                        '₹0.00',
-                        const Color(0xFF8B5CF6),
-                        Icons.currency_rupee,
-                      ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildBalanceCard(
+                            'BDT Balance',
+                            isLoading ? '৳ ...' : (_isBalanceHidden ? '৳ ****' : '৳ ${bdtBalance.toStringAsFixed(2)}'),
+                            const Color(0xFF10B981),
+                            null,
+                            false,
+                            currencySymbol: '৳',
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildBalanceCard(
+                            'INR Balance',
+                            isLoading ? '₹ ...' : (_isBalanceHidden ? '₹ ****' : '₹ ${(bdtBalance * exchangeProvider.baseRate).toStringAsFixed(2)}'),
+                            const Color(0xFF8B5CF6),
+                            null,
+                            true,
+                            currencySymbol: '₹',
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -459,7 +570,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     Expanded(
                       child: _buildQuickAction(
                         'Deposit',
-                        Icons.add_card,
+                        null, // We'll use custom icon
                         const Color(0xFF10B981),
                         () async {
                           final isLoggedIn = await LoginPopup.show(
@@ -479,7 +590,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     Expanded(
                       child: _buildQuickAction(
                         'Withdraw',
-                        Icons.account_balance,
+                        null, // We'll use custom icon
                         const Color(0xFF3B82F6),
                         () async {
                           final isLoggedIn = await LoginPopup.show(
@@ -499,7 +610,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     Expanded(
                       child: _buildQuickAction(
                         'Invite',
-                        Icons.card_giftcard,
+                        null, // We'll use custom icon
                         const Color(0xFFF59E0B),
                         () async {
                           final isLoggedIn = await LoginPopup.show(
@@ -550,48 +661,97 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           ),
                         ),
                         const SizedBox(height: 8),
+                        // Auto-updating rate info bar (no manual refresh needed)
                         Container(
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFEF3C7),
+                            color: const Color(0xFFECFDF5),
                             borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFF10B981).withOpacity(0.3)),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.info_outline, color: Color(0xFFD97706), size: 18),
-                              const SizedBox(width: 8),
+                              // Auto-sync icon with animation
+                              TweenAnimationBuilder<double>(
+                                tween: Tween(begin: 0.0, end: 1.0),
+                                duration: Duration(seconds: exchangeProvider.countdown),
+                                builder: (context, value, child) {
+                                  return Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(
+                                          value: 1 - (exchangeProvider.countdown / 60),
+                                          strokeWidth: 2.5,
+                                          backgroundColor: const Color(0xFF10B981).withOpacity(0.2),
+                                          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                                        ),
+                                      ),
+                                      CustomIcons.sync(color: const Color(0xFF10B981), size: 14),
+                                    ],
+                                  );
+                                },
+                              ),
+                              const SizedBox(width: 10),
                               Expanded(
-                                child: Text(
-                                  'Rate updates in ${exchangeProvider.countdown}s • Current: ${exchangeProvider.baseRate.toStringAsFixed(4)}',
-                                  style: const TextStyle(fontSize: 11, color: Color(0xFF92400E)),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Live Rate • Auto Updates',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF065F46),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    AnimatedSwitcher(
+                                      duration: const Duration(milliseconds: 300),
+                                      child: Text(
+                                        'Next update in ${exchangeProvider.countdown}s',
+                                        key: ValueKey(exchangeProvider.countdown),
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          color: Color(0xFF047857),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
+                              // Live indicator
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: exchangeProvider.countdown > 10
-                                      ? const Color(0xFFD97706)
-                                      : const Color(0xFFEF4444),
+                                  color: const Color(0xFF10B981),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        value: exchangeProvider.countdown / 60,
-                                        strokeWidth: 2,
-                                        backgroundColor: Colors.white.withOpacity(0.3),
-                                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                                    Container(
+                                      width: 6,
+                                      height: 6,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.white.withOpacity(0.5),
+                                            blurRadius: 4,
+                                            spreadRadius: 1,
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      '${exchangeProvider.countdown}s',
-                                      style: const TextStyle(
-                                        fontSize: 12,
+                                    const SizedBox(width: 4),
+                                    const Text(
+                                      'LIVE',
+                                      style: TextStyle(
+                                        fontSize: 10,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white,
                                       ),
@@ -609,25 +769,28 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF1F2937),
+                            color: Color(0xFF1E293B), // Darker color for better visibility
                           ),
                           decoration: InputDecoration(
                             labelText: 'Enter BDT Amount',
+                            labelStyle: const TextStyle(
+                              color: Color(0x991E293B), // Semi-transparent dark color
+                            ),
                             prefixText: '৳ ',
                             prefixStyle: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF1F2937),
+                              color: Color(0xFF1E293B), // Darker color for better visibility
                             ),
                             filled: true,
-                            fillColor: const Color(0xFFF8FAFC),
+                            fillColor: const Color(0xFFFFFFFF), // Pure white background for contrast
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
                               borderSide: BorderSide.none,
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                              borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -719,7 +882,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
             // Rate Chart Section - Eye-Catching Design
             SliverToBoxAdapter(
-              child: Padding(
+              child: RepaintBoundary(
+                child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -753,8 +917,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               color: Colors.white.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(14),
                             ),
-                            child: const Icon(
-                              Icons.show_chart_rounded,
+                            child: CustomIcons.showChart(
                               color: Colors.white,
                               size: 24,
                             ),
@@ -795,11 +958,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 width: 1,
                               ),
                             ),
-                            child: const Row(
+                            child: Row(
                               children: [
-                                Icon(Icons.trending_up, color: Colors.white, size: 16),
-                                SizedBox(width: 4),
-                                Text(
+                                ThemeIcons.trendingUp(color: Colors.white, size: 16),
+                                const SizedBox(width: 4),
+                                const Text(
                                   'LIVE',
                                   style: TextStyle(
                                     color: Colors.white,
@@ -820,10 +983,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
               ),
             ),
+            ),
 
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
-            // Updates/Announcements Section (Dynamic)
+            // Live Updates Section
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -877,9 +1041,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
-                                _updates[_currentUpdateIndex]['icon'],
+                                _updates[_currentUpdateIndex]['iconData'],
+                                size: 18,
                                 color: _updates[_currentUpdateIndex]['color'],
-                                size: 20,
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -893,8 +1057,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 ),
                               ),
                             ),
-                            Icon(
-                              Icons.arrow_forward_ios,
+                            CustomIcons.arrowForwardIos(
                               color: _updates[_currentUpdateIndex]['color'],
                               size: 16,
                             ),
@@ -906,17 +1069,32 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
               ),
             ),
-            
+
             // Bottom padding to prevent overlap with bottom navigation
-            const SliverToBoxAdapter(child: SizedBox(height: 150)),
+            const SliverToBoxAdapter(child: SizedBox(height: 90)),
           ],
+        ),
         ),
       ),
     );
   }
 
-  Widget _buildBalanceCard(String title, String amount, Color color, IconData icon) {
-    return Container(
+  Widget _buildHeaderButton(IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(icon, color: Colors.white, size: 20),
+      ),
+    );
+  }
+
+  Widget _buildBalanceCard(String title, String amount, Color color, IconData? icon, bool isAnimated, {String? currencySymbol}) {
+    Widget cardContent = Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -941,15 +1119,75 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: Colors.white, size: 22),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: currencySymbol != null 
+                  ? Text(
+                      currencySymbol,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+                  : Icon(icon, color: Colors.white, size: 22),
+              ),
+              if (isAnimated)
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _isInrBalanceUpdating 
+                        ? const Color(0xFF3B82F6).withOpacity(0.9)
+                        : Colors.white.withOpacity(0.25),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_isInrBalanceUpdating)
+                        SizedBox(
+                          width: 8,
+                          height: 8,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 1.5,
+                            valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      else
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _isInrBalanceUpdating ? 'SYNC' : 'LIVE',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+            ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 18),
           Text(
             title,
             style: const TextStyle(
@@ -979,9 +1217,30 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ],
       ),
     );
+    
+    return cardContent;
   }
 
-  Widget _buildQuickAction(String title, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildQuickAction(String title, IconData? icon, Color color, VoidCallback onTap) {
+    Widget iconWidget;
+    
+    // Use custom emoji icons based on title
+    switch (title) {
+      case 'Deposit':
+        iconWidget = CustomIcons.addCard(color: color, size: 28);
+        break;
+      case 'Withdraw':
+        iconWidget = CustomIcons.accountBalance(color: color, size: 28);
+        break;
+      case 'Invite':
+        iconWidget = CustomIcons.cardGiftcard(color: color, size: 28);
+        break;
+      default:
+        iconWidget = icon != null 
+          ? Icon(icon, color: color, size: 28)
+          : CustomIcons.info(color: color, size: 28);
+    }
+    
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -1000,7 +1259,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ),
         child: Column(
           children: [
-            Icon(icon, color: color, size: 28),
+            iconWidget,
             const SizedBox(height: 8),
             Text(
               title,
@@ -1015,5 +1274,168 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ),
     );
   }
+}
 
+// Professional Sparkline Graph Painter with Theme Colors
+class _ProfessionalSparklinePainter extends CustomPainter {
+  final List<double> data;
+  final Color primaryColor;
+  final Color secondaryColor;
+
+  _ProfessionalSparklinePainter({
+    required this.data,
+    required this.primaryColor,
+    required this.secondaryColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (data.isEmpty) return;
+
+    final minValue = data.reduce((a, b) => a < b ? a : b);
+    final maxValue = data.reduce((a, b) => a > b ? a : b);
+    final range = maxValue - minValue;
+    final effectiveRange = range == 0 ? 1.0 : range;
+    final padding = 8.0;
+
+    // Calculate points with padding
+    final points = <Offset>[];
+    for (int i = 0; i < data.length; i++) {
+      final x = padding + (i / (data.length - 1)) * (size.width - padding * 2);
+      final normalizedY = (data[i] - minValue) / effectiveRange;
+      final y = size.height - padding - (normalizedY * (size.height - padding * 2));
+      points.add(Offset(x, y));
+    }
+
+    // Draw subtle grid lines
+    final gridPaint = Paint()
+      ..color = const Color(0xFFE2E8F0)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.5;
+    
+    for (int i = 0; i <= 3; i++) {
+      final y = padding + (i / 3) * (size.height - padding * 2);
+      canvas.drawLine(
+        Offset(padding, y),
+        Offset(size.width - padding, y),
+        gridPaint,
+      );
+    }
+
+    // Create smooth bezier curve path
+    final curvePath = Path();
+    curvePath.moveTo(points.first.dx, points.first.dy);
+    
+    for (int i = 0; i < points.length - 1; i++) {
+      final p0 = points[i];
+      final p1 = points[i + 1];
+      final controlX = (p0.dx + p1.dx) / 2;
+      curvePath.cubicTo(controlX, p0.dy, controlX, p1.dy, p1.dx, p1.dy);
+    }
+
+    // Draw gradient fill under curve
+    final fillPath = Path.from(curvePath);
+    fillPath.lineTo(points.last.dx, size.height);
+    fillPath.lineTo(points.first.dx, size.height);
+    fillPath.close();
+
+    final fillGradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        primaryColor.withValues(alpha: 0.25),
+        secondaryColor.withValues(alpha: 0.08),
+        Colors.transparent,
+      ],
+      stops: const [0.0, 0.6, 1.0],
+    );
+
+    final fillPaint = Paint()
+      ..shader = fillGradient.createShader(
+        Rect.fromLTWH(0, 0, size.width, size.height),
+      )
+      ..style = PaintingStyle.fill;
+    canvas.drawPath(fillPath, fillPaint);
+
+    // Draw gradient line with glow effect
+    final glowPaint = Paint()
+      ..shader = LinearGradient(
+        colors: [primaryColor, secondaryColor],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+    canvas.drawPath(curvePath, glowPaint);
+
+    // Draw main gradient line
+    final linePaint = Paint()
+      ..shader = LinearGradient(
+        colors: [primaryColor, secondaryColor],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    canvas.drawPath(curvePath, linePaint);
+
+    // Draw data points
+    for (int i = 0; i < points.length; i++) {
+      final point = points[i];
+      final isLast = i == points.length - 1;
+      
+      if (isLast) {
+        // Animated pulse effect for last point
+        final outerGlow = Paint()
+          ..color = secondaryColor.withValues(alpha: 0.3)
+          ..style = PaintingStyle.fill;
+        canvas.drawCircle(point, 8, outerGlow);
+        
+        final outerDot = Paint()
+          ..color = secondaryColor
+          ..style = PaintingStyle.fill;
+        canvas.drawCircle(point, 5, outerDot);
+        
+        final innerDot = Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.fill;
+        canvas.drawCircle(point, 2.5, innerDot);
+      } else {
+        // Small dots for other points
+        final dotPaint = Paint()
+          ..color = primaryColor.withValues(alpha: 0.4)
+          ..style = PaintingStyle.fill;
+        canvas.drawCircle(point, 2, dotPaint);
+      }
+    }
+
+    // Draw min/max labels
+    final textStyle = TextStyle(
+      color: const Color(0xFF94A3B8),
+      fontSize: 9,
+      fontWeight: FontWeight.w500,
+    );
+    
+    final maxTextPainter = TextPainter(
+      text: TextSpan(text: maxValue.toStringAsFixed(2), style: textStyle),
+      textDirection: TextDirection.ltr,
+    );
+    maxTextPainter.layout();
+    maxTextPainter.paint(canvas, Offset(size.width - maxTextPainter.width - 4, padding - 2));
+    
+    final minTextPainter = TextPainter(
+      text: TextSpan(text: minValue.toStringAsFixed(2), style: textStyle),
+      textDirection: TextDirection.ltr,
+    );
+    minTextPainter.layout();
+    minTextPainter.paint(canvas, Offset(size.width - minTextPainter.width - 4, size.height - padding - 8));
+  }
+
+  @override
+  bool shouldRepaint(covariant _ProfessionalSparklinePainter oldDelegate) {
+    return oldDelegate.data != data || 
+           oldDelegate.primaryColor != primaryColor ||
+           oldDelegate.secondaryColor != secondaryColor;
+  }
 }

@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/exchange_provider.dart';
 import '../../providers/transaction_provider.dart';
-import '../../widgets/animated_avatar.dart';
 import 'payment_screen.dart';
 
 class ExchangeScreen extends StatefulWidget {
@@ -89,7 +88,7 @@ class _ExchangeScreenState extends State<ExchangeScreen> {
                 padding: const EdgeInsets.all(20),
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                    colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
                   ),
                 ),
                 child: Column(
@@ -97,50 +96,31 @@ class _ExchangeScreenState extends State<ExchangeScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Animated Avatar with Blinking Eyes
-                            AnimatedAvatar(
-                              size: 50,
-                              userName: user?.fullName ?? user?.email ?? 'User',
+                            Text(
+                              user?.phone ?? '',
+                              style: const TextStyle(color: Colors.white70),
                             ),
-                            const SizedBox(width: 12),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: const [
-                                Text(
-                                  'Hello, User',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  'BDPayX Exchange',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
+                            Text(
+                              '৳${user?.balance.toStringAsFixed(2) ?? '0.00'}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const Text(
+                              'BDT Balance',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                              ),
                             ),
                           ],
                         ),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.notifications,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
+                        const Icon(Icons.notifications, color: Colors.white),
                       ],
                     ),
                   ],
@@ -228,84 +208,18 @@ class _ExchangeScreenState extends State<ExchangeScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 24),
-                      // SUPER VISIBLE LABEL
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [Colors.orange.shade600, Colors.deepOrange.shade600],
+                      const SizedBox(height: 20),
+                      TextField(
+                        controller: _amountController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: 'Enter BDT Amount',
+                          prefixText: '৳ ',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.orange.withOpacity(0.4),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
-                            Icon(
-                              Icons.edit,
-                              color: Colors.white,
-                              size: 28,
-                            ),
-                            SizedBox(width: 12),
-                            Text(
-                              'Enter BDT Amount',
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.blue.shade600,
-                            width: 3,
-                          ),
-                        ),
-                        child: TextField(
-                          controller: _amountController,
-                          keyboardType: TextInputType.number,
-                          style: const TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: 'Type amount here...',
-                            hintStyle: TextStyle(
-                              fontSize: 20,
-                              color: Colors.grey.shade400,
-                            ),
-                            prefixText: '৳ ',
-                            prefixStyle: const TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green,
-                            ),
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            filled: false,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 20,
-                            ),
-                          ),
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -411,45 +325,12 @@ class _ExchangeScreenState extends State<ExchangeScreen> {
   }
 
   Widget _buildQuickAmountChip(String amount) {
-    final isSelected = _amountController.text == amount;
-    return InkWell(
-      onTap: () {
+    return ActionChip(
+      label: Text('৳$amount'),
+      backgroundColor: Colors.blue.shade50,
+      onPressed: () {
         _amountController.text = amount;
       },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          gradient: isSelected
-              ? LinearGradient(
-                  colors: [Colors.blue.shade600, Colors.purple.shade600],
-                )
-              : LinearGradient(
-                  colors: [Colors.grey.shade100, Colors.grey.shade200],
-                ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? Colors.blue.shade700 : Colors.grey.shade300,
-            width: 2,
-          ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: Colors.blue.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : [],
-        ),
-        child: Text(
-          '৳$amount',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: isSelected ? Colors.white : Colors.black87,
-          ),
-        ),
-      ),
     );
   }
 }

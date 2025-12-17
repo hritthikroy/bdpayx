@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/login_popup.dart';
-import '../../widgets/theme_icons.dart';
-import '../../widgets/custom_icons.dart';
 import 'chat_screen.dart';
 
 class SupportScreen extends StatelessWidget {
@@ -11,142 +9,79 @@ class SupportScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
         child: CustomScrollView(
-          physics: const BouncingScrollPhysics(
-            decelerationRate: ScrollDecelerationRate.fast,
-          ),
           slivers: [
-            // Theme-friendly Header
-            SliverToBoxAdapter(
-              child: Container(
-                margin: const EdgeInsets.all(20),
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      colorScheme.primary.withValues(alpha: 0.1),
-                      colorScheme.secondary.withValues(alpha: 0.05),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: colorScheme.primary.withValues(alpha: 0.2),
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: colorScheme.primary.withValues(alpha: 0.1),
-                      blurRadius: 20,
-                      offset: const Offset(0, 4),
+            // App Bar
+            SliverAppBar(
+              expandedHeight: 180,
+              floating: false,
+              pinned: true,
+              backgroundColor: const Color(0xFF3B82F6),
+              flexibleSpace: FlexibleSpaceBar(
+                background: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color(0xFF3B82F6), Color(0xFF2563EB), Color(0xFF1D4ED8)],
                     ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsets.fromLTRB(20, 60, 20, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: colorScheme.primary,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: colorScheme.primary.withValues(alpha: 0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: CustomIcons.supportAgent(
-                            color: colorScheme.onPrimary,
-                            size: 24,
+                        Text(
+                          'Help & Support',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Help & Support',
-                                style: TextStyle(
-                                  color: colorScheme.onSurface,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'We\'re here to help you 24/7',
-                                style: TextStyle(
-                                  color: colorScheme.onSurface.withValues(alpha: 0.7),
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
+                        SizedBox(height: 8),
+                        Text(
+                          'We\'re here to help you 24/7',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surface,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: colorScheme.primary.withValues(alpha: 0.2),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          const Text(
-                            '❓',
-                            style: TextStyle(
-                              fontSize: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            'How can we help you?',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: colorScheme.onSurface,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
 
-            // Support Cards
+            // Quick Actions
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.all(20),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const Text(
+                      'How can we help you?',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    
                     // Live Chat
                     _buildSupportCard(
                       context,
-                      icon: null, // Will use emoji
+                      icon: Icons.chat_bubble,
                       title: 'Live Chat',
                       subtitle: 'Chat with our support team',
-                      color: colorScheme.primary,
+                      color: const Color(0xFF10B981),
                       onTap: () async {
                         final authProvider = Provider.of<AuthProvider>(context, listen: false);
                         if (!authProvider.isAuthenticated) {
@@ -162,44 +97,82 @@ class SupportScreen extends StatelessWidget {
                     
                     const SizedBox(height: 12),
                     
-                    // Call
+                    // Email Support
                     _buildSupportCard(
                       context,
-                      icon: null, // Will use emoji
-                      title: 'Call',
-                      subtitle: 'Voice call support',
-                      color: const Color(0xFF0088CC),
+                      icon: Icons.email,
+                      title: 'Email Support',
+                      subtitle: 'support@bdpayx.com',
+                      color: const Color(0xFF3B82F6),
                       onTap: () {
-                        _showTelegramCallDialog(context);
+                        _showEmailDialog(context);
                       },
                     ),
                     
                     const SizedBox(height: 12),
                     
-                    // Message
+                    // Phone Support
                     _buildSupportCard(
                       context,
-                      icon: null, // Will use emoji
-                      title: 'Message',
-                      subtitle: 'Send us a message',
-                      color: const Color(0xFF0088CC),
+                      icon: Icons.phone,
+                      title: 'Phone Support',
+                      subtitle: '+880 1XXX-XXXXXX',
+                      color: const Color(0xFF8B5CF6),
                       onTap: () {
-                        _showTelegramMessageDialog(context);
+                        _showPhoneDialog(context);
                       },
                     ),
                     
                     const SizedBox(height: 12),
                     
-                    // Video Call
+                    // WhatsApp Support
                     _buildSupportCard(
                       context,
-                      icon: null, // Will use emoji
-                      title: 'Video Call',
-                      subtitle: 'Face-to-face support',
-                      color: const Color(0xFF0088CC),
+                      icon: Icons.chat,
+                      title: 'WhatsApp Support',
+                      subtitle: 'Quick response via WhatsApp',
+                      color: const Color(0xFF059669),
                       onTap: () {
-                        _showTelegramVideoCallDialog(context);
+                        _showWhatsAppDialog(context);
                       },
+                    ),
+                    
+                    const SizedBox(height: 32),
+                    
+                    // FAQ Section
+                    const Text(
+                      'Frequently Asked Questions',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    _buildFAQItem(
+                      'How do I exchange BDT to INR?',
+                      'Simply enter the amount you want to exchange on the home screen, verify the rate, and proceed to payment. Your INR will be credited instantly.',
+                    ),
+                    
+                    _buildFAQItem(
+                      'What are the transaction fees?',
+                      'We offer competitive rates with transparent pricing. Check the pricing tiers on the exchange screen for detailed fee structure.',
+                    ),
+                    
+                    _buildFAQItem(
+                      'How long does withdrawal take?',
+                      'Withdrawals are processed within 24 hours on business days. You\'ll receive a notification once processed.',
+                    ),
+                    
+                    _buildFAQItem(
+                      'Is my money safe?',
+                      'Yes! We use bank-level security with SSL encryption and comply with all financial regulations.',
+                    ),
+                    
+                    _buildFAQItem(
+                      'How do I verify my account?',
+                      'Go to Profile → KYC Verification and upload your ID documents. Verification typically takes 24-48 hours.',
                     ),
                     
                     const SizedBox(height: 32),
@@ -208,14 +181,11 @@ class SupportScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            colorScheme.primary.withValues(alpha: 0.1),
-                            colorScheme.primary.withValues(alpha: 0.05),
-                          ],
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFDCFCE7), Color(0xFFBBF7D0)],
                         ),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.3)),
+                        border: Border.all(color: const Color(0xFF10B981).withOpacity(0.3)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -225,27 +195,27 @@ class SupportScreen extends StatelessWidget {
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: colorScheme.primary,
+                                  color: const Color(0xFF10B981),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: CustomIcons.schedule(color: colorScheme.onPrimary, size: 20),
+                                child: const Icon(Icons.access_time, color: Colors.white, size: 20),
                               ),
                               const SizedBox(width: 12),
-                              Text(
+                              const Text(
                                 'Support Hours',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: colorScheme.primary,
+                                  color: Color(0xFF065F46),
                                 ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 16),
                           _buildHoursRow('Live Chat', '24/7 Available'),
-                          _buildHoursRow('Call', '24/7 Available'),
-                          _buildHoursRow('Message', '24/7 Available'),
-                          _buildHoursRow('Video Call', '24/7 Available'),
+                          _buildHoursRow('Email Support', 'Response within 2 hours'),
+                          _buildHoursRow('Phone Support', 'Mon-Sat: 9 AM - 9 PM'),
+                          _buildHoursRow('WhatsApp', '24/7 Available'),
                         ],
                       ),
                     ),
@@ -256,31 +226,24 @@ class SupportScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            colorScheme.error.withValues(alpha: 0.1),
-                            colorScheme.error.withValues(alpha: 0.05),
-                          ],
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFEE2E2), Color(0xFFFECACA)],
                         ),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: colorScheme.error.withValues(alpha: 0.3)),
+                        border: Border.all(color: const Color(0xFFEF4444).withOpacity(0.3)),
                       ),
                       child: Row(
                         children: [
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: colorScheme.error,
+                              color: const Color(0xFFEF4444),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(
-                              Icons.warning_rounded,
-                              size: 24,
-                              color: Colors.white,
-                            ),
+                            child: const Icon(Icons.emergency, color: Colors.white, size: 24),
                           ),
                           const SizedBox(width: 16),
-                          Expanded(
+                          const Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -289,15 +252,15 @@ class SupportScreen extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: colorScheme.error,
+                                    color: Color(0xFF991B1B),
                                   ),
                                 ),
                                 SizedBox(height: 4),
                                 Text(
-                                  'For urgent issues, contact us via Telegram: @bdpayx_support',
+                                  'For urgent issues, call: +880 1XXX-XXXXXX',
                                   style: TextStyle(
                                     fontSize: 13,
-                                    color: colorScheme.error.withValues(alpha: 0.8),
+                                    color: Color(0xFF7F1D1D),
                                   ),
                                 ),
                               ],
@@ -306,9 +269,6 @@ class SupportScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    
-                    // Add bottom padding to account for navigation bar
-                    const SizedBox(height: 100),
                   ],
                 ),
               ),
@@ -321,48 +281,24 @@ class SupportScreen extends StatelessWidget {
 
   Widget _buildSupportCard(
     BuildContext context, {
-    required IconData? icon,
+    required IconData icon,
     required String title,
     required String subtitle,
     required Color color,
     required VoidCallback onTap,
   }) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    
-    // Get emoji icon based on title
-    Widget iconWidget;
-    switch (title) {
-      case 'Live Chat':
-        iconWidget = ThemeIcons.support(color: color, size: 28);
-        break;
-      case 'Call':
-        iconWidget = ThemeIcons.phone(color: color, size: 28);
-        break;
-      case 'Message':
-        iconWidget = ThemeIcons.send(color: color, size: 28);
-        break;
-      case 'Video Call':
-        iconWidget = ThemeIcons.play(color: color, size: 28);
-        break;
-      default:
-        iconWidget = icon != null 
-          ? Icon(icon, color: color, size: 28)
-          : ThemeIcons.support(color: color, size: 28);
-    }
-    
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: colorScheme.surface,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
+          border: Border.all(color: color.withOpacity(0.2)),
           boxShadow: [
             BoxShadow(
-              color: colorScheme.shadow.withValues(alpha: 0.05),
+              color: Colors.black.withOpacity(0.05),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -373,10 +309,10 @@ class SupportScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
+                color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: iconWidget,
+              child: Icon(icon, color: color, size: 28),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -385,100 +321,124 @@ class SupportScreen extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
+                      color: Color(0xFF1E293B),
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 13,
-                      color: colorScheme.onSurface.withValues(alpha: 0.7),
+                      color: Color(0xFF64748B),
                     ),
                   ),
                 ],
               ),
             ),
-            CustomIcons.arrowForwardIos(color: color, size: 18),
+            Icon(Icons.arrow_forward_ios, color: color, size: 18),
           ],
         ),
       ),
     );
   }
 
-
+  Widget _buildFAQItem(String question, String answer) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Theme(
+        data: ThemeData(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          title: Text(
+            question,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1E293B),
+            ),
+          ),
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Text(
+                answer,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF64748B),
+                  height: 1.5,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildHoursRow(String service, String hours) {
-    return Builder(
-      builder: (context) {
-        final colorScheme = Theme.of(context).colorScheme;
-        
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                service,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: colorScheme.primary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              Text(
-                hours,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: colorScheme.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            service,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Color(0xFF065F46),
+              fontWeight: FontWeight.w500,
+            ),
           ),
-        );
-      },
+          Text(
+            hours,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Color(0xFF047857),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  void _showTelegramCallDialog(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    
+  void _showEmailDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
+        title: const Row(
           children: [
-            CustomIcons.phone(color: const Color(0xFF0088CC)),
-            const SizedBox(width: 12),
-            const Text('Call'),
+            Icon(Icons.email, color: Color(0xFF3B82F6)),
+            SizedBox(width: 12),
+            Text('Email Support'),
           ],
         ),
-        content: Column(
+        content: const Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Start a voice call on Telegram:'),
-            const SizedBox(height: 8),
+            Text('Send us an email at:'),
+            SizedBox(height: 8),
             SelectableText(
-              '@bdpayx_support',
+              'support@bdpayx.com',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFF0088CC),
+                color: Color(0xFF3B82F6),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
-              'Available 24/7 for instant voice support',
-              style: TextStyle(
-                fontSize: 13, 
-                color: colorScheme.onSurface.withValues(alpha: 0.7),
-              ),
+              'We typically respond within 2 hours during business hours.',
+              style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
             ),
           ],
         ),
@@ -492,41 +452,36 @@ class SupportScreen extends StatelessWidget {
     );
   }
 
-  void _showTelegramMessageDialog(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    
+  void _showPhoneDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
+        title: const Row(
           children: [
-            ThemeIcons.send(color: const Color(0xFF0088CC), size: 24),
-            const SizedBox(width: 12),
-            const Text('Message'),
+            Icon(Icons.phone, color: Color(0xFF8B5CF6)),
+            SizedBox(width: 12),
+            Text('Phone Support'),
           ],
         ),
-        content: Column(
+        content: const Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Send us a message on Telegram:'),
-            const SizedBox(height: 8),
+            Text('Call us at:'),
+            SizedBox(height: 8),
             SelectableText(
-              '@bdpayx_support',
+              '+880 1XXX-XXXXXX',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFF0088CC),
+                color: Color(0xFF8B5CF6),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
-              'Get quick responses to your questions 24/7',
-              style: TextStyle(
-                fontSize: 13, 
-                color: colorScheme.onSurface.withValues(alpha: 0.7),
-              ),
+              'Available: Monday - Saturday\n9:00 AM - 9:00 PM (GMT+6)',
+              style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
             ),
           ],
         ),
@@ -540,45 +495,36 @@ class SupportScreen extends StatelessWidget {
     );
   }
 
-  void _showTelegramVideoCallDialog(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    
+  void _showWhatsAppDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
+        title: const Row(
           children: [
-            const Icon(
-              Icons.videocam_rounded,
-              size: 24,
-              color: Color(0xFF0088CC),
-            ),
-            const SizedBox(width: 12),
-            const Text('Video Call'),
+            Icon(Icons.chat, color: Color(0xFF059669)),
+            SizedBox(width: 12),
+            Text('WhatsApp Support'),
           ],
         ),
-        content: Column(
+        content: const Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Start a video call on Telegram:'),
-            const SizedBox(height: 8),
+            Text('Message us on WhatsApp:'),
+            SizedBox(height: 8),
             SelectableText(
-              '@bdpayx_support',
+              '+880 1XXX-XXXXXX',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFF0088CC),
+                color: Color(0xFF059669),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
-              'Face-to-face support available 24/7',
-              style: TextStyle(
-                fontSize: 13, 
-                color: colorScheme.onSurface.withValues(alpha: 0.7),
-              ),
+              'Available 24/7 for quick support',
+              style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
             ),
           ],
         ),

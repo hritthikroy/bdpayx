@@ -14,7 +14,6 @@ class ExchangeProvider with ChangeNotifier {
   bool _isLoading = false;
   String? _error;
   bool _isInitialized = false;
-  final List<double> _rateHistory = [0.70, 0.698, 0.702, 0.699, 0.701, 0.70];
 
   double get baseRate => _baseRate;
   double get currentRate => _currentRate;
@@ -22,7 +21,6 @@ class ExchangeProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
   int get countdown => _countdown;
-  List<double> get rateHistory => _rateHistory;
 
   ExchangeProvider() {
     // Initialize with default rate immediately
@@ -43,49 +41,38 @@ class ExchangeProvider with ChangeNotifier {
 
   void startAutoRefresh() {
     _countdown = 60;
-
-    // Countdown timer - only notify every 5 seconds to reduce rebuilds
+    
+    // Countdown timer (updates every second) - NO NOTIFICATIONS
+    // This prevents unnecessary rebuilds
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (_countdown > 0) {
         _countdown--;
-        // Only notify every 5 seconds or at key moments (10, 5, 0)
-        if (_countdown % 5 == 0 || _countdown <= 5) {
-          notifyListeners();
-        }
+        // Don't notify listeners - countdown is just internal state
       } else {
         _countdown = 60;
-        notifyListeners();
       }
     });
-
+    
     // Refresh timer (fetches new rate every 60 seconds)
     _refreshTimer = Timer.periodic(const Duration(seconds: 60), (_) {
-      _error = null; // Clear any previous error before attempting refresh
-      notifyListeners(); // Notify that we're starting a fetch
       fetchExchangeRate();
       _countdown = 60;
     });
   }
 
   Future<void> fetchExchangeRate() async {
-    _error = null; // Clear previous error before attempting fetch
-    if (_isInitialized) {
-      notifyListeners(); // Notify that loading/error state has changed
-    }
-
     try {
       final response = await http.get(Uri.parse(ApiConfig.exchangeRate)).timeout(
-        const Duration(seconds: 10), // Increase timeout to 10 seconds
+        const Duration(seconds: 5),
       );
-
+      
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final newRate = double.parse(data['base_rate'].toString());
-
+        
         // Only notify if rate actually changed and initialized
         if (newRate != _baseRate && _isInitialized) {
           _baseRate = newRate;
-          _updateRateHistory(newRate);
           _error = null;
           notifyListeners();
         } else {
@@ -93,17 +80,14 @@ class ExchangeProvider with ChangeNotifier {
           _error = null;
         }
       } else {
-        // Only show error if we've successfully initialized before
-        if (_isInitialized) {
-          _error = 'Failed to fetch exchange rate: Server returned ${response.statusCode}';
-          print('Fetch rate error: Server returned ${response.statusCode}');
+        if (_error == null && _isInitialized) {
+          _error = 'Failed to fetch rate';
           notifyListeners();
         }
       }
     } catch (e) {
-      // Only show error if we've successfully initialized before
-      if (_isInitialized) {
-        _error = 'Network error: ${e.toString().split('(').first.trim()}'; // Simplify error message
+      if (_error == null && _isInitialized) {
+        _error = 'Network error';
         print('Fetch rate error: $e');
         notifyListeners();
       }
@@ -145,13 +129,6 @@ class ExchangeProvider with ChangeNotifier {
   // Quick calculation without API call for instant feedback
   double quickCalculate(double amount) {
     return amount * _baseRate;
-  }
-
-  void _updateRateHistory(double newRate) {
-    _rateHistory.add(newRate);
-    if (_rateHistory.length > 10) {
-      _rateHistory.removeAt(0);
-    }
   }
 
   @override

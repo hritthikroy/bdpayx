@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../models/transaction_model.dart';
-import 'theme_icons.dart';
-import 'custom_icons.dart';
 
 class TransactionAnalytics extends StatefulWidget {
   final List<Transaction> transactions;
@@ -81,7 +79,11 @@ class _TransactionAnalyticsState extends State<TransactionAnalytics> with Single
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              ThemeIcons.chart(color: colorScheme.primary.withOpacity(0.3), size: 64),
+              Icon(
+                Icons.analytics_outlined,
+                size: 64,
+                color: colorScheme.primary.withOpacity(0.3),
+              ),
               const SizedBox(height: 16),
               Text(
                 'No data to display',
@@ -146,7 +148,8 @@ class _TransactionAnalyticsState extends State<TransactionAnalytics> with Single
                             ),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: CustomIcons.showChart(
+                          child: const Icon(
+                            Icons.analytics_rounded,
                             color: Colors.white,
                             size: 20,
                           ),
@@ -169,8 +172,8 @@ class _TransactionAnalyticsState extends State<TransactionAnalytics> with Single
                       ),
                       child: Row(
                         children: [
-                          _buildTabButton(0, 'chart', colorScheme),
-                          _buildTabButton(1, 'pie', colorScheme),
+                          _buildTabButton(0, Icons.bar_chart, colorScheme),
+                          _buildTabButton(1, Icons.pie_chart, colorScheme),
                         ],
                       ),
                     ),
@@ -193,7 +196,7 @@ class _TransactionAnalyticsState extends State<TransactionAnalytics> with Single
     );
   }
 
-  Widget _buildTabButton(int index, String iconType, ColorScheme colorScheme) {
+  Widget _buildTabButton(int index, IconData icon, ColorScheme colorScheme) {
     final isSelected = _selectedTab == index;
     return GestureDetector(
       onTap: () {
@@ -209,9 +212,10 @@ class _TransactionAnalyticsState extends State<TransactionAnalytics> with Single
           color: isSelected ? colorScheme.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
         ),
-        child: ThemeIcons.chart(
-          color: isSelected ? Colors.white : colorScheme.onSurface.withOpacity(0.5),
+        child: Icon(
+          icon,
           size: 20,
+          color: isSelected ? Colors.white : colorScheme.onSurface.withOpacity(0.5),
         ),
       ),
     );

@@ -109,8 +109,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
-        SliverToBoxAdapter(child: _buildHeader(user, isDark)),
-        SliverToBoxAdapter(child: _buildProfileCard(user, isDark)),
+        SliverToBoxAdapter(child: _buildHeaderWithProfile(user, isDark)),
         SliverToBoxAdapter(child: _buildQuickActions(isDark)),
         SliverToBoxAdapter(child: _buildMyAccountSection(isDark)),
         SliverToBoxAdapter(child: _buildActivitySection(isDark)),
@@ -122,9 +121,9 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
 
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // HEADER SECTION
+  // HEADER WITH PROFILE - Combined header and profile info
   // ═══════════════════════════════════════════════════════════════════════════
-  Widget _buildHeader(dynamic user, bool isDark) {
+  Widget _buildHeaderWithProfile(dynamic user, bool isDark) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -138,33 +137,193 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 80),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          child: Column(
             children: [
-              const Text(
-                'My Profile',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: -0.5,
-                ),
+              // Top Row: Title + Actions
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'My Profile',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      _buildHeaderIcon(Icons.notifications_outlined, () {
+                        HapticFeedback.lightImpact();
+                      }),
+                      const SizedBox(width: 8),
+                      _buildHeaderIcon(Icons.settings_outlined, () {
+                        HapticFeedback.lightImpact();
+                      }),
+                    ],
+                  ),
+                ],
               ),
+              const SizedBox(height: 24),
+              // Profile Info Row
               Row(
                 children: [
-                  _buildHeaderIcon(Icons.notifications_outlined, () {
-                    HapticFeedback.lightImpact();
-                  }),
-                  const SizedBox(width: 8),
-                  _buildHeaderIcon(Icons.settings_outlined, () {
-                    HapticFeedback.lightImpact();
-                  }),
+                  // Avatar with gradient ring
+                  Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [Colors.white, Color(0xFFEC4899)],
+                      ),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isDark ? const Color(0xFF4F46E5) : const Color(0xFF6366F1),
+                      ),
+                      child: AnimatedAvatar(size: 70, userName: user?.fullName),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  // User Info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user?.fullName ?? 'User',
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(Icons.phone_rounded, 
+                              size: 14, 
+                              color: Colors.white.withValues(alpha: 0.7)),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                user?.phone ?? 'Add phone number',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.white.withValues(alpha: 0.7),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        _buildKycBadgeLight(user?.kycStatus ?? 'pending'),
+                      ],
+                    ),
+                  ),
+                  // Edit Profile Button
+                  GestureDetector(
+                    onTap: () => HapticFeedback.lightImpact(),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.edit_rounded, color: Colors.white, size: 18),
+                    ),
+                  ),
                 ],
+              ),
+              const SizedBox(height: 20),
+              // Stats Row
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(child: _buildStatItem('৳${user?.balance?.toStringAsFixed(0) ?? '0'}', 'Balance', Icons.account_balance_wallet_rounded)),
+                    Container(width: 1, height: 40, color: Colors.white.withValues(alpha: 0.3)),
+                    Expanded(child: _buildStatItem('12', 'Transactions', Icons.swap_horiz_rounded)),
+                    Container(width: 1, height: 40, color: Colors.white.withValues(alpha: 0.3)),
+                    Expanded(child: _buildStatItem('2', 'Cards', Icons.credit_card_rounded)),
+                  ],
+                ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String value, String label, IconData icon) {
+    return Column(
+      children: [
+        Icon(icon, color: Colors.white, size: 20),
+        const SizedBox(height: 6),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: Colors.white.withValues(alpha: 0.7),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildKycBadgeLight(String status) {
+    final isApproved = status == 'approved';
+    final isPending = status == 'pending';
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: isApproved
+            ? Colors.white.withValues(alpha: 0.25)
+            : isPending
+                ? const Color(0xFFF59E0B).withValues(alpha: 0.3)
+                : const Color(0xFFEF4444).withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isApproved ? Icons.verified_rounded : isPending ? Icons.schedule_rounded : Icons.error_rounded,
+            size: 12,
+            color: Colors.white,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            isApproved ? 'Verified' : isPending ? 'KYC Pending' : 'KYC Failed',
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -189,26 +348,24 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   // PROFILE CARD - Floating card with avatar and user info
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildProfileCard(dynamic user, bool isDark) {
-    return Transform.translate(
-      offset: const Offset(0, -50),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 30,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Row(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 30,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
                 children: [
                   // Avatar with gradient ring
                   Container(
@@ -298,12 +455,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                     Container(width: 1, height: 40, color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
                     Expanded(child: _buildBalanceStat('12', 'Transactions', Icons.swap_horiz_rounded, const Color(0xFF6366F1), isDark)),
                     Container(width: 1, height: 40, color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
-                    Expanded(child: _buildBalanceStat('2', 'Cards', Icons.credit_card_rounded, const Color(0xFFEC4899), isDark)),
-                  ],
-                ),
+                  Expanded(child: _buildBalanceStat('2', 'Cards', Icons.credit_card_rounded, const Color(0xFFEC4899), isDark)),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -382,8 +538,8 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   // QUICK ACTIONS - Horizontal scrollable action buttons
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildQuickActions(bool isDark) {
-    return Transform.translate(
-      offset: const Offset(0, -30),
+    return Padding(
+      padding: const EdgeInsets.only(top: 16, bottom: 16),
       child: SizedBox(
         height: 90,
         child: ListView(
@@ -422,9 +578,13 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         width: 75,
         margin: const EdgeInsets.only(right: 12),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(14),
+              width: 52,
+              height: 52,
+              alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: isDark ? color.withValues(alpha: 0.2) : color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
@@ -435,6 +595,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
             const SizedBox(height: 8),
             Text(
               label,
+              textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
@@ -452,8 +613,8 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   // MY ACCOUNT SECTION
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildMyAccountSection(bool isDark) {
-    return Transform.translate(
-      offset: const Offset(0, -20),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 0),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(
@@ -949,7 +1110,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         
         if (confirm == true && mounted) {
           final authProvider = Provider.of<AuthProvider>(context, listen: false);
+          
+          // Sign out from Google as well
+          await LoginPopup.signOut();
           await authProvider.logout();
+          
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

@@ -24,6 +24,9 @@ dependencies:
   http: ^1.1.0
   supabase_flutter: ^2.0.0
   
+  # Security
+  crypto: ^3.0.3
+  
   # Storage
   shared_preferences: ^2.2.2
   
@@ -50,7 +53,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  
+
   assets:
     - assets/images/
     - assets/animations/

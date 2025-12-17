@@ -184,12 +184,10 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                               ],
                             ),
                           ),
-                          const Text(
-                            '▶️',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 40,
-                            ),
+                          const Icon(
+                            Icons.play_circle_filled_rounded,
+                            color: Colors.white,
+                            size: 48,
                           ),
                         ],
                       ),
@@ -323,13 +321,20 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          '🏆 Top Winners Today',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1E293B),
-                          ),
+                        const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.emoji_events_rounded, color: Color(0xFFF59E0B), size: 20),
+                            SizedBox(width: 6),
+                            Text(
+                              'Top Winners Today',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1E293B),
+                              ),
+                            ),
+                          ],
                         ),
                         TextButton(
                           onPressed: () {},
@@ -338,9 +343,9 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    _buildLeaderboardItem(1, 'Rahim K.', '৳5,200', '🥇'),
-                    _buildLeaderboardItem(2, 'Karim M.', '৳3,800', '🥈'),
-                    _buildLeaderboardItem(3, 'Jamal H.', '৳2,500', '🥉'),
+                    _buildLeaderboardItem(1, 'Rahim K.', '5,200 BDT', const Color(0xFFFFD700)),
+                    _buildLeaderboardItem(2, 'Karim M.', '3,800 BDT', const Color(0xFFC0C0C0)),
+                    _buildLeaderboardItem(3, 'Jamal H.', '2,500 BDT', const Color(0xFFCD7F32)),
                   ],
                 ),
               ),
@@ -545,12 +550,30 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
   }
 
   Widget _buildLeaderboardItem(
-      int rank, String name, String amount, String medal) {
+      int rank, String name, String amount, Color medalColor) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Text(medal, style: const TextStyle(fontSize: 20)),
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: medalColor.withOpacity(0.2),
+              shape: BoxShape.circle,
+              border: Border.all(color: medalColor, width: 2),
+            ),
+            child: Center(
+              child: Text(
+                '$rank',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: medalColor,
+                ),
+              ),
+            ),
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -581,7 +604,13 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
       if (gameId == 'ludo') {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const LudoGameScreen()),
+          MaterialPageRoute(
+            builder: (_) => const LudoGameScreen(
+              opponentName: 'Player 2',
+              betAmount: '100',
+              gameMode: 'classic',
+            ),
+          ),
         );
       }
     }

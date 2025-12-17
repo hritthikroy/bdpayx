@@ -1,5 +1,5 @@
 class User {
-  final int id;
+  final String id; // Changed to String to support Google IDs
   final String phone;
   final String? email;
   final String? fullName;
@@ -23,7 +23,7 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'],
+      id: json['id']?.toString() ?? '', // Convert to string for compatibility
       phone: json['phone'] ?? '',
       email: json['email'],
       fullName: json['full_name'] ?? json['display_name'],
@@ -47,5 +47,29 @@ class User {
       'photo_url': photoUrl,
       'login_method': loginMethod,
     };
+  }
+
+  User copyWith({
+    String? id,
+    String? phone,
+    String? email,
+    String? fullName,
+    String? kycStatus,
+    double? balance,
+    double? inrBalance,
+    String? photoUrl,
+    String? loginMethod,
+  }) {
+    return User(
+      id: id ?? this.id,
+      phone: phone ?? this.phone,
+      email: email ?? this.email,
+      fullName: fullName ?? this.fullName,
+      kycStatus: kycStatus ?? this.kycStatus,
+      balance: balance ?? this.balance,
+      inrBalance: inrBalance ?? this.inrBalance,
+      photoUrl: photoUrl ?? this.photoUrl,
+      loginMethod: loginMethod ?? this.loginMethod,
+    );
   }
 }

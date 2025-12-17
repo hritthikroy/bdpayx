@@ -22,10 +22,6 @@ class _WalletScreenState extends State<WalletScreen>
   bool _isBalanceHidden = false;
   int _selectedCardIndex = 0;
 
-  // Demo data
-  final double _bdtBalance = 12500.00;
-  final double _inrBalance = 8750.00;
-
   @override
   void initState() {
     super.initState();
@@ -43,8 +39,19 @@ class _WalletScreenState extends State<WalletScreen>
 
   @override
   Widget build(BuildContext context) {
-    final user = context.select<AuthProvider, dynamic>((p) => p.user);
+    final authProvider = context.watch<AuthProvider>();
+    final user = authProvider.user;
+    final bdtBalance = authProvider.bdtBalance;
+    final inrBalance = authProvider.inrBalance;
     final exchangeProvider = context.watch<ExchangeProvider>();
+
+    // Show login prompt if not authenticated
+    if (!authProvider.isAuthenticated) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
+        body: _buildLoginPrompt(),
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -83,13 +90,13 @@ class _WalletScreenState extends State<WalletScreen>
                           ),
                           Row(
                             children: [
-                              _buildHeaderButton(
-                                '👁',
+                              _buildHeaderIconButton(
+                                _isBalanceHidden ? Icons.visibility_off_rounded : Icons.visibility_rounded,
                                 () => setState(
                                     () => _isBalanceHidden = !_isBalanceHidden),
                               ),
                               const SizedBox(width: 8),
-                              _buildHeaderButton('📷', () {}),
+                              _buildHeaderIconButton(Icons.qr_code_scanner_rounded, () {}),
                             ],
                           ),
                         ],
@@ -153,7 +160,7 @@ class _WalletScreenState extends State<WalletScreen>
                             Text(
                               _isBalanceHidden
                                   ? '৳ ••••••'
-                                  : '৳ ${_bdtBalance.toStringAsFixed(2)}',
+                                  : '৳ ${bdtBalance.toStringAsFixed(2)}',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 32,
@@ -165,7 +172,7 @@ class _WalletScreenState extends State<WalletScreen>
                             Text(
                               _isBalanceHidden
                                   ? '≈ ₹ ••••••'
-                                  : '≈ ₹ ${(_bdtBalance * exchangeProvider.baseRate).toStringAsFixed(2)}',
+                                  : '≈ ₹ ${(bdtBalance * exchangeProvider.baseRate).toStringAsFixed(2)}',
                               style: TextStyle(
                                 color: Colors.white.withOpacity(0.7),
                                 fontSize: 14,
@@ -249,20 +256,20 @@ class _WalletScreenState extends State<WalletScreen>
                   ),
                   const SizedBox(height: 12),
                   _buildCurrencyCard(
-                    '🇧🇩',
+                    'BD',
                     'BDT',
                     'Bangladeshi Taka',
-                    _bdtBalance,
-                    '৳',
+                    bdtBalance,
+                    'BDT',
                     const Color(0xFF10B981),
                   ),
                   const SizedBox(height: 12),
                   _buildCurrencyCard(
-                    '🇮🇳',
+                    'IN',
                     'INR',
                     'Indian Rupee',
-                    _inrBalance,
-                    '₹',
+                    inrBalance,
+                    'INR',
                     const Color(0xFF8B5CF6),
                   ),
                 ],
@@ -391,7 +398,7 @@ class _WalletScreenState extends State<WalletScreen>
     );
   }
 
-  Widget _buildHeaderButton(String emoji, VoidCallback onTap) {
+  Widget _buildHeaderIconButton(IconData icon, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -401,12 +408,10 @@ class _WalletScreenState extends State<WalletScreen>
           color: Colors.white.withOpacity(0.15),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Text(
-          emoji,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 22,
-          ),
+        child: Icon(
+          icon,
+          color: Colors.white,
+          size: 22,
         ),
       ),
     );
@@ -484,7 +489,14 @@ class _WalletScreenState extends State<WalletScreen>
               borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
-              child: Text(flag, style: const TextStyle(fontSize: 24)),
+              child: Text(
+                flag,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 14),
@@ -646,5 +658,75 @@ class _WalletScreenState extends State<WalletScreen>
     if (isLoggedIn && mounted) {
       Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
     }
+  }
+
+  Widget _buildLoginPrompt() {
+    return SafeArea(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFFF59E0B).withOpacity(0.1),
+                      const Color(0xFFEA580C).withOpacity(0.05),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Icon(
+                  Icons.account_balance_wallet_outlined,
+                  size: 64,
+                  color: const Color(0xFFF59E0B).withOpacity(0.6),
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Login to View Wallet',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Sign in to access your wallet, view balances, and manage your funds.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF64748B),
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () async {
+                  await LoginPopup.show(context);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFF59E0B),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  'Login Now',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

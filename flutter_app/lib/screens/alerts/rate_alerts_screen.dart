@@ -453,7 +453,7 @@ class _RateAlertsScreenState extends State<RateAlertsScreen> {
                   Navigator.pop(ctx);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: const Text('Alert created! 🔔'),
+                      content: const Text('Alert created!'),
                       backgroundColor: const Color(0xFF10B981),
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

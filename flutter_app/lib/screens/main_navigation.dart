@@ -191,7 +191,7 @@ class _MainNavigationState extends State<MainNavigation>
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Transaction PIN set successfully! 🎉'),
+                      content: Text('Transaction PIN set successfully!'),
                       backgroundColor: Color(0xFF10B981),
                     ),
                   );

@@ -93,6 +93,10 @@ class MyApp extends StatelessWidget {
       primarySwatch: Colors.blue,
       scaffoldBackgroundColor: const Color(0xFFF8FAFC),
       fontFamily: 'Inter',
+      iconTheme: const IconThemeData(
+        color: Color(0xFF1E293B), // Use a consistent color for all icons
+        size: 24.0,               // Standard icon size
+      ),
       colorScheme: const ColorScheme.light(
         primary: Color(0xFF6366F1),
         secondary: Color(0xFF8B5CF6),
@@ -102,11 +106,16 @@ class MyApp extends StatelessWidget {
         onPrimary: Colors.white,
         onSecondary: Colors.white,
         onSurface: Color(0xFF1E293B),
+        onSurfaceVariant: Color(0xFF64748B), // For secondary elements
       ),
       cardTheme: const CardThemeData(
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
         color: Colors.white,
+      ),
+      appBarTheme: const AppBarTheme(
+        iconTheme: IconThemeData(color: Colors.white),
+        actionsIconTheme: IconThemeData(color: Colors.white),
       ),
       // Smooth page transitions globally
       pageTransitionsTheme: const PageTransitionsTheme(

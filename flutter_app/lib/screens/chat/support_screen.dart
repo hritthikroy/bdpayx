@@ -273,11 +273,10 @@ class SupportScreen extends StatelessWidget {
                               color: colorScheme.error,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Text(
-                              '🚨',
-                              style: TextStyle(
-                                fontSize: 24,
-                              ),
+                            child: const Icon(
+                              Icons.warning_rounded,
+                              size: 24,
+                              color: Colors.white,
                             ),
                           ),
                           const SizedBox(width: 16),
@@ -550,12 +549,10 @@ class SupportScreen extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
-            const Text(
-              '📹',
-              style: TextStyle(
-                fontSize: 24,
-                color: Color(0xFF0088CC),
-              ),
+            const Icon(
+              Icons.videocam_rounded,
+              size: 24,
+              color: Color(0xFF0088CC),
             ),
             const SizedBox(width: 12),
             const Text('Video Call'),

@@ -43,7 +43,7 @@ class ExchangeProvider with ChangeNotifier {
 
   void startAutoRefresh() {
     _countdown = 60;
-    
+
     // Countdown timer - only notify every 5 seconds to reduce rebuilds
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (_countdown > 0) {
@@ -57,24 +57,31 @@ class ExchangeProvider with ChangeNotifier {
         notifyListeners();
       }
     });
-    
+
     // Refresh timer (fetches new rate every 60 seconds)
     _refreshTimer = Timer.periodic(const Duration(seconds: 60), (_) {
+      _error = null; // Clear any previous error before attempting refresh
+      notifyListeners(); // Notify that we're starting a fetch
       fetchExchangeRate();
       _countdown = 60;
     });
   }
 
   Future<void> fetchExchangeRate() async {
+    _error = null; // Clear previous error before attempting fetch
+    if (_isInitialized) {
+      notifyListeners(); // Notify that loading/error state has changed
+    }
+
     try {
       final response = await http.get(Uri.parse(ApiConfig.exchangeRate)).timeout(
-        const Duration(seconds: 5),
+        const Duration(seconds: 10), // Increase timeout to 10 seconds
       );
-      
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final newRate = double.parse(data['base_rate'].toString());
-        
+
         // Only notify if rate actually changed and initialized
         if (newRate != _baseRate && _isInitialized) {
           _baseRate = newRate;
@@ -86,14 +93,17 @@ class ExchangeProvider with ChangeNotifier {
           _error = null;
         }
       } else {
-        if (_error == null && _isInitialized) {
-          _error = 'Failed to fetch rate';
+        // Only show error if we've successfully initialized before
+        if (_isInitialized) {
+          _error = 'Failed to fetch exchange rate: Server returned ${response.statusCode}';
+          print('Fetch rate error: Server returned ${response.statusCode}');
           notifyListeners();
         }
       }
     } catch (e) {
-      if (_error == null && _isInitialized) {
-        _error = 'Network error';
+      // Only show error if we've successfully initialized before
+      if (_isInitialized) {
+        _error = 'Network error: ${e.toString().split('(').first.trim()}'; // Simplify error message
         print('Fetch rate error: $e');
         notifyListeners();
       }

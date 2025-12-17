@@ -36,50 +36,49 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final List<int> _shownUpdates = [];
   bool _isBalanceHidden = false;
   double _animatedInrBalance = 0.0;
-  final double _demoBdtBalance = 100.0;
   bool _isInrBalanceUpdating = false;
   double _lastKnownRate = 0.0;
   
   // System updates and notifications
   final List<Map<String, dynamic>> _updates = [
     {
-      'text': 'Exchange rate updated • Current: 100 BDT = ₹69.97',
-      'icon': '🔄', // sync
+      'text': 'Exchange rate updated - Current: 100 BDT = 69.97 INR',
+      'iconData': Icons.sync_rounded,
       'color': Color(0xFF6366F1),
     },
     {
-      'text': 'System maintenance scheduled • Tonight 2:00 AM - 3:00 AM',
-      'icon': '🔧', // build
+      'text': 'System maintenance scheduled - Tonight 2:00 AM - 3:00 AM',
+      'iconData': Icons.build_rounded,
       'color': Color(0xFFF59E0B),
     },
     {
-      'text': 'New security features enabled • Enhanced account protection',
-      'icon': '🔒', // security
+      'text': 'New security features enabled - Enhanced account protection',
+      'iconData': Icons.lock_rounded,
       'color': Color(0xFF10B981),
     },
     {
-      'text': 'Transaction processing time • Average: 2-5 minutes',
-      'icon': '⏰', // schedule
+      'text': 'Transaction processing time - Average: 2-5 minutes',
+      'iconData': Icons.schedule_rounded,
       'color': Color(0xFF8B5CF6),
     },
     {
-      'text': 'Daily transaction limit • Exchange up to ৳100,000',
-      'icon': 'ℹ️', // info_outline
+      'text': 'Daily transaction limit - Exchange up to 100,000 BDT',
+      'iconData': Icons.info_outline_rounded,
       'color': Color(0xFF06B6D4),
     },
     {
-      'text': 'KYC verification required • Complete for higher limits',
-      'icon': '🛡️', // verified_user
+      'text': 'KYC verification required - Complete for higher limits',
+      'iconData': Icons.verified_user_rounded,
       'color': Color(0xFF10B981),
     },
     {
-      'text': 'Customer support available • 24/7 live chat assistance',
-      'icon': '🎧', // support_agent
+      'text': 'Customer support available - 24/7 live chat assistance',
+      'iconData': Icons.headset_mic_rounded,
       'color': Color(0xFFEC4899),
     },
     {
-      'text': 'Payment methods • bKash, Nagad, Rocket accepted',
-      'icon': '💰', // payment
+      'text': 'Payment methods - bKash, Nagad, Rocket accepted',
+      'iconData': Icons.payment_rounded,
       'color': Color(0xFF8B5CF6),
     },
   ];
@@ -107,7 +106,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     // Initialize INR balance and listen to exchange rate changes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final exchangeProvider = Provider.of<ExchangeProvider>(context, listen: false);
-      _animatedInrBalance = _demoBdtBalance * exchangeProvider.baseRate;
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final bdtBalance = authProvider.bdtBalance;
+      _animatedInrBalance = bdtBalance * exchangeProvider.baseRate;
       
       // Store the current rate to detect actual changes
       _lastKnownRate = exchangeProvider.baseRate;
@@ -121,6 +122,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     if (!mounted) return;
     
     final exchangeProvider = Provider.of<ExchangeProvider>(context, listen: false);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     
     // Only proceed if the rate actually changed (not just countdown updates)
     if ((exchangeProvider.baseRate - _lastKnownRate).abs() < 0.0001) {
@@ -128,7 +130,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
     
     _lastKnownRate = exchangeProvider.baseRate;
-    final targetInrBalance = _demoBdtBalance * exchangeProvider.baseRate;
+    final bdtBalance = authProvider.bdtBalance;
+    final targetInrBalance = bdtBalance * exchangeProvider.baseRate;
     
     // Also update the converted amount if user has entered an amount
     final enteredAmount = double.tryParse(_amountController.text);
@@ -278,7 +281,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     // Use Selector for minimal rebuilds - only rebuild when specific values change
-    final user = context.select<AuthProvider, dynamic>((p) => p.user);
+    final authProvider = context.watch<AuthProvider>();
+    final user = authProvider.user;
+    final bdtBalance = authProvider.bdtBalance;
+    final isLoading = authProvider.isLoading;
     final exchangeProvider = context.watch<ExchangeProvider>();
 
     return Scaffold(
@@ -322,7 +328,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Hello, ${user?.fullName?.split(' ').first ?? 'User'} 👋',
+                                    'Hello, ${user?.fullName?.split(' ').first ?? 'User'}',
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 16,
@@ -530,11 +536,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         Expanded(
                           child: _buildBalanceCard(
                             'BDT Balance',
-                            _isBalanceHidden ? '৳ ****' : '৳ ${_demoBdtBalance.toStringAsFixed(2)}',
+                            isLoading ? '৳ ...' : (_isBalanceHidden ? '৳ ****' : '৳ ${bdtBalance.toStringAsFixed(2)}'),
                             const Color(0xFF10B981),
-                            null, // Use custom BDT symbol instead of icon
+                            null,
                             false,
-                            showDemoBadge: true,
                             currencySymbol: '৳',
                           ),
                         ),
@@ -542,11 +547,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         Expanded(
                           child: _buildBalanceCard(
                             'INR Balance',
-                            _isBalanceHidden ? '₹ ****' : '₹ ${_animatedInrBalance.toStringAsFixed(2)}',
+                            isLoading ? '₹ ...' : (_isBalanceHidden ? '₹ ****' : '₹ ${(bdtBalance * exchangeProvider.baseRate).toStringAsFixed(2)}'),
                             const Color(0xFF8B5CF6),
-                            null, // Will use currencySymbol instead
+                            null,
                             true,
-                            showDemoBadge: false,
                             currencySymbol: '₹',
                           ),
                         ),
@@ -1036,12 +1040,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 color: _updates[_currentUpdateIndex]['color'].withOpacity(0.2),
                                 shape: BoxShape.circle,
                               ),
-                              child: Text(
-                                _updates[_currentUpdateIndex]['icon'],
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  color: _updates[_currentUpdateIndex]['color'],
-                                ),
+                              child: Icon(
+                                _updates[_currentUpdateIndex]['iconData'],
+                                size: 18,
+                                color: _updates[_currentUpdateIndex]['color'],
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -1091,7 +1093,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildBalanceCard(String title, String amount, Color color, IconData? icon, bool isAnimated, {bool showDemoBadge = false, String? currencySymbol}) {
+  Widget _buildBalanceCard(String title, String amount, Color color, IconData? icon, bool isAnimated, {String? currencySymbol}) {
     Widget cardContent = Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -1182,23 +1184,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ],
                   ),
                 ),
-              if (showDemoBadge)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF59E0B).withOpacity(0.9),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Text(
-                    'DEMO',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 9,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
+
             ],
           ),
           const SizedBox(height: 18),

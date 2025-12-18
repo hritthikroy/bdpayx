@@ -93,6 +93,9 @@ npm run backend:dev
 # Terminal 2: Frontend  
 npm run frontend:dev
 
+# Terminal 3: Admin Dashboard
+npm run admin:serve
+
 # 5. Access the app
 # Frontend: http://localhost:8080
 # Backend: http://localhost:3000
@@ -177,13 +180,10 @@ bdpayx/
 │   └── DIY_AUTO_PAYMENT_SYSTEM.md
 │
 ├── scripts/                      # Utility scripts
-│   ├── START_ALL.sh             # Start all servers
-│   ├── STOP_ALL.sh              # Stop all servers
 │   ├── create-admin.js          # Create admin user
 │   ├── setup-auto-payment.js    # Setup payment system
 │   ├── setup-auto-payment.sql   # Payment SQL
-│   ├── setup-support-tables.js  # Setup support DB
-│   └── serve-app.js             # Static file server
+│   └── setup-support-tables.js  # Setup support DB
 │
 ├── backend-nodejs-legacy/        # Legacy Node.js backend (archived)
 ├── .env.vercel.example          # Environment template

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../widgets/login_popup.dart';
-import '../../widgets/theme_icons.dart';
 import 'ludo_game_screen.dart';
 
 class GamesHubScreen extends StatefulWidget {
@@ -70,7 +69,8 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                             ),
                             child: Row(
                               children: [
-                                ThemeIcons.coin(color: Colors.white, size: 20),
+                                const Icon(Icons.monetization_on,
+                                    color: Colors.white, size: 20),
                                 const SizedBox(width: 6),
                                 const Text(
                                   '৳500',
@@ -127,8 +127,8 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                               color: Colors.white.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(16),
                             ),
-                            child: Center(
-                              child: ThemeIcons.dice(color: Colors.white, size: 36),
+                            child: const Center(
+                              child: Text('🎲', style: TextStyle(fontSize: 36)),
                             ),
                           ),
                           const SizedBox(width: 16),
@@ -185,9 +185,9 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                             ),
                           ),
                           const Icon(
-                            Icons.play_circle_filled_rounded,
+                            Icons.play_circle_fill,
                             color: Colors.white,
-                            size: 48,
+                            size: 40,
                           ),
                         ],
                       ),
@@ -262,7 +262,7 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
               delegate: SliverChildListDelegate([
                 _buildGameCard(
                   context,
-                  'dice',
+                  '🎲',
                   'Ludo',
                   '2.5K playing',
                   const Color(0xFF6366F1),
@@ -270,7 +270,7 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                 ),
                 _buildGameCard(
                   context,
-                  'gamepad',
+                  '🃏',
                   'Teen Patti',
                   '1.2K playing',
                   const Color(0xFFEF4444),
@@ -279,7 +279,7 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                 ),
                 _buildGameCard(
                   context,
-                  'gamepad',
+                  '♠️',
                   'Rummy',
                   '800 playing',
                   const Color(0xFF10B981),
@@ -288,7 +288,7 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                 ),
                 _buildGameCard(
                   context,
-                  'star',
+                  '🎰',
                   'Spin & Win',
                   '3K playing',
                   const Color(0xFFF59E0B),
@@ -321,20 +321,13 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.emoji_events_rounded, color: Color(0xFFF59E0B), size: 20),
-                            SizedBox(width: 6),
-                            Text(
-                              'Top Winners Today',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF1E293B),
-                              ),
-                            ),
-                          ],
+                        const Text(
+                          '🏆 Top Winners Today',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1E293B),
+                          ),
                         ),
                         TextButton(
                           onPressed: () {},
@@ -343,9 +336,9 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    _buildLeaderboardItem(1, 'Rahim K.', '5,200 BDT', const Color(0xFFFFD700)),
-                    _buildLeaderboardItem(2, 'Karim M.', '3,800 BDT', const Color(0xFFC0C0C0)),
-                    _buildLeaderboardItem(3, 'Jamal H.', '2,500 BDT', const Color(0xFFCD7F32)),
+                    _buildLeaderboardItem(1, 'Rahim K.', '৳5,200', '🥇'),
+                    _buildLeaderboardItem(2, 'Karim M.', '৳3,800', '🥈'),
+                    _buildLeaderboardItem(3, 'Jamal H.', '৳2,500', '🥉'),
                   ],
                 ),
               ),
@@ -428,15 +421,15 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
             ),
           ),
           const SizedBox(height: 4),
-          isClaimed 
-            ? ThemeIcons.check(
-                color: isToday ? Colors.white : const Color(0xFF10B981),
-                size: 20,
-              )
-            : ThemeIcons.gift(
-                color: isToday ? Colors.white : const Color(0xFFF59E0B),
-                size: 20,
-              ),
+          Icon(
+            isClaimed ? Icons.check_circle : Icons.card_giftcard,
+            color: isToday
+                ? Colors.white
+                : isClaimed
+                    ? const Color(0xFF10B981)
+                    : const Color(0xFFF59E0B),
+            size: 20,
+          ),
           const SizedBox(height: 4),
           Text(
             reward,
@@ -451,24 +444,9 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
     );
   }
 
-  Widget _buildGameCard(BuildContext context, String iconType, String name,
+  Widget _buildGameCard(BuildContext context, String emoji, String name,
       String players, Color color, String gameId,
       {bool comingSoon = false}) {
-    Widget iconWidget;
-    switch (iconType) {
-      case 'dice':
-        iconWidget = ThemeIcons.dice(color: color, size: 28);
-        break;
-      case 'gamepad':
-        iconWidget = ThemeIcons.gamepad(color: color, size: 28);
-        break;
-      case 'star':
-        iconWidget = ThemeIcons.star(color: color, size: 28);
-        break;
-      default:
-        iconWidget = ThemeIcons.gamepad(color: color, size: 28);
-    }
-    
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -499,7 +477,9 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                       color: color.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Center(child: iconWidget),
+                    child: Center(
+                      child: Text(emoji, style: const TextStyle(fontSize: 28)),
+                    ),
                   ),
                   if (comingSoon)
                     Positioned(
@@ -550,30 +530,12 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
   }
 
   Widget _buildLeaderboardItem(
-      int rank, String name, String amount, Color medalColor) {
+      int rank, String name, String amount, String medal) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: medalColor.withOpacity(0.2),
-              shape: BoxShape.circle,
-              border: Border.all(color: medalColor, width: 2),
-            ),
-            child: Center(
-              child: Text(
-                '$rank',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: medalColor,
-                ),
-              ),
-            ),
-          ),
+          Text(medal, style: const TextStyle(fontSize: 20)),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -604,13 +566,7 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
       if (gameId == 'ludo') {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => const LudoGameScreen(
-              opponentName: 'Player 2',
-              betAmount: '100',
-              gameMode: 'classic',
-            ),
-          ),
+          MaterialPageRoute(builder: (_) => const LudoGameScreen()),
         );
       }
     }

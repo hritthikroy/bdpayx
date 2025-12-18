@@ -12,6 +12,7 @@ import (
 	"bdpayx-backend/internal/websocket"
 
 	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -51,15 +52,32 @@ func main() {
 	wsHub := websocket.NewHub()
 	go wsHub.Run()
 
-	// Start rate fluctuation service
-	go rateService.StartRateFluctuation()
+	// Start rate fluctuation service only if database is available
+	if db != nil {
+		go rateService.StartRateFluctuation()
+	}
 
 	// Initialize Gin router
 	if cfg.GinMode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	
-	router := gin.Default()
+	router := gin.New()
+	
+	// Add recovery middleware
+	router.Use(gin.Recovery())
+	
+	// Add gzip compression for better performance
+	router.Use(gzip.Gzip(gzip.DefaultCompression))
+	
+	// Add custom headers
+	router.Use(func(c *gin.Context) {
+		c.Header("Server", "BDPayX-Go")
+		c.Header("X-Content-Type-Options", "nosniff")
+		c.Header("X-Frame-Options", "DENY")
+		c.Header("X-XSS-Protection", "1; mode=block")
+		c.Next()
+	})
 
 	// CORS middleware
 	corsConfig := cors.DefaultConfig()
@@ -72,10 +90,13 @@ func main() {
 	corsConfig.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
 	router.Use(cors.New(corsConfig))
 
-	// Request logging middleware
+	// Request logging middleware (only in development)
 	if cfg.GinMode != "release" {
 		router.Use(gin.Logger())
 	}
+	
+	// Add rate limiting for better security and performance
+	router.Use(middleware.RateLimitMiddleware())
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)

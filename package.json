@@ -8,12 +8,13 @@
     "backend:start": "cd backend-go && ./bdpayx-backend",
     "backend:dev": "cd backend-go && go run main.go",
     "backend:test": "cd backend-go && go test ./...",
-    "frontend:dev": "cd flutter_app && flutter run -d web-server --web-port 8080",
-    "frontend:build": "cd flutter_app && flutter build web --release",
+    "frontend:dev": "cd flutter_app && flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0",
+    "frontend:build": "cd flutter_app && flutter build web --release --web-renderer canvaskit",
     "admin:serve": "cd admin-dashboard && python3 -m http.server 8081",
-    "dev": "echo 'Run: npm run backend:dev (terminal 1) && npm run frontend:dev (terminal 2)'",
+    "dev": "echo 'Start: npm run backend:dev (terminal 1) && npm run frontend:dev (terminal 2) && npm run admin:serve (terminal 3)'",
     "build": "npm run backend:build && npm run frontend:build",
-    "clean": "cd flutter_app && flutter clean && cd ../backend-go && go clean"
+    "clean": "cd flutter_app && flutter clean && flutter pub get && cd ../backend-go && go clean && go mod tidy",
+    "optimize": "npm run clean && npm run build"
   },
   "keywords": ["currency", "exchange", "bdt", "inr", "go", "flutter"],
   "author": "BDPayX Team",

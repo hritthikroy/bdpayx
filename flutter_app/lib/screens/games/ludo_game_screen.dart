@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
-import '../../widgets/theme_icons.dart';
-import '../../widgets/custom_icons.dart';
 
 class LudoGameScreen extends StatefulWidget {
   final String opponentName;
@@ -165,7 +163,7 @@ class _LudoGameScreenState extends State<LudoGameScreen>
         children: [
           IconButton(
             onPressed: () => Navigator.pop(context),
-            icon: CustomIcons.arrowBack(color: Colors.white),
+            icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
           ),
           Expanded(
             child: Column(
@@ -181,7 +179,7 @@ class _LudoGameScreenState extends State<LudoGameScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CustomIcons.currencyRupee(color: Colors.white, size: 16),
+                    const Icon(Icons.currency_rupee, color: Colors.white, size: 16),
                     Text(
                       widget.betAmount,
                       style: const TextStyle(
@@ -199,13 +197,7 @@ class _LudoGameScreenState extends State<LudoGameScreen>
             onPressed: () {
               // Show game menu
             },
-            icon: const Text(
-              '⋮',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-              ),
-            ),
+            icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
           ),
         ],
       ),
@@ -265,7 +257,7 @@ class _LudoGameScreenState extends State<LudoGameScreen>
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    ThemeIcons.star(color: const Color(0xFFF59E0B), size: 14),
+                    const Icon(Icons.stars_rounded, size: 14, color: Color(0xFFF59E0B)),
                     const SizedBox(width: 4),
                     Text(
                       'Score: $score',

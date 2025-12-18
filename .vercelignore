@@ -8,10 +8,14 @@ flutter_app/.flutter-plugins-dependencies
 flutter_app/.packages
 flutter_app/pubspec.lock
 
-# Backend
-backend/node_modules/
-backend/uploads/
-backend/.env
+# Legacy Backend
+backend-nodejs-legacy/node_modules/
+backend-nodejs-legacy/uploads/
+backend-nodejs-legacy/.env
+
+# Go Backend
+backend-go/bdpayx-backend
+backend-go/.env
 backend/.env.local
 
 # Git

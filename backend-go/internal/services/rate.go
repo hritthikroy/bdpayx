@@ -24,6 +24,11 @@ func NewRateService(db *sql.DB, redisClient *RedisService) *RateService {
 }
 
 func (s *RateService) GetRates() (map[string]models.ExchangeRate, error) {
+	// Return mock data if database is not available (test mode)
+	if s.db == nil {
+		return s.getMockRates(), nil
+	}
+
 	rows, err := s.db.Query(`
 		SELECT id, from_currency, to_currency, rate, spread, created_at, updated_at
 		FROM exchange_rates`)
@@ -48,6 +53,16 @@ func (s *RateService) GetRates() (map[string]models.ExchangeRate, error) {
 }
 
 func (s *RateService) GetRate(fromCurrency, toCurrency string) (*models.ExchangeRate, error) {
+	// Return mock data if database is not available (test mode)
+	if s.db == nil {
+		rates := s.getMockRates()
+		key := fromCurrency + "_" + toCurrency
+		if rate, exists := rates[key]; exists {
+			return &rate, nil
+		}
+		return nil, fmt.Errorf("exchange rate not found for %s to %s", fromCurrency, toCurrency)
+	}
+
 	var rate models.ExchangeRate
 	err := s.db.QueryRow(`
 		SELECT id, from_currency, to_currency, rate, spread, created_at, updated_at
@@ -83,6 +98,12 @@ func (s *RateService) CalculateExchange(fromCurrency, toCurrency string, amount 
 }
 
 func (s *RateService) UpdateRate(fromCurrency, toCurrency string, newRate float64) error {
+	// Skip update if database is not available (test mode)
+	if s.db == nil {
+		log.Printf("📊 Mock rate update: %s_%s = %.4f", fromCurrency, toCurrency, newRate)
+		return nil
+	}
+
 	_, err := s.db.Exec(`
 		UPDATE exchange_rates 
 		SET rate = $1, updated_at = CURRENT_TIMESTAMP
@@ -134,5 +155,30 @@ func (s *RateService) fluctuateRates() {
 		if err != nil {
 			log.Printf("Error updating rate %s_%s: %v", rate.FromCurrency, rate.ToCurrency, err)
 		}
+	}
+}
+
+// getMockRates returns mock exchange rates for testing when database is not available
+func (s *RateService) getMockRates() map[string]models.ExchangeRate {
+	now := time.Now()
+	return map[string]models.ExchangeRate{
+		"BDT_INR": {
+			ID:           1,
+			FromCurrency: "BDT",
+			ToCurrency:   "INR",
+			Rate:         0.70,
+			Spread:       0.02,
+			CreatedAt:    now,
+			UpdatedAt:    now,
+		},
+		"INR_BDT": {
+			ID:           2,
+			FromCurrency: "INR",
+			ToCurrency:   "BDT",
+			Rate:         1.43,
+			Spread:       0.02,
+			CreatedAt:    now,
+			UpdatedAt:    now,
+		},
 	}
 }

@@ -35,11 +35,15 @@ class _KycScreenState extends State<KycScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('KYC Verification'),
-        backgroundColor: const Color(0xFF3B82F6),
-        foregroundColor: Colors.white,
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -49,22 +53,28 @@ class _KycScreenState extends State<KycScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.blue.shade50,
+                color: isDark 
+                    ? colorScheme.primary.withOpacity(0.1)
+                    : colorScheme.primary.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
-                children: const [
-                  Icon(Icons.verified_user, size: 48, color: Color(0xFF3B82F6)),
-                  SizedBox(height: 12),
+                children: [
+                  Icon(Icons.verified_user, size: 48, color: colorScheme.primary),
+                  const SizedBox(height: 12),
                   Text(
                     'Complete KYC Verification',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 18, 
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
+                    ),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
                     'Please provide your documents for verification. This helps us keep your account secure.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey),
+                    style: TextStyle(color: colorScheme.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -72,32 +82,75 @@ class _KycScreenState extends State<KycScreen> {
             const SizedBox(height: 24),
             TextField(
               controller: _nameController,
+              style: TextStyle(color: colorScheme.onSurface),
               decoration: InputDecoration(
                 labelText: 'Full Name (as per ID)',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colorScheme.outline),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colorScheme.outline),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colorScheme.primary, width: 2),
+                ),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _addressController,
               maxLines: 3,
+              style: TextStyle(color: colorScheme.onSurface),
               decoration: InputDecoration(
                 labelText: 'Address',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colorScheme.outline),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colorScheme.outline),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colorScheme.primary, width: 2),
+                ),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _idNumberController,
+              style: TextStyle(color: colorScheme.onSurface),
               decoration: InputDecoration(
                 labelText: 'ID Number (NID/Passport)',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colorScheme.outline),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colorScheme.outline),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colorScheme.primary, width: 2),
+                ),
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'Upload Documents',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 16, 
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
+              ),
             ),
             const SizedBox(height: 12),
             _buildUploadButton(
@@ -115,8 +168,8 @@ class _KycScreenState extends State<KycScreen> {
             ElevatedButton(
               onPressed: _submitKyc,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3B82F6),
-                foregroundColor: Colors.white,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
@@ -129,14 +182,25 @@ class _KycScreenState extends State<KycScreen> {
   }
 
   Widget _buildUploadButton(String label, String? path, VoidCallback onTap) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return OutlinedButton.icon(
       onPressed: onTap,
-      icon: Icon(path != null ? Icons.check_circle : Icons.upload_file),
-      label: Text(path != null ? '$label - Uploaded' : 'Upload $label'),
+      icon: Icon(
+        path != null ? Icons.check_circle : Icons.upload_file,
+        color: path != null ? Colors.green : colorScheme.onSurfaceVariant,
+      ),
+      label: Text(
+        path != null ? '$label - Uploaded' : 'Upload $label',
+        style: TextStyle(
+          color: path != null ? Colors.green : colorScheme.onSurface,
+        ),
+      ),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 16),
         side: BorderSide(
-          color: path != null ? Colors.green : Colors.grey,
+          color: path != null ? Colors.green : colorScheme.outline,
         ),
       ),
     );

@@ -12,27 +12,34 @@ class _BankCardsScreenState extends State<BankCardsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Indian Bank Accounts'),
-        backgroundColor: const Color(0xFF3B82F6),
-        foregroundColor: Colors.white,
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
       ),
       body: _cards.isEmpty
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.account_balance, size: 64, color: Colors.grey),
+                  Icon(Icons.account_balance, size: 64, color: colorScheme.onSurfaceVariant),
                   const SizedBox(height: 16),
-                  const Text('No Indian bank accounts added', style: TextStyle(color: Colors.grey, fontSize: 16)),
+                  Text(
+                    'No Indian bank accounts added', 
+                    style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 16),
+                  ),
                   const SizedBox(height: 8),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 40),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 40),
                     child: Text(
                       'Add your Indian bank account to receive INR payments from exchanges',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                      style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -41,8 +48,8 @@ class _BankCardsScreenState extends State<BankCardsScreen> {
                     icon: const Icon(Icons.add),
                     label: const Text('Add Indian Bank Account'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3B82F6),
-                      foregroundColor: Colors.white,
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     ),
                   ),
@@ -56,11 +63,14 @@ class _BankCardsScreenState extends State<BankCardsScreen> {
                 final card = _cards[index];
                 return Card(
                   margin: const EdgeInsets.only(bottom: 16),
+                  color: colorScheme.surface,
                   child: Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
+                      gradient: LinearGradient(
+                        colors: isDark 
+                            ? [colorScheme.primary.withOpacity(0.8), colorScheme.secondary.withOpacity(0.6)]
+                            : [colorScheme.primary, colorScheme.secondary],
                       ),
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -120,7 +130,8 @@ class _BankCardsScreenState extends State<BankCardsScreen> {
       floatingActionButton: _cards.isNotEmpty
           ? FloatingActionButton(
               onPressed: _showAddCardDialog,
-              backgroundColor: const Color(0xFF3B82F6),
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
               child: const Icon(Icons.add),
             )
           : null,
@@ -132,11 +143,18 @@ class _BankCardsScreenState extends State<BankCardsScreen> {
     final bankController = TextEditingController();
     final accountController = TextEditingController();
     final ifscController = TextEditingController();
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Add Indian Bank Account'),
+        backgroundColor: colorScheme.surface,
+        title: Text(
+          'Add Indian Bank Account',
+          style: TextStyle(color: colorScheme.onSurface),
+        ),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -144,17 +162,19 @@ class _BankCardsScreenState extends State<BankCardsScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
+                  color: isDark 
+                      ? colorScheme.primary.withOpacity(0.1)
+                      : colorScheme.primary.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.info_outline, color: Colors.blue, size: 20),
-                    SizedBox(width: 8),
+                    Icon(Icons.info_outline, color: colorScheme.primary, size: 20),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Add your Indian bank account to receive INR payments',
-                        style: TextStyle(fontSize: 12, color: Colors.blue),
+                        style: TextStyle(fontSize: 12, color: colorScheme.primary),
                       ),
                     ),
                   ],
@@ -163,40 +183,82 @@ class _BankCardsScreenState extends State<BankCardsScreen> {
               const SizedBox(height: 16),
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(
+                style: TextStyle(color: colorScheme.onSurface),
+                decoration: InputDecoration(
                   labelText: 'Account Holder Name',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person),
+                  labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: colorScheme.outline),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: colorScheme.outline),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: colorScheme.primary, width: 2),
+                  ),
+                  prefixIcon: Icon(Icons.person, color: colorScheme.onSurfaceVariant),
                 ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: bankController,
-                decoration: const InputDecoration(
+                style: TextStyle(color: colorScheme.onSurface),
+                decoration: InputDecoration(
                   labelText: 'Bank Name',
+                  labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
                   hintText: 'e.g., HDFC Bank, ICICI Bank, SBI',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.account_balance),
+                  hintStyle: TextStyle(color: colorScheme.onSurfaceVariant.withOpacity(0.7)),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: colorScheme.outline),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: colorScheme.outline),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: colorScheme.primary, width: 2),
+                  ),
+                  prefixIcon: Icon(Icons.account_balance, color: colorScheme.onSurfaceVariant),
                 ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: accountController,
-                decoration: const InputDecoration(
+                style: TextStyle(color: colorScheme.onSurface),
+                decoration: InputDecoration(
                   labelText: 'Account Number',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.numbers),
+                  labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: colorScheme.outline),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: colorScheme.outline),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: colorScheme.primary, width: 2),
+                  ),
+                  prefixIcon: Icon(Icons.numbers, color: colorScheme.onSurfaceVariant),
                 ),
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: ifscController,
-                decoration: const InputDecoration(
+                style: TextStyle(color: colorScheme.onSurface),
+                decoration: InputDecoration(
                   labelText: 'IFSC Code',
+                  labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
                   hintText: 'e.g., HDFC0001234',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.code),
+                  hintStyle: TextStyle(color: colorScheme.onSurfaceVariant.withOpacity(0.7)),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: colorScheme.outline),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: colorScheme.outline),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: colorScheme.primary, width: 2),
+                  ),
+                  prefixIcon: Icon(Icons.code, color: colorScheme.onSurfaceVariant),
                 ),
                 textCapitalization: TextCapitalization.characters,
               ),
@@ -206,7 +268,7 @@ class _BankCardsScreenState extends State<BankCardsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text('Cancel', style: TextStyle(color: colorScheme.onSurfaceVariant)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -240,8 +302,8 @@ class _BankCardsScreenState extends State<BankCardsScreen> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF3B82F6),
-              foregroundColor: Colors.white,
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
             ),
             child: const Text('Add Account'),
           ),

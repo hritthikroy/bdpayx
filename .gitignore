@@ -1,9 +1,15 @@
-# Backend
-backend/node_modules/
-backend/.env
-backend/.env.local
-backend/.env.production
-backend/uploads/
+# Go Backend
+backend-go/bdpayx-backend
+backend-go/.env
+backend-go/.env.local
+backend-go/.env.production
+
+# Legacy Node.js Backend
+backend-nodejs-legacy/node_modules/
+backend-nodejs-legacy/.env
+backend-nodejs-legacy/.env.local
+backend-nodejs-legacy/.env.production
+backend-nodejs-legacy/uploads/
 
 # Flutter
 flutter_app/.dart_tool/
@@ -12,6 +18,10 @@ flutter_app/.flutter-plugins-dependencies
 flutter_app/.packages
 flutter_app/build/
 flutter_app/pubspec.lock
+flutter_app/.metadata
+
+# Node modules (any location)
+node_modules/
 
 # IDE
 .vscode/
@@ -28,3 +38,4 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+*.pid

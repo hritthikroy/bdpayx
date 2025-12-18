@@ -3,7 +3,7 @@ const path = require('path');
 const cors = require('cors');
 
 const app = express();
-const PORT = 8080;
+const PORT = process.argv[2] ? parseInt(process.argv[2]) : 8080; // Allow port to be passed as an argument
 
 // Enable CORS
 app.use(cors());
@@ -55,11 +55,11 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('🎉 Frontend Server Started!');
   console.log('================================');
   console.log(`📱 Local:    http://localhost:${PORT}`);
-  console.log(`🌐 Network:  http://10.248.24.199:${PORT}`);
+  console.log(`🌐 Network:  http://0.0.0.0:${PORT}`);
   console.log('================================');
   console.log('');
-  console.log('✅ Backend API: http://localhost:8081');
-  console.log('✅ Frontend:    http://localhost:8080');
+  console.log('✅ Backend API: http://localhost:3000');
+  console.log('✅ Frontend:    http://localhost:' + PORT);
   console.log('');
   console.log('📂 Serving from: flutter_app/build/web');
   console.log('');

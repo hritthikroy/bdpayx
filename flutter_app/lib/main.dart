@@ -5,6 +5,7 @@ import 'providers/auth_provider.dart';
 import 'providers/exchange_provider.dart';
 import 'providers/transaction_provider.dart';
 import 'providers/security_provider.dart';
+import 'providers/theme_provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/main_navigation.dart';
 import 'config/supabase_config.dart';
@@ -56,13 +57,17 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ExchangeProvider()),
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
         ChangeNotifierProvider(create: (_) => SecurityProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
-      child: MaterialApp(
-        title: 'Currency Exchange',
-        debugShowCheckedModeBanner: false,
-        theme: _buildLightTheme(),
-        themeMode: ThemeMode.light,
-        home: const MainNavigation(), // Direct to main - no splash screen
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, _) {
+          return MaterialApp(
+            title: 'Currency Exchange',
+            debugShowCheckedModeBanner: false,
+            theme: _buildLightTheme(),
+            darkTheme: _buildDarkTheme(),
+            themeMode: themeProvider.themeMode,
+            home: const MainNavigation(), // Direct to main - no splash screen
         // Smooth page transitions
         onGenerateRoute: (settings) {
           Widget page;
@@ -81,6 +86,8 @@ class MyApp extends StatelessWidget {
         routes: {
           '/main': (context) => const MainNavigation(),
           '/splash': (context) => const SplashScreen(),
+        },
+          );
         },
       ),
     );
@@ -112,6 +119,47 @@ class MyApp extends StatelessWidget {
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
         color: Colors.white,
+      ),
+      appBarTheme: const AppBarTheme(
+        iconTheme: IconThemeData(color: Colors.white),
+        actionsIconTheme: IconThemeData(color: Colors.white),
+      ),
+      // Smooth page transitions globally
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
+    );
+  }
+
+  ThemeData _buildDarkTheme() {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      primarySwatch: Colors.blue,
+      scaffoldBackgroundColor: const Color(0xFF0F172A),
+      fontFamily: 'Inter',
+      iconTheme: const IconThemeData(
+        color: Color(0xFFE2E8F0), // Light icons for dark theme
+        size: 24.0,
+      ),
+      colorScheme: const ColorScheme.dark(
+        primary: Color(0xFF6366F1),
+        secondary: Color(0xFF8B5CF6),
+        tertiary: Color(0xFFA855F7),
+        surface: Color(0xFF1E293B),
+        error: Color(0xFFEF4444),
+        onPrimary: Colors.white,
+        onSecondary: Colors.white,
+        onSurface: Color(0xFFE2E8F0),
+        onSurfaceVariant: Color(0xFF94A3B8), // For secondary elements
+      ),
+      cardTheme: const CardThemeData(
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
+        color: Color(0xFF1E293B),
       ),
       appBarTheme: const AppBarTheme(
         iconTheme: IconThemeData(color: Colors.white),

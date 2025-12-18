@@ -40,14 +40,15 @@
     const style = document.createElement('style');
     style.setAttribute('data-material-icons', 'true');
 
-    // Using local font with multiple format options - since FontManifest.json is empty, we'll try from CDN
+    // Using local font first, then CDN fallback
     style.textContent = `
       @font-face {
         font-family: 'Material Icons';
         font-style: normal;
         font-weight: 400;
-        font-display: swap;  /* Changed from block to swap for better loading */
-        src: url('https://fonts.gstatic.com/s/materialicons/v149/flUhRq6tzZclQEJ-Vdg-IuiaDsNZ.ttf') format('truetype');
+        font-display: swap;
+        src: url('fonts/MaterialIcons-Regular.otf') format('opentype'),
+             url('https://fonts.gstatic.com/s/materialicons/v149/flUhRq6tzZclQEJ-Vdg-IuiaDsNZ.ttf') format('truetype');
       }
 
       .material-icons {
@@ -78,16 +79,16 @@
 
   // Method 3: Preload the font file
   function preloadFontFile() {
-    // Since FontManifest.json is empty, preload from CDN
+    // Preload local font first
     const preloadLink = document.createElement('link');
     preloadLink.rel = 'preload';
-    preloadLink.href = 'https://fonts.gstatic.com/s/materialicons/v149/flUhRq6tzZclQEJ-Vdg-IuiaDsNZ.ttf';
+    preloadLink.href = 'fonts/MaterialIcons-Regular.otf';
     preloadLink.as = 'font';
-    preloadLink.type = 'font/ttf';
+    preloadLink.type = 'font/otf';
     preloadLink.crossOrigin = 'anonymous';
     document.head.appendChild(preloadLink);
 
-    console.log('✅ Material Icons font preloaded from CDN');
+    console.log('✅ Material Icons font preloaded from local assets');
   }
 
   // Method 4: Extended Font Loading API

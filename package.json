@@ -1,6 +1,25 @@
 {
-  "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^5.2.1"
+  "name": "bdpayx",
+  "version": "2.0.0",
+  "description": "BDT to INR Currency Exchange Platform",
+  "scripts": {
+    "start": "npm run backend:dev",
+    "backend:build": "cd backend-go && go build -o bdpayx-backend main.go",
+    "backend:start": "cd backend-go && ./bdpayx-backend",
+    "backend:dev": "cd backend-go && go run main.go",
+    "backend:test": "cd backend-go && go test ./...",
+    "frontend:dev": "cd flutter_app && flutter run -d web-server --web-port 8080",
+    "frontend:build": "cd flutter_app && flutter build web --release",
+    "admin:serve": "cd admin-dashboard && python3 -m http.server 8081",
+    "dev": "echo 'Run: npm run backend:dev (terminal 1) && npm run frontend:dev (terminal 2)'",
+    "build": "npm run backend:build && npm run frontend:build",
+    "clean": "cd flutter_app && flutter clean && cd ../backend-go && go clean"
+  },
+  "keywords": ["currency", "exchange", "bdt", "inr", "go", "flutter"],
+  "author": "BDPayX Team",
+  "license": "MIT",
+  "engines": {
+    "go": ">=1.21.0",
+    "flutter": ">=3.0.0"
   }
 }

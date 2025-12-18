@@ -22,7 +22,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Material Icons from Google Fonts CDN -->
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" media="print" onload="this.media='all'">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  
+  <!-- Preload Material Icons for faster loading -->
+  <link rel="preload" href="fonts/MaterialIcons-Regular.otf" as="font" type="font/otf" crossorigin="anonymous">
 
   <style>
     /* Ensure all icon elements use the correct font - CRITICAL CSS FOR ICONS */
@@ -31,9 +34,19 @@
       -moz-osx-font-smoothing: grayscale;
     }
 
+    /* Material Icons Font Face Declaration */
+    @font-face {
+      font-family: 'Material Icons';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('fonts/MaterialIcons-Regular.otf') format('opentype'),
+           url('https://fonts.gstatic.com/s/materialicons/v149/flUhRq6tzZclQEJ-Vdg-IuiaDsNZ.ttf') format('truetype');
+    }
+
     /* Apply Material Icons font to Flutter-generated icon elements */
     i.material-icons, span.material-icons, .material-icons {
-      font-family: 'Material Icons', serif !important;
+      font-family: 'Material Icons' !important;
       font-weight: normal;
       font-style: normal;
       font-size: 24px;
@@ -50,22 +63,22 @@
 
     /* Ensure all icon-related classes use the proper font */
     .flutter-icon, .icon, [class*="icon-"], [class*="Icon"], [class*="icon"] {
-      font-family: 'Material Icons', serif !important;
+      font-family: 'Material Icons' !important;
     }
 
     /* Force the font at the document level for any icon elements */
     *[class*="material-icons"] {
-      font-family: 'Material Icons', serif !important;
+      font-family: 'Material Icons' !important;
     }
 
     /* More specific selectors for Flutter web icons */
     i[class*="Icon"], span[class*="Icon"], div[class*="Icon"] {
-      font-family: 'Material Icons', serif !important;
+      font-family: 'Material Icons' !important;
     }
 
     /* Ensure icon elements render properly */
     .material-icons, .icon, [class*="Icon"] {
-      font-family: 'Material Icons', serif !important;
+      font-family: 'Material Icons' !important;
       line-height: 1 !important;
       font-style: normal !important;
       font-weight: normal !important;

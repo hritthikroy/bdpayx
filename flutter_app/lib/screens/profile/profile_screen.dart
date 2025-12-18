@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/theme_provider.dart';
 import '../../widgets/login_popup.dart';
 import '../../widgets/animated_avatar.dart';
 import 'kyc_screen.dart';
@@ -86,6 +87,61 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         }
       }
     }
+  }
+
+  void _showSettingsDialog() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: colorScheme.surface,
+        title: Text(
+          'Settings',
+          style: TextStyle(color: colorScheme.onSurface),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Consumer<ThemeProvider>(
+              builder: (context, themeProvider, _) {
+                return ListTile(
+                  leading: Icon(
+                    themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                    color: colorScheme.primary,
+                  ),
+                  title: Text(
+                    'Theme',
+                    style: TextStyle(color: colorScheme.onSurface),
+                  ),
+                  subtitle: Text(
+                    themeProvider.isDarkMode ? 'Dark Mode' : 'Light Mode',
+                    style: TextStyle(color: colorScheme.onSurfaceVariant),
+                  ),
+                  trailing: Switch(
+                    value: themeProvider.isDarkMode,
+                    onChanged: (_) => themeProvider.toggleTheme(),
+                    activeColor: colorScheme.primary,
+                  ),
+                  contentPadding: EdgeInsets.zero,
+                );
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Close',
+              style: TextStyle(color: colorScheme.primary),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -725,7 +781,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
               subtitle: 'App preferences',
               color: const Color(0xFF64748B),
               isDark: isDark,
-              onTap: () {},
+              onTap: () => _showSettingsDialog(),
             ),
           ], isDark),
           const SizedBox(height: 16),

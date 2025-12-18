@@ -3,25 +3,50 @@
 ## Start All Services
 
 ```bash
-# Backend (Terminal 1)
-cd backend && npm start
+# Go Backend (Terminal 1)
+npm run backend:dev
 
-# Flutter Web (Terminal 2)
-cd flutter_app && flutter run -d chrome --web-port=3000
+# Flutter Web (Terminal 2)  
+npm run frontend:dev
+
+# Admin Dashboard (Terminal 3)
+npm run admin:serve
 ```
 
 ## Access Points
 
-- **Flutter App**: http://localhost:3000
-- **Backend API**: http://localhost:3001
+- **Flutter App**: http://localhost:8080
+- **Backend API**: http://localhost:3000
+- **Admin Dashboard**: http://localhost:8081
 
-## Current Branch
+## Development Commands
 
-`feature/ui-improvements`
+```bash
+# Build everything
+npm run build
 
-## Recent Updates
+# Clean build artifacts
+npm run clean
 
-- Redesigned Profile Screen with professional UI
-- Improved Home Screen header with avatar and live rate chart
-- Professional sparkline chart with purple gradient theme
-- Fixed CustomIcons imports across all screens
+# Start backend only
+npm run backend:dev
+
+# Start frontend only
+npm run frontend:dev
+```
+
+## Project Status
+
+✅ **Cleaned & Restructured**
+- Removed unnecessary test files
+- Removed build artifacts and cache
+- Archived legacy Node.js backend
+- Streamlined project structure
+- Updated npm scripts for better workflow
+
+## Architecture
+
+- **Backend**: Go + Gin (High Performance)
+- **Frontend**: Flutter Web (Cross-platform)
+- **Database**: Supabase PostgreSQL
+- **Admin**: Vanilla HTML/JS Dashboard
